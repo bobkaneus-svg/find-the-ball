@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Find the Ball - Admin Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg-primary: #0a0e17;
+      --bg-secondary: #111827;
+      --bg-card: #1a2236;
+      --bg-hover: #243049;
+      --border: #2a3a55;
+      --text-primary: #f0f4ff;
+      --text-secondary: #8899b4;
+      --accent: #3b82f6;
+      --accent-hover: #2563eb;
+      --green: #22c55e;
+      --green-bg: rgba(34, 197, 94, 0.15);
+      --yellow: #eab308;
+      --yellow-bg: rgba(234, 179, 8, 0.15);
+      --red: #ef4444;
+      --red-bg: rgba(239, 68, 68, 0.15);
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      min-height: 100vh;
+    }
+
+    .header {
+      background: var(--bg-secondary);
+      border-bottom: 1px solid var(--border);
+      padding: 20px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .header h1 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 28px;
+      letter-spacing: 2px;
+      color: var(--text-primary);
+    }
+
+    .stats-bar {
+      display: flex;
+      gap: 24px;
+      flex-wrap: wrap;
+    }
+
+    .stat-item {
+      text-align: center;
+    }
+
+    .stat-value {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 28px;
+      line-height: 1;
+    }
+
+    .stat-label {
+      font-size: 11px;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .stat-value.total { color: var(--accent); }
+    .stat-value.approved { color: var(--green); }
+    .stat-value.pending { color: var(--yellow); }
+    .stat-value.rejected { color: var(--red); }
+
+    .controls {
+      background: var(--bg-secondary);
+      border-bottom: 1px solid var(--border);
+      padding: 16px 32px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .controls-label {
+      font-weight: 600;
+      font-size: 14px;
+      color: var(--text-secondary);
+      margin-right: 4px;
+    }
+
+    button {
+      font-family: 'Inter', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 18px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .btn-pipeline {
+      background: var(--accent);
+      color: white;
+    }
+
+    .btn-pipeline:hover { background: var(--accent-hover); }
+
+    .btn-pipeline:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .btn-approve {
+      background: var(--green-bg);
+      color: var(--green);
+      border: 1px solid rgba(34, 197, 94, 0.3);
+    }
+
+    .btn-approve:hover {
+      background: rgba(34, 197, 94, 0.25);
+    }
+
+    .btn-reject {
+      background: var(--red-bg);
+      color: var(--red);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+
+    .btn-reject:hover {
+      background: rgba(239, 68, 68, 0.25);
+    }
+
+    .btn-preview {
+      background: var(--bg-hover);
+      color: var(--text-secondary);
+      border: 1px solid var(--border);
+    }
+
+    .btn-preview:hover {
+      color: var(--text-primary);
+      border-color: var(--text-secondary);
+    }
+
+    .pipeline-status {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-left: auto;
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+
+    .status-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #555;
+    }
+
+    .status-dot.running {
+      background: var(--green);
+      animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    .filter-tabs {
+      padding: 16px 32px 0;
+      display: flex;
+      gap: 4px;
+    }
+
+    .filter-tab {
+      background: transparent;
+      color: var(--text-secondary);
+      padding: 8px 20px;
+      border-radius: 8px 8px 0 0;
+      border: 1px solid transparent;
+      border-bottom: none;
+      font-size: 13px;
+    }
+
+    .filter-tab.active {
+      background: var(--bg-card);
+      color: var(--text-primary);
+      border-color: var(--border);
+    }
+
+    .filter-tab:hover:not(.active) {
+      color: var(--text-primary);
+    }
+
+    .content {
+      padding: 0 32px 32px;
+    }
+
+    .photo-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+      padding-top: 20px;
+    }
+
+    @media (max-width: 1024px) {
+      .photo-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    @media (max-width: 640px) {
+      .photo-grid { grid-template-columns: 1fr; }
+      .header, .controls, .filter-tabs, .content { padding-left: 16px; padding-right: 16px; }
+    }
+
+    .photo-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      transition: border-color 0.2s;
+    }
+
+    .photo-card:hover {
+      border-color: var(--accent);
+    }
+
+    .photo-thumb {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 16 / 10;
+      overflow: hidden;
+      background: var(--bg-primary);
+    }
+
+    .photo-thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .ball-marker {
+      position: absolute;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: var(--green);
+      border: 2px solid white;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+      box-shadow: 0 0 8px rgba(34, 197, 94, 0.6);
+    }
+
+    .badge {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 3px 10px;
+      border-radius: 6px;
+    }
+
+    .badge-approved { background: var(--green-bg); color: var(--green); }
+    .badge-pending { background: var(--yellow-bg); color: var(--yellow); }
+    .badge-rejected { background: var(--red-bg); color: var(--red); }
+
+    .photo-info {
+      padding: 14px 16px;
+    }
+
+    .photo-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+
+    .photo-meta .id {
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .photo-details {
+      display: flex;
+      gap: 16px;
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-bottom: 12px;
+    }
+
+    .photo-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .photo-actions button {
+      flex: 1;
+      font-size: 12px;
+      padding: 7px 10px;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 80px 20px;
+      color: var(--text-secondary);
+    }
+
+    .empty-state h3 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 24px;
+      color: var(--text-primary);
+      margin-bottom: 8px;
+    }
+
+    .pagination {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 12px;
+      padding-top: 24px;
+    }
+
+    .pagination button {
+      background: var(--bg-card);
+      color: var(--text-secondary);
+      border: 1px solid var(--border);
+      padding: 8px 16px;
+    }
+
+    .pagination button:hover:not(:disabled) {
+      color: var(--text-primary);
+      border-color: var(--text-secondary);
+    }
+
+    .pagination button:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+    }
+
+    .pagination span {
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+
+    /* Modal */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.85);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+      padding: 32px;
+    }
+
+    .modal-overlay.active {
+      display: flex;
+    }
+
+    .modal {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      max-width: 900px;
+      width: 100%;
+      max-height: 90vh;
+      overflow: auto;
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .modal-header h3 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 20px;
+    }
+
+    .modal-close {
+      background: transparent;
+      color: var(--text-secondary);
+      font-size: 20px;
+      padding: 4px 8px;
+    }
+
+    .modal-close:hover { color: var(--text-primary); }
+
+    .modal-body {
+      padding: 20px;
+      position: relative;
+    }
+
+    .modal-body img {
+      width: 100%;
+      border-radius: 8px;
+    }
+
+    .modal-ball-marker {
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: var(--red);
+      border: 3px solid white;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+      box-shadow: 0 0 12px rgba(239, 68, 68, 0.7);
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 20px;
+      font-size: 13px;
+      color: var(--text-primary);
+      z-index: 2000;
+      transform: translateY(100px);
+      opacity: 0;
+      transition: all 0.3s ease;
+    }
+
+    .toast.show {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    .toast.success { border-color: var(--green); }
+    .toast.error { border-color: var(--red); }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <h1>Find the Ball - Admin Dashboard</h1>
+    <div class="stats-bar">
+      <div class="stat-item">
+        <div class="stat-value total" id="stat-total">-</div>
+        <div class="stat-label">Total</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value approved" id="stat-approved">-</div>
+        <div class="stat-label">Approved</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value pending" id="stat-pending">-</div>
+        <div class="stat-label">Pending</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value rejected" id="stat-rejected">-</div>
+        <div class="stat-label">Rejected</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <span class="controls-label">Pipeline:</span>
+    <button class="btn-pipeline" onclick="runPipeline('download')">Run Pipeline (Download 50)</button>
+    <button class="btn-pipeline" onclick="runPipeline('detect')">Detect Balls</button>
+    <button class="btn-pipeline" onclick="runPipeline('process')">Process Photos</button>
+    <div class="pipeline-status">
+      <div class="status-dot" id="pipeline-dot"></div>
+      <span id="pipeline-text">Idle</span>
+    </div>
+  </div>
+
+  <div class="filter-tabs">
+    <button class="filter-tab active" data-filter="all" onclick="setFilter('all')">All</button>
+    <button class="filter-tab" data-filter="pending" onclick="setFilter('pending')">Pending</button>
+    <button class="filter-tab" data-filter="approved" onclick="setFilter('approved')">Approved</button>
+    <button class="filter-tab" data-filter="rejected" onclick="setFilter('rejected')">Rejected</button>
+  </div>
+
+  <div class="content">
+    <div class="photo-grid" id="photo-grid"></div>
+    <div class="pagination" id="pagination"></div>
+  </div>
+
+  <!-- Preview Modal -->
+  <div class="modal-overlay" id="modal-overlay" onclick="closeModal(event)">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 id="modal-title">Original Photo</h3>
+        <button class="modal-close" onclick="closeModal()">&times;</button>
+      </div>
+      <div class="modal-body" id="modal-body"></div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+<script>
+  // === Config ===
+  const params = new URLSearchParams(window.location.search);
+  const API_KEY = params.get('key') || '';
+  const BASE = '';
+
+  function apiUrl(path) {
+    const sep = path.includes('?') ? '&' : '?';
+    return `${BASE}${path}${sep}key=${encodeURIComponent(API_KEY)}`;
+  }
+
+  // === State ===
+  let currentFilter = 'all';
+  let currentPage = 1;
+  const PAGE_LIMIT = 20;
+  let pipelineRunning = false;
+  let autoRefreshInterval = null;
+
+  // === Init ===
+  document.addEventListener('DOMContentLoaded', () => {
+    loadStats();
+    loadPhotos();
+    checkPipelineStatus();
+    startAutoRefresh();
+  });
+
+  // === Stats ===
+  async function loadStats() {
+    try {
+      const res = await fetch(apiUrl('/api/admin/pipeline/stats'));
+      if (!res.ok) throw new Error('Unauthorized');
+      const data = await res.json();
+      document.getElementById('stat-total').textContent = data.total || 0;
+      document.getElementById('stat-approved').textContent = data.approved || 0;
+      document.getElementById('stat-pending').textContent = data.pending || 0;
+      document.getElementById('stat-rejected').textContent = data.rejected || 0;
+    } catch (e) {
+      console.error('Failed to load stats:', e);
+    }
+  }
+
+  // === Photos ===
+  async function loadPhotos() {
+    const grid = document.getElementById('photo-grid');
+    try {
+      const statusParam = currentFilter !== 'all' ? `&status=${currentFilter}` : '';
+      const res = await fetch(apiUrl(`/api/admin/pipeline/photos?page=${currentPage}&limit=${PAGE_LIMIT}${statusParam}`));
+      if (!res.ok) throw new Error('Failed to fetch photos');
+      const data = await res.json();
+      renderPhotos(data.photos);
+      renderPagination(data.total, data.page, data.limit);
+    } catch (e) {
+      grid.innerHTML = `<div class="empty-state"><h3>Error</h3><p>${e.message}</p></div>`;
+    }
+  }
+
+  function renderPhotos(photos) {
+    const grid = document.getElementById('photo-grid');
+    if (!photos || photos.length === 0) {
+      grid.innerHTML = '<div class="empty-state"><h3>No Photos</h3><p>No photos match the current filter.</p></div>';
+      return;
+    }
+
+    grid.innerHTML = photos.map(photo => {
+      const statusText = photo.active === 1 ? 'approved' : photo.active === -1 ? 'rejected' : 'pending';
+      const badgeClass = `badge-${statusText}`;
+      return `
+        <div class="photo-card" data-id="${photo.id}">
+          <div class="photo-thumb">
+            <img src="/photos/modified/${photo.filename_modified}" alt="Photo ${photo.id}" loading="lazy"
+                 onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22250%22><rect fill=%22%231a2236%22 width=%22400%22 height=%22250%22/><text fill=%22%238899b4%22 x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22 font-size=%2214%22>No image</text></svg>'">
+            <div class="ball-marker" style="left: ${photo.ball_x}%; top: ${photo.ball_y}%"></div>
+            <div class="badge ${badgeClass}">${statusText}</div>
+          </div>
+          <div class="photo-info">
+            <div class="photo-meta">
+              <span class="id">#${photo.id}</span>
+              <span>${photo.difficulty || 'medium'} | ${photo.sport || 'football'}</span>
+            </div>
+            <div class="photo-details">
+              <span>Ball: ${photo.ball_x.toFixed(1)}%, ${photo.ball_y.toFixed(1)}%</span>
+              <span>Radius: ${photo.ball_radius}</span>
+            </div>
+            <div class="photo-actions">
+              ${photo.active !== 1 ? `<button class="btn-approve" onclick="approvePhoto(${photo.id})">Approve</button>` : ''}
+              ${photo.active !== -1 ? `<button class="btn-reject" onclick="rejectPhoto(${photo.id})">Reject</button>` : ''}
+              <button class="btn-preview" onclick="previewOriginal(${photo.id}, '${photo.filename_original}', ${photo.ball_x}, ${photo.ball_y})">Preview Original</button>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function renderPagination(total, page, limit) {
+    const container = document.getElementById('pagination');
+    const totalPages = Math.ceil(total / limit);
+    if (totalPages <= 1) {
+      container.innerHTML = '';
+      return;
+    }
+    container.innerHTML = `
+      <button ${page <= 1 ? 'disabled' : ''} onclick="goToPage(${page - 1})">Previous</button>
+      <span>Page ${page} of ${totalPages}</span>
+      <button ${page >= totalPages ? 'disabled' : ''} onclick="goToPage(${page + 1})">Next</button>
+    `;
+  }
+
+  function goToPage(page) {
+    currentPage = page;
+    loadPhotos();
+  }
+
+  // === Filters ===
+  function setFilter(filter) {
+    currentFilter = filter;
+    currentPage = 1;
+    document.querySelectorAll('.filter-tab').forEach(tab => {
+      tab.classList.toggle('active', tab.dataset.filter === filter);
+    });
+    loadPhotos();
+  }
+
+  // === Actions ===
+  async function approvePhoto(id) {
+    try {
+      const res = await fetch(apiUrl(`/api/admin/pipeline/approve/${id}`), { method: 'POST' });
+      if (!res.ok) throw new Error('Failed to approve');
+      showToast('Photo approved', 'success');
+      loadPhotos();
+      loadStats();
+    } catch (e) {
+      showToast('Error: ' + e.message, 'error');
+    }
+  }
+
+  async function rejectPhoto(id) {
+    try {
+      const res = await fetch(apiUrl(`/api/admin/pipeline/reject/${id}`), { method: 'POST' });
+      if (!res.ok) throw new Error('Failed to reject');
+      showToast('Photo rejected', 'success');
+      loadPhotos();
+      loadStats();
+    } catch (e) {
+      showToast('Error: ' + e.message, 'error');
+    }
+  }
+
+  // === Preview Modal ===
+  function previewOriginal(id, filename, ballX, ballY) {
+    const overlay = document.getElementById('modal-overlay');
+    const body = document.getElementById('modal-body');
+    document.getElementById('modal-title').textContent = `Original Photo #${id}`;
+    body.innerHTML = `
+      <img src="/photos/originals/${filename}" alt="Original photo ${id}"
+           onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22800%22 height=%22500%22><rect fill=%22%231a2236%22 width=%22800%22 height=%22500%22/><text fill=%22%238899b4%22 x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22 font-size=%2218%22>Image not found</text></svg>'">
+      <div class="modal-ball-marker" style="left: calc(20px + (100% - 40px) * ${ballX / 100}); top: calc(20px + (100% - 40px) * ${ballY / 100});"></div>
+    `;
+    overlay.classList.add('active');
+  }
+
+  function closeModal(event) {
+    if (event && event.target !== document.getElementById('modal-overlay')) return;
+    document.getElementById('modal-overlay').classList.remove('active');
+  }
+
+  // Close modal on Escape
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      document.getElementById('modal-overlay').classList.remove('active');
+    }
+  });
+
+  // === Pipeline ===
+  async function runPipeline(step) {
+    try {
+      const res = await fetch(apiUrl(`/api/admin/pipeline/${step}`), { method: 'POST' });
+      const data = await res.json();
+      if (!res.ok) {
+        showToast(data.error || 'Pipeline error', 'error');
+        return;
+      }
+      showToast(data.message, 'success');
+      pipelineRunning = true;
+      updatePipelineUI();
+    } catch (e) {
+      showToast('Error: ' + e.message, 'error');
+    }
+  }
+
+  async function checkPipelineStatus() {
+    try {
+      const res = await fetch(apiUrl('/api/admin/pipeline/status'));
+      if (!res.ok) return;
+      const data = await res.json();
+      pipelineRunning = data.running;
+      updatePipelineUI(data);
+    } catch (e) {
+      // Silent fail
+    }
+  }
+
+  function updatePipelineUI(data) {
+    const dot = document.getElementById('pipeline-dot');
+    const text = document.getElementById('pipeline-text');
+
+    if (pipelineRunning) {
+      dot.classList.add('running');
+      text.textContent = data?.message || data?.step ? `Running: ${data.step}` : 'Running...';
+      disablePipelineButtons(true);
+    } else {
+      dot.classList.remove('running');
+      text.textContent = 'Idle';
+      disablePipelineButtons(false);
+    }
+  }
+
+  function disablePipelineButtons(disabled) {
+    document.querySelectorAll('.btn-pipeline').forEach(btn => btn.disabled = disabled);
+  }
+
+  // === Auto-refresh ===
+  function startAutoRefresh() {
+    autoRefreshInterval = setInterval(() => {
+      checkPipelineStatus();
+      if (pipelineRunning) {
+        loadStats();
+        loadPhotos();
+      }
+    }, 10000);
+  }
+
+  // === Toast ===
+  function showToast(message, type = '') {
+    const toast = document.getElementById('toast');
+    toast.textContent = message;
+    toast.className = 'toast show ' + type;
+    setTimeout(() => {
+      toast.className = 'toast';
+    }, 3000);
+  }
+</script>
+
+</body>
+</html>

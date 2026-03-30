@@ -1,0 +1,65 @@
+{
+  "lastRun": "2026-03-30T15:39:31.843Z",
+  "totalDownloaded": 5,
+  "totalDetected": 5,
+  "totalProcessed": 5,
+  "totalApproved": 0,
+  "totalFailed": 0,
+  "photos": [
+    {
+      "id": 1,
+      "sourceUrl": "https://images.unsplash.com/photo-1553778263-73a83bab9b0c?w=800&h=600&fit=crop",
+      "filename": "auto_001.jpg",
+      "status": "processed",
+      "ballX": 51.5,
+      "ballY": 60,
+      "ballRadius": 16,
+      "confidence": 1,
+      "error": null
+    },
+    {
+      "id": 2,
+      "sourceUrl": "https://images.unsplash.com/photo-1431324155629-1a6deb1dec8d?w=800&h=600&fit=crop",
+      "filename": "auto_002.jpg",
+      "status": "processed",
+      "ballX": 51.5,
+      "ballY": 22.33,
+      "ballRadius": 20,
+      "confidence": 0.825,
+      "error": null
+    },
+    {
+      "id": 3,
+      "sourceUrl": "https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=800&h=600&fit=crop",
+      "filename": "auto_003.jpg",
+      "status": "processed",
+      "ballX": 76.25,
+      "ballY": 29.67,
+      "ballRadius": 12,
+      "confidence": 0.904,
+      "error": null
+    },
+    {
+      "id": 4,
+      "sourceUrl": "https://images.unsplash.com/photo-1560272564-c83b66b1ad12?w=800&h=600&fit=crop",
+      "filename": "auto_004.jpg",
+      "status": "processed",
+      "ballX": 32.75,
+      "ballY": 45.33,
+      "ballRadius": 20,
+      "confidence": 1,
+      "error": null
+    },
+    {
+      "id": 5,
+      "sourceUrl": "https://images.unsplash.com/photo-1579952363873-27f3bade9f55?w=800&h=600&fit=crop",
+      "filename": "auto_005.jpg",
+      "status": "processed",
+      "ballX": 40.5,
+      "ballY": 33,
+      "ballRadius": 16,
+      "confidence": 1,
+      "error": null
+    }
+  ]
+}

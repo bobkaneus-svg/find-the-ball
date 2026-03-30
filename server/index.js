@@ -13,6 +13,7 @@ const PORT = process.env.PORT || 3000;
 const BOT_TOKEN = process.env.BOT_TOKEN;
 const WEBAPP_URL = process.env.WEBAPP_URL || `http://localhost:${PORT}`;
 const ADMIN_IDS = (process.env.ADMIN_IDS || '').split(',').map(Number);
+const ADMIN_SECRET = process.env.ADMIN_SECRET || 'ftb-admin-2024';
 
 // Telegram Bot
 let bot;
@@ -80,6 +81,12 @@ function validateTelegramData(initData) {
 }
 
 function authMiddleware(req, res, next) {
+  // Admin secret key bypass (for browser-based admin dashboard)
+  if (req.query.key === ADMIN_SECRET) {
+    req.telegramUser = { id: ADMIN_IDS[0] || 0 };
+    return next();
+  }
+
   const initData = req.headers['x-telegram-init-data'];
 
   // Dev mode: accept telegram_id from header
@@ -255,6 +262,109 @@ app.post('/api/shop/ad-reward', authMiddleware, (req, res) => {
   db.logTransaction.run(req.telegramUser.id, REWARD, 'ad_reward', 'Watched video ad');
   const user = db.getUser.get(req.telegramUser.id);
   res.json({ coins: user.coins, reward: REWARD });
+});
+
+// ============ ADMIN PIPELINE ROUTES ============
+
+const { fork } = require('child_process');
+const fs = require('fs');
+
+let pipelineProcess = null;
+
+// Pipeline status
+app.get('/api/admin/pipeline/status', authMiddleware, adminMiddleware, (req, res) => {
+  const statusPath = path.join(__dirname, '..', 'pipeline-status.json');
+  try {
+    if (fs.existsSync(statusPath)) {
+      const status = JSON.parse(fs.readFileSync(statusPath, 'utf-8'));
+      status.running = pipelineProcess !== null;
+      return res.json(status);
+    }
+  } catch (e) {
+    console.error('Error reading pipeline status:', e.message);
+  }
+  res.json({ running: pipelineProcess !== null, step: null, progress: 0, message: 'No pipeline data' });
+});
+
+// List all photos for review (with pagination and status filter)
+app.get('/api/admin/pipeline/photos', authMiddleware, adminMiddleware, (req, res) => {
+  const { status, page = 1, limit = 20 } = req.query;
+  const pageNum = Math.max(1, parseInt(page));
+  const limitNum = Math.min(100, Math.max(1, parseInt(limit)));
+  const offset = (pageNum - 1) * limitNum;
+
+  let photos;
+  if (status !== undefined && status !== 'all') {
+    const activeVal = status === 'approved' ? 1 : status === 'rejected' ? -1 : 0;
+    photos = db.getPhotosByStatus.all(activeVal);
+    // Manual pagination for status-filtered results
+    const total = photos.length;
+    photos = photos.slice(offset, offset + limitNum);
+    return res.json({ photos, total, page: pageNum, limit: limitNum });
+  }
+
+  photos = db.getAllPhotosAdmin.all(limitNum, offset);
+  const stats = db.getPhotoStats.get();
+  res.json({ photos, total: stats.total, page: pageNum, limit: limitNum });
+});
+
+// Photo stats
+app.get('/api/admin/pipeline/stats', authMiddleware, adminMiddleware, (req, res) => {
+  const stats = db.getPhotoStats.get();
+  res.json(stats);
+});
+
+// Approve a photo
+app.post('/api/admin/pipeline/approve/:id', authMiddleware, adminMiddleware, (req, res) => {
+  const { id } = req.params;
+  db.updatePhotoActive.run(1, parseInt(id));
+  res.json({ success: true, message: `Photo ${id} approved` });
+});
+
+// Reject a photo
+app.post('/api/admin/pipeline/reject/:id', authMiddleware, adminMiddleware, (req, res) => {
+  const { id } = req.params;
+  db.updatePhotoActive.run(-1, parseInt(id));
+  res.json({ success: true, message: `Photo ${id} rejected` });
+});
+
+// Helper to fork pipeline worker
+function runPipelineStep(step, res) {
+  if (pipelineProcess) {
+    return res.status(409).json({ error: 'Pipeline is already running' });
+  }
+
+  const workerPath = path.join(__dirname, '..', 'pipeline-worker.js');
+  if (!fs.existsSync(workerPath)) {
+    return res.status(404).json({ error: 'pipeline-worker.js not found' });
+  }
+
+  pipelineProcess = fork(workerPath, [step]);
+
+  pipelineProcess.on('exit', (code) => {
+    console.log(`Pipeline step "${step}" exited with code ${code}`);
+    pipelineProcess = null;
+  });
+
+  pipelineProcess.on('error', (err) => {
+    console.error(`Pipeline step "${step}" error:`, err.message);
+    pipelineProcess = null;
+  });
+
+  res.json({ success: true, message: `Pipeline step "${step}" started` });
+}
+
+// Trigger pipeline steps
+app.post('/api/admin/pipeline/download', authMiddleware, adminMiddleware, (req, res) => {
+  runPipelineStep('download', res);
+});
+
+app.post('/api/admin/pipeline/detect', authMiddleware, adminMiddleware, (req, res) => {
+  runPipelineStep('detect', res);
+});
+
+app.post('/api/admin/pipeline/process', authMiddleware, adminMiddleware, (req, res) => {
+  runPipelineStep('process', res);
 });
 
 // ============ ADMIN ROUTES ============

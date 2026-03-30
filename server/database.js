@@ -136,6 +136,19 @@ const getUserRank = db.prepare(`
   AND games_played > 0
 `);
 
+// Admin pipeline operations
+const getPhotosByStatus = db.prepare('SELECT * FROM photos WHERE active = ? ORDER BY id DESC');
+const getAllPhotosAdmin = db.prepare('SELECT * FROM photos ORDER BY id DESC LIMIT ? OFFSET ?');
+const updatePhotoActive = db.prepare('UPDATE photos SET active = ? WHERE id = ?');
+const getPhotoStats = db.prepare(`
+  SELECT
+    COUNT(*) as total,
+    SUM(CASE WHEN active = 1 THEN 1 ELSE 0 END) as approved,
+    SUM(CASE WHEN active = 0 THEN 1 ELSE 0 END) as pending,
+    SUM(CASE WHEN active = -1 THEN 1 ELSE 0 END) as rejected
+  FROM photos
+`);
+
 // Transaction logging
 const logTransaction = db.prepare(`
   INSERT INTO transactions (user_id, amount, type, description)
@@ -159,5 +172,9 @@ module.exports = {
   getRoundById,
   getLeaderboard,
   getUserRank,
-  logTransaction
+  logTransaction,
+  getPhotosByStatus,
+  getAllPhotosAdmin,
+  updatePhotoActive,
+  getPhotoStats
 };
