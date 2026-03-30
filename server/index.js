@@ -332,48 +332,17 @@ function seedDemoPhotos() {
   const existing = db.getAllPhotos.all();
   if (existing.length > 0) return;
 
-  // Demo photos - in production, use real photos uploaded via admin
   const demoPhotos = [
-    {
-      original: 'demo1_original.jpg',
-      modified: 'demo1_modified.jpg',
-      ball_x: 62.5,
-      ball_y: 45.3,
-      difficulty: 'easy',
-      description: 'Corner kick - player about to head the ball'
-    },
-    {
-      original: 'demo2_original.jpg',
-      modified: 'demo2_modified.jpg',
-      ball_x: 35.8,
-      ball_y: 68.2,
-      difficulty: 'medium',
-      description: 'Player dribbling past defender'
-    },
-    {
-      original: 'demo3_original.jpg',
-      modified: 'demo3_modified.jpg',
-      ball_x: 78.1,
-      ball_y: 22.7,
-      difficulty: 'hard',
-      description: 'Long pass across the field'
-    },
-    {
-      original: 'demo4_original.jpg',
-      modified: 'demo4_modified.jpg',
-      ball_x: 48.3,
-      ball_y: 55.9,
-      difficulty: 'medium',
-      description: 'Goalkeeper diving for save'
-    },
-    {
-      original: 'demo5_original.jpg',
-      modified: 'demo5_modified.jpg',
-      ball_x: 25.0,
-      ball_y: 40.1,
-      difficulty: 'hard',
-      description: 'Free kick lineup'
-    }
+    { original: 'demo_01.jpg', modified: 'demo_01.jpg', ball_x: 62, ball_y: 45, difficulty: 'easy', description: 'Corner kick scene' },
+    { original: 'demo_02.jpg', modified: 'demo_02.jpg', ball_x: 25, ball_y: 70, difficulty: 'medium', description: 'Dribbling past defender' },
+    { original: 'demo_03.jpg', modified: 'demo_03.jpg', ball_x: 80, ball_y: 55, difficulty: 'hard', description: 'Long pass across field' },
+    { original: 'demo_04.jpg', modified: 'demo_04.jpg', ball_x: 50, ball_y: 35, difficulty: 'easy', description: 'Kick-off position' },
+    { original: 'demo_05.jpg', modified: 'demo_05.jpg', ball_x: 15, ball_y: 60, difficulty: 'medium', description: 'Free kick lineup' },
+    { original: 'demo_06.jpg', modified: 'demo_06.jpg', ball_x: 70, ball_y: 80, difficulty: 'hard', description: 'Goal-line scramble' },
+    { original: 'demo_07.jpg', modified: 'demo_07.jpg', ball_x: 90, ball_y: 50, difficulty: 'easy', description: 'Throw-in moment' },
+    { original: 'demo_08.jpg', modified: 'demo_08.jpg', ball_x: 45, ball_y: 25, difficulty: 'medium', description: 'Header duel' },
+    { original: 'demo_09.jpg', modified: 'demo_09.jpg', ball_x: 35, ball_y: 55, difficulty: 'hard', description: 'Midfield battle' },
+    { original: 'demo_10.jpg', modified: 'demo_10.jpg', ball_x: 55, ball_y: 65, difficulty: 'easy', description: 'Penalty area action' }
   ];
 
   demoPhotos.forEach(p => {
