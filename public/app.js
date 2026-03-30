@@ -222,20 +222,63 @@ function setupGameTouchHandlers() {
 
   const photoContainer = document.getElementById('photo-container');
 
-  function handleMove(clientX, clientY) {
-    const rect = photoContainer.getBoundingClientRect();
-    const x = ((clientX - rect.left) / rect.width) * 100;
-    const y = ((clientY - rect.top) / rect.height) * 100;
+  function getImageBounds() {
+    // Calculate the actual rendered image area within the container
+    // when using object-fit: contain, there may be black bars
+    const img = document.getElementById('game-photo');
+    const containerRect = photoContainer.getBoundingClientRect();
 
-    // Clamp
-    const clampedX = Math.max(0, Math.min(100, x));
-    const clampedY = Math.max(0, Math.min(100, y));
+    const imgNaturalW = img.naturalWidth || 800;
+    const imgNaturalH = img.naturalHeight || 600;
+    const containerW = containerRect.width;
+    const containerH = containerRect.height;
+
+    const imgRatio = imgNaturalW / imgNaturalH;
+    const containerRatio = containerW / containerH;
+
+    let renderW, renderH, offsetX, offsetY;
+
+    if (imgRatio > containerRatio) {
+      // Image is wider than container → black bars top/bottom
+      renderW = containerW;
+      renderH = containerW / imgRatio;
+      offsetX = 0;
+      offsetY = (containerH - renderH) / 2;
+    } else {
+      // Image is taller than container → black bars left/right
+      renderH = containerH;
+      renderW = containerH * imgRatio;
+      offsetX = (containerW - renderW) / 2;
+      offsetY = 0;
+    }
+
+    return { renderW, renderH, offsetX, offsetY, containerRect };
+  }
+
+  function handleMove(clientX, clientY) {
+    const { renderW, renderH, offsetX, offsetY, containerRect } = getImageBounds();
+
+    // Position relative to the actual image area (not the container)
+    const relX = clientX - containerRect.left - offsetX;
+    const relY = clientY - containerRect.top - offsetY;
+
+    // Convert to percentage of actual image (0-100)
+    const pctX = (relX / renderW) * 100;
+    const pctY = (relY / renderH) * 100;
+
+    // Clamp to image bounds
+    const clampedX = Math.max(0, Math.min(100, pctX));
+    const clampedY = Math.max(0, Math.min(100, pctY));
 
     state.cursorPosition = { x: clampedX, y: clampedY };
 
+    // Position the search circle within the container using absolute offsets
+    // so it aligns with the actual image content
     const sc = document.getElementById('search-circle');
-    sc.style.left = `${clampedX}%`;
-    sc.style.top = `${clampedY}%`;
+    const pixelLeft = offsetX + (clampedX / 100) * renderW;
+    const pixelTop = offsetY + (clampedY / 100) * renderH;
+    sc.style.left = pixelLeft + 'px';
+    sc.style.top = pixelTop + 'px';
     sc.classList.add('visible');
     sc.classList.add('placed');
 
@@ -325,33 +368,63 @@ async function submitGuess() {
   }
 }
 
+// Position markers accurately on a photo container with object-fit: contain
+function positionMarkerOnPhoto(container, img, marker, pctX, pctY) {
+  const cW = container.offsetWidth;
+  const cH = container.offsetHeight;
+  const nW = img.naturalWidth || 800;
+  const nH = img.naturalHeight || 600;
+
+  // Calculate actual rendered image bounds
+  const imgRatio = nW / nH;
+  const cRatio = cW / cH;
+  let rW, rH, oX, oY;
+
+  if (cH === 0 || img.style.height === 'auto' || !img.style.height) {
+    // height:auto means image width fills container, no letterboxing
+    marker.style.left = `${pctX}%`;
+    marker.style.top = `${pctY}%`;
+    return;
+  }
+
+  if (imgRatio > cRatio) {
+    rW = cW; rH = cW / imgRatio;
+    oX = 0; oY = (cH - rH) / 2;
+  } else {
+    rH = cH; rW = cH * imgRatio;
+    oX = (cW - rW) / 2; oY = 0;
+  }
+
+  const px = oX + (pctX / 100) * rW;
+  const py = oY + (pctY / 100) * rH;
+  marker.style.left = px + 'px';
+  marker.style.top = py + 'px';
+}
+
 function showGameOver(result) {
   // Haptic
   if (tg) tg.HapticFeedback.notificationOccurred('error');
 
   document.getElementById('gameover-score').textContent = state.sessionScore;
 
-  // Show original photo with ball visible
   const photo = document.getElementById('gameover-photo');
   photo.src = result.originalPhoto;
 
-  // Position guess marker
   const guessMarker = document.getElementById('gameover-guess');
-  guessMarker.style.left = `${result.guessPosition.x}%`;
-  guessMarker.style.top = `${result.guessPosition.y}%`;
-
-  // Position ball marker
   const ballMarker = document.getElementById('gameover-ball');
-  ballMarker.style.left = `${result.ballPosition.x}%`;
-  ballMarker.style.top = `${result.ballPosition.y}%`;
-
-  // Draw distance line between guess and ball
   const line = document.getElementById('gameover-distance-line');
+  const container = document.getElementById('gameover-photo-container');
+
   photo.onload = () => {
-    line.setAttribute('x1', `${result.guessPosition.x}%`);
-    line.setAttribute('y1', `${result.guessPosition.y}%`);
-    line.setAttribute('x2', `${result.ballPosition.x}%`);
-    line.setAttribute('y2', `${result.ballPosition.y}%`);
+    // Position markers on the actual image area
+    positionMarkerOnPhoto(container, photo, guessMarker, result.guessPosition.x, result.guessPosition.y);
+    positionMarkerOnPhoto(container, photo, ballMarker, result.ballPosition.x, result.ballPosition.y);
+
+    // Line uses same coordinates
+    line.setAttribute('x1', guessMarker.style.left);
+    line.setAttribute('y1', guessMarker.style.top);
+    line.setAttribute('x2', ballMarker.style.left);
+    line.setAttribute('y2', ballMarker.style.top);
   };
 
   showScreen('gameover');
@@ -383,23 +456,19 @@ function showResult(result) {
   const resultPhoto = document.getElementById('result-photo');
   resultPhoto.src = result.originalPhoto;
 
-  // Position guess marker
   const guessMarker = document.getElementById('result-guess');
-  guessMarker.style.left = `${result.guessPosition.x}%`;
-  guessMarker.style.top = `${result.guessPosition.y}%`;
-
-  // Position ball marker
   const ballMarker = document.getElementById('result-ball');
-  ballMarker.style.left = `${result.ballPosition.x}%`;
-  ballMarker.style.top = `${result.ballPosition.y}%`;
-
-  // Draw distance line
   const line = document.getElementById('distance-line');
+  const container = document.getElementById('result-photo-container');
+
   resultPhoto.onload = () => {
-    line.setAttribute('x1', `${result.guessPosition.x}%`);
-    line.setAttribute('y1', `${result.guessPosition.y}%`);
-    line.setAttribute('x2', `${result.ballPosition.x}%`);
-    line.setAttribute('y2', `${result.ballPosition.y}%`);
+    positionMarkerOnPhoto(container, resultPhoto, guessMarker, result.guessPosition.x, result.guessPosition.y);
+    positionMarkerOnPhoto(container, resultPhoto, ballMarker, result.ballPosition.x, result.ballPosition.y);
+
+    line.setAttribute('x1', guessMarker.style.left);
+    line.setAttribute('y1', guessMarker.style.top);
+    line.setAttribute('x2', ballMarker.style.left);
+    line.setAttribute('y2', ballMarker.style.top);
   };
 
   // Haptic feedback
