@@ -433,7 +433,7 @@ function positionMarkerOnPhoto(container, img, marker, pctX, pctY) {
   marker.style.top = py + 'px';
 }
 
-function showGameOver(result) {
+async function showGameOver(result) {
   // Haptic
   if (tg) tg.HapticFeedback.notificationOccurred('error');
 
@@ -448,11 +448,8 @@ function showGameOver(result) {
   const container = document.getElementById('gameover-photo-container');
 
   photo.onload = () => {
-    // Position markers on the actual image area
     positionMarkerOnPhoto(container, photo, guessMarker, result.guessPosition.x, result.guessPosition.y);
     positionMarkerOnPhoto(container, photo, ballMarker, result.ballPosition.x, result.ballPosition.y);
-
-    // Line uses same coordinates
     line.setAttribute('x1', guessMarker.style.left);
     line.setAttribute('y1', guessMarker.style.top);
     line.setAttribute('x2', ballMarker.style.left);
@@ -460,6 +457,54 @@ function showGameOver(result) {
   };
 
   showScreen('gameover');
+
+  // Load leaderboard into game over screen
+  try {
+    const [lbData, statsData] = await Promise.all([
+      api('/api/leaderboard?limit=10'),
+      api('/api/user/stats')
+    ]);
+
+    const myRank = statsData?.rank || '-';
+    document.getElementById('gameover-rank').textContent = `Toi: #${myRank}`;
+
+    const list = document.getElementById('gameover-lb-list');
+    list.innerHTML = '';
+
+    const medals = ['🥇', '🥈', '🥉'];
+    const myId = state.user?.telegramId;
+
+    lbData.leaderboard.forEach(entry => {
+      const div = document.createElement('div');
+      const isMe = entry.username === (state.user?.username || state.user?.firstName);
+      div.className = 'go-lb-entry' + (isMe ? ' is-me' : '');
+      div.innerHTML = `
+        <span class="go-lb-rank">${medals[entry.rank - 1] || entry.rank}</span>
+        <span class="go-lb-name">${escapeHtml(entry.username)}${isMe ? ' (toi)' : ''}</span>
+        <span class="go-lb-pts">${entry.totalScore.toLocaleString()}</span>
+      `;
+      list.appendChild(div);
+    });
+
+    // If player not in top 10, add their entry at the bottom
+    if (myRank > 10 && statsData) {
+      const sep = document.createElement('div');
+      sep.style.cssText = 'text-align:center;padding:4px;color:var(--text-muted);font-size:11px;';
+      sep.textContent = '...';
+      list.appendChild(sep);
+
+      const myDiv = document.createElement('div');
+      myDiv.className = 'go-lb-entry is-me';
+      myDiv.innerHTML = `
+        <span class="go-lb-rank">${myRank}</span>
+        <span class="go-lb-name">${escapeHtml(state.user?.username || state.user?.firstName || 'Toi')} (toi)</span>
+        <span class="go-lb-pts">${statsData.totalScore.toLocaleString()}</span>
+      `;
+      list.appendChild(myDiv);
+    }
+  } catch (err) {
+    console.error('Failed to load gameover leaderboard:', err);
+  }
 }
 
 function showResult(result) {
@@ -778,9 +823,6 @@ document.getElementById('btn-back-menu').addEventListener('click', () => {
 
 // Game Over buttons
 document.getElementById('btn-restart').addEventListener('click', startNewSession);
-document.getElementById('btn-gameover-shop').addEventListener('click', () => {
-  showShop();
-});
 document.getElementById('btn-gameover-menu').addEventListener('click', () => {
   state.sessionScore = 0;
   updateMenuStats();
