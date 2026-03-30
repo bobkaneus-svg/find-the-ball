@@ -63,6 +63,7 @@
 
         <div class="menu-buttons">
           <button class="btn btn-gold btn-large" id="btn-play">START GAME</button>
+          <button class="btn btn-gold btn-large" id="btn-menu-leaderboard">LEADERBOARD</button>
           <button class="btn btn-gold btn-large" id="btn-shop">SHOP</button>
         </div>
 
@@ -146,8 +147,9 @@
 
       <div class="result-details">
         <div class="result-detail">
-          <span class="detail-label">Distance</span>
-          <span class="detail-value" id="result-distance">0%</span>
+          <span class="detail-label">Precision</span>
+          <div class="precision-bar"><div class="precision-fill" id="result-precision-bar"></div></div>
+          <span class="detail-value" id="result-distance"></span>
         </div>
         <div class="result-detail" id="result-bonus-container" style="display:none">
           <span class="detail-label">Bonus</span>

@@ -125,11 +125,20 @@ function showModal(message) {
 // ============ SCREENS ============
 
 function showScreen(name) {
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  const prev = document.querySelector('.screen.active');
+  if (prev) {
+    prev.classList.add('screen-exit');
+    setTimeout(() => {
+      prev.classList.remove('active', 'screen-exit');
+    }, 200);
+  }
+
   const screen = document.getElementById(`screen-${name}`);
-  screen.classList.add('active');
-  screen.classList.add('screen-enter');
-  setTimeout(() => screen.classList.remove('screen-enter'), 300);
+  setTimeout(() => {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    screen.classList.add('active', 'screen-enter');
+    setTimeout(() => screen.classList.remove('screen-enter'), 400);
+  }, prev ? 150 : 0);
 }
 
 // ============ MENU ============
@@ -165,10 +174,32 @@ function startNewSession() {
   loadNextRound();
 }
 
+// Preload next photo for instant display
+let preloadedRound = null;
+
+async function preloadNextRound() {
+  try {
+    const res = await api('/api/game/start', 'POST');
+    preloadedRound = res;
+    // Preload image into browser cache
+    const img = new Image();
+    img.src = res.photo.url;
+  } catch (e) {
+    preloadedRound = null;
+  }
+}
+
 // Continue session with next round (keeps score)
 async function loadNextRound() {
   try {
-    const res = await api('/api/game/start', 'POST');
+    let res;
+    if (preloadedRound) {
+      res = preloadedRound;
+      preloadedRound = null;
+    } else {
+      res = await api('/api/game/start', 'POST');
+    }
+
     state.currentRound = res;
     state.cursorPosition = null;
     state.isDragging = false;
@@ -176,7 +207,7 @@ async function loadNextRound() {
     state.usedReveal = false;
     state.usedExpand = false;
 
-    // Set photo
+    // Set photo (already cached if preloaded)
     const photo = document.getElementById('game-photo');
     photo.src = res.photo.url;
 
@@ -193,10 +224,8 @@ async function loadNextRound() {
     document.getElementById('btn-expand').disabled = false;
     document.getElementById('game-score-text').textContent = `SCORE ${state.sessionScore}`;
 
-    // Update coins in HUD
     updateAllCoinDisplays();
 
-    // Clear quarter highlights
     document.querySelectorAll('.quarter').forEach(q => {
       q.classList.remove('revealed-yes', 'revealed-no');
     });
@@ -352,14 +381,17 @@ async function submitGuess() {
       state.user.bestRoundScore = result.score;
     }
 
-    // Check if game over (miss = 0 points)
-    if (result.rating === 'miss') {
-      // Update high score if session score is the best
+    // Game over when too far (far or miss = you lose)
+    if (result.rating === 'miss' || result.rating === 'far') {
+      // Score from this bad round does NOT count
+      state.sessionScore -= result.score;
       if (state.sessionScore > (state.user.bestRoundScore || 0)) {
         state.user.bestRoundScore = state.sessionScore;
       }
       showGameOver(result);
     } else {
+      // Preload next photo while showing result
+      preloadNextRound();
       showResult(result);
     }
   } catch (err) {
@@ -440,8 +472,14 @@ function showResult(result) {
   document.getElementById('result-score').textContent = `+${result.score}`;
   document.getElementById('result-score').classList.add('score-animate');
 
-  // Distance
-  document.getElementById('result-distance').textContent = `${result.distance}%`;
+  // Precision (inverse of distance - closer = higher precision)
+  const precision = Math.max(0, Math.round(100 - result.distance * 2.5));
+  document.getElementById('result-distance').textContent = `${precision}/100`;
+  const precBar = document.getElementById('result-precision-bar');
+  if (precBar) {
+    precBar.style.width = `${precision}%`;
+    precBar.style.background = precision > 80 ? '#4CAF50' : precision > 50 ? '#F5C518' : '#e74c3c';
+  }
 
   // Bonus coins
   const bonusContainer = document.getElementById('result-bonus-container');
@@ -699,6 +737,7 @@ function shareScore() {
 
 // Menu buttons
 document.getElementById('btn-play').addEventListener('click', startNewSession);
+document.getElementById('btn-menu-leaderboard').addEventListener('click', showLeaderboard);
 document.getElementById('btn-shop').addEventListener('click', showShop);
 
 // Game buttons

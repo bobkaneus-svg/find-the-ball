@@ -564,9 +564,36 @@ body {
   margin-top: 1px;
 }
 
+/* Animated power-up buttons - pulse glow to attract clicks */
+.action-btn:not(.confirm-btn):not(:disabled):not(.used) {
+  animation: powerup-glow 2s ease-in-out infinite;
+}
+
+@keyframes powerup-glow {
+  0%, 100% {
+    box-shadow: 0 0 8px rgba(245, 197, 24, 0.3);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(245, 197, 24, 0.6), 0 0 40px rgba(245, 197, 24, 0.2);
+    transform: scale(1.08);
+  }
+}
+
+.action-btn:not(.confirm-btn):not(:disabled):not(.used) .action-icon {
+  animation: powerup-wiggle 3s ease-in-out infinite;
+}
+
+@keyframes powerup-wiggle {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(-8deg); }
+  75% { transform: rotate(8deg); }
+}
+
 .action-btn.used {
   background: rgba(245, 197, 24, 0.4);
   border-color: var(--primary);
+  animation: none;
 }
 
 /* ============ RESULT SCREEN ============ */
@@ -1140,14 +1167,41 @@ body {
 .rating-far .result-message { color: var(--danger); }
 .rating-miss .result-message { color: var(--danger); }
 
-/* ============ ANIMATIONS ============ */
-.screen-enter {
-  animation: slideIn 0.3s ease-out;
+/* ============ PRECISION BAR ============ */
+.precision-bar {
+  width: 100%;
+  max-width: 160px;
+  height: 8px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 4px;
+  overflow: hidden;
+  margin: 6px auto;
 }
 
-@keyframes slideIn {
-  from { transform: translateX(100%); }
-  to { transform: translateX(0); }
+.precision-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.8s ease-out;
+  width: 0;
+}
+
+/* ============ ANIMATIONS ============ */
+.screen-enter {
+  animation: screenFadeIn 0.35s ease-out;
+}
+
+.screen-exit {
+  animation: screenFadeOut 0.2s ease-in;
+}
+
+@keyframes screenFadeIn {
+  from { opacity: 0; transform: scale(0.95) translateY(10px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+@keyframes screenFadeOut {
+  from { opacity: 1; transform: scale(1); }
+  to { opacity: 0; transform: scale(0.95); }
 }
 
 .score-animate {
