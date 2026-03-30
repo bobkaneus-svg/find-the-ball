@@ -361,9 +361,15 @@ body {
 
 .game-photo {
   width: 100%;
-  height: 100%;
-  object-fit: cover;
+  height: auto;
+  object-fit: contain;
   display: block;
+}
+
+/* Game screen: fill available play area without cropping */
+.game-photo-container .game-photo {
+  height: 100%;
+  object-fit: contain;
 }
 
 /* Search circle (magnifying glass cursor) */
@@ -611,13 +617,14 @@ body {
   position: relative;
   border-radius: var(--radius);
   overflow: hidden;
-  aspect-ratio: 4/3;
+  max-height: 45vh;
+  background: #1a1a1a;
 }
 
 .result-photo-container .game-photo {
   width: 100%;
-  height: 100%;
-  object-fit: cover;
+  height: auto;
+  object-fit: contain;
 }
 
 .result-marker {
@@ -752,13 +759,14 @@ body {
   position: relative;
   border-radius: var(--radius);
   overflow: hidden;
-  aspect-ratio: 4/3;
+  max-height: 45vh;
+  background: #1a1a1a;
 }
 
 .gameover-photo-container .game-photo {
   width: 100%;
-  height: 100%;
-  object-fit: cover;
+  height: auto;
+  object-fit: contain;
 }
 
 .gameover-buttons {

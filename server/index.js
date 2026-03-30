@@ -375,18 +375,18 @@ function seedDemoPhotos() {
   }
 
   const demoPhotos = [
-    { original: 'photo_01.jpg', modified: 'photo_01.jpg', ball_x: 55, ball_y: 72, difficulty: 'medium', description: 'Soccer player kicking the ball' },
-    { original: 'photo_02.jpg', modified: 'photo_02.jpg', ball_x: 48, ball_y: 65, difficulty: 'easy', description: 'Football field aerial view' },
-    { original: 'photo_03.jpg', modified: 'photo_03.jpg', ball_x: 42, ball_y: 58, difficulty: 'medium', description: 'Soccer match in progress' },
-    { original: 'photo_04.jpg', modified: 'photo_04.jpg', ball_x: 62, ball_y: 70, difficulty: 'easy', description: 'Football player with the ball' },
-    { original: 'photo_05.jpg', modified: 'photo_05.jpg', ball_x: 50, ball_y: 80, difficulty: 'hard', description: 'Stadium panoramic view' },
-    { original: 'photo_06.jpg', modified: 'photo_06.jpg', ball_x: 45, ball_y: 55, difficulty: 'easy', description: 'Soccer ball on the field' },
-    { original: 'photo_07.jpg', modified: 'photo_07.jpg', ball_x: 38, ball_y: 62, difficulty: 'medium', description: 'Football match action shot' },
-    { original: 'photo_08.jpg', modified: 'photo_08.jpg', ball_x: 58, ball_y: 68, difficulty: 'medium', description: 'Soccer player dribbling' }
+    { original: 'photo_01.jpg', modified: 'photo_01.jpg', ball_x: 51.4, ball_y: 59.8, ball_radius: 16, difficulty: 'easy', description: 'Soccer player kicking' },
+    { original: 'photo_02.jpg', modified: 'photo_02.jpg', ball_x: 51.6, ball_y: 22.2, ball_radius: 18, difficulty: 'medium', description: 'Football field view' },
+    { original: 'photo_03.jpg', modified: 'photo_03.jpg', ball_x: 70.4, ball_y: 26.8, ball_radius: 18, difficulty: 'medium', description: 'Soccer match action' },
+    { original: 'photo_04.jpg', modified: 'photo_04.jpg', ball_x: 24.9, ball_y: 55.8, ball_radius: 18, difficulty: 'easy', description: 'Football player dribbling' },
+    { original: 'photo_05.jpg', modified: 'photo_05.jpg', ball_x: 40.4, ball_y: 32.8, ball_radius: 16, difficulty: 'easy', description: 'Stadium panorama' },
+    { original: 'photo_06.jpg', modified: 'photo_06.jpg', ball_x: 13.4, ball_y: 36.5, ball_radius: 28, difficulty: 'hard', description: 'Soccer ball close-up' },
+    { original: 'photo_07.jpg', modified: 'photo_07.jpg', ball_x: 37.4, ball_y: 64.8, ball_radius: 25, difficulty: 'medium', description: 'Football match play' },
+    { original: 'photo_08.jpg', modified: 'photo_08.jpg', ball_x: 49.6, ball_y: 66.2, ball_radius: 16, difficulty: 'medium', description: 'Soccer player action' }
   ];
 
   demoPhotos.forEach(p => {
-    db.addPhoto.run(p.original, p.modified, p.ball_x, p.ball_y, 30, p.difficulty, 'football', p.description);
+    db.addPhoto.run(p.original, p.modified, p.ball_x, p.ball_y, p.ball_radius || 30, p.difficulty, 'football', p.description);
   });
 
   console.log(`Seeded ${demoPhotos.length} demo photos`);
