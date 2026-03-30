@@ -362,7 +362,17 @@ function setupBot(bot) {
 
 function seedDemoPhotos() {
   const existing = db.getAllPhotos.all();
-  if (existing.length > 0) return;
+  // Check if photos point to real files, re-seed if not
+  if (existing.length > 0) {
+    const fs = require('fs');
+    const firstPhoto = existing[0];
+    const photoPath = path.join(__dirname, '..', 'public', 'photos', 'modified', firstPhoto.filename_modified);
+    if (fs.existsSync(photoPath)) return; // Photos are valid
+    // Old records with wrong filenames - clear and re-seed
+    db.db.exec('DELETE FROM game_rounds');
+    db.db.exec('DELETE FROM photos');
+    console.log('Cleared stale photo records, re-seeding...');
+  }
 
   const demoPhotos = [
     { original: 'photo_01.jpg', modified: 'photo_01.jpg', ball_x: 55, ball_y: 72, difficulty: 'medium', description: 'Soccer player kicking the ball' },
