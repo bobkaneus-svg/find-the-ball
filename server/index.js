@@ -25,6 +25,17 @@ if (BOT_TOKEN) {
 // Middleware
 app.use(cors());
 app.use(express.json());
+
+// Request logging middleware
+app.use((req, res, next) => {
+  const start = Date.now();
+  res.on('finish', () => {
+    const duration = Date.now() - start;
+    console.log(`${req.method} ${req.path} ${res.statusCode} ${duration}ms`);
+  });
+  next();
+});
+
 app.use(express.static(path.join(__dirname, '..', 'public')));
 
 // Photo upload config
@@ -97,7 +108,19 @@ function adminMiddleware(req, res, next) {
   next();
 }
 
+// ============ HEALTH CHECK ============
+
+app.get('/health', (req, res) => {
+  res.json({ status: 'ok' });
+});
+
 // ============ API ROUTES ============
+
+// Photo count (no auth)
+app.get('/api/game/photo-count', (req, res) => {
+  const photos = db.getAllPhotos.all().filter(p => p.active !== 0);
+  res.json({ count: photos.length });
+});
 
 // Initialize / get user
 app.post('/api/auth', authMiddleware, (req, res) => {

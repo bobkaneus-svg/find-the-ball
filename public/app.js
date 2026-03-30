@@ -36,17 +36,33 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 async function init() {
+  const loadingStart = Date.now();
   try {
     const res = await api('/api/auth', 'POST');
     state.user = res.user;
     updateAllCoinDisplays();
     updateMenuStats();
+
+    // Ensure loading screen is visible for at least 1.5s
+    const elapsed = Date.now() - loadingStart;
+    const remaining = 1500 - elapsed;
+    if (remaining > 0) {
+      await new Promise(resolve => setTimeout(resolve, remaining));
+    }
+
     showScreen('menu');
   } catch (err) {
     console.error('Auth failed:', err);
     // Dev mode fallback
     state.user = { telegramId: 12345, coins: 200, totalScore: 0, gamesPlayed: 0, bestRoundScore: 0, rank: 0 };
     updateAllCoinDisplays();
+
+    const elapsed = Date.now() - loadingStart;
+    const remaining = 1500 - elapsed;
+    if (remaining > 0) {
+      await new Promise(resolve => setTimeout(resolve, remaining));
+    }
+
     showScreen('menu');
   }
 }
@@ -322,7 +338,30 @@ function showResult(result) {
   }
 
   updateAllCoinDisplays();
+
+  // Celebrate animation for perfect/great scores
+  const resultHeader = document.getElementById('result-header');
+  resultHeader.classList.remove('celebrate');
+  if (result.rating === 'perfect' || result.rating === 'great') {
+    resultHeader.classList.add('celebrate');
+  }
+
+  // Show coin bonus toast
+  if (result.bonusCoins > 0) {
+    showToast(`+${result.bonusCoins} coins!`);
+  }
+
   showScreen('result');
+
+  // Share score feature
+  setTimeout(() => {
+    if (tg && tg.shareUrl) {
+      const shareBtn = document.getElementById('btn-share-score');
+      if (shareBtn) {
+        shareBtn.style.display = 'flex';
+      }
+    }
+  }, 500);
 }
 
 // ============ POWER-UPS ============
@@ -473,6 +512,39 @@ function escapeHtml(text) {
   return div.innerHTML;
 }
 
+function showToast(message, duration = 3000) {
+  const container = document.getElementById('toast-container');
+  if (!container) return;
+
+  const toast = document.createElement('div');
+  toast.className = 'toast';
+  toast.textContent = message;
+  container.appendChild(toast);
+
+  // Trigger slide-in
+  requestAnimationFrame(() => {
+    toast.classList.add('visible');
+  });
+
+  setTimeout(() => {
+    toast.classList.remove('visible');
+    setTimeout(() => toast.remove(), 300);
+  }, duration);
+}
+
+function shareScore() {
+  if (!state.currentRound) return;
+  const score = state.sessionScore;
+  const shareText = `J'ai marque ${score} points sur Find the Ball! Tu peux faire mieux?`;
+
+  if (tg && tg.shareUrl) {
+    const url = window.location.origin || 'https://t.me/FindTheBallBot';
+    tg.shareUrl(url, shareText);
+  } else {
+    showToast(shareText, 4000);
+  }
+}
+
 // ============ EVENT LISTENERS ============
 
 // Menu buttons
@@ -508,8 +580,20 @@ document.getElementById('btn-back-menu').addEventListener('click', () => {
   showScreen('menu');
 });
 
-// Leaderboard back
-document.getElementById('btn-lb-back').addEventListener('click', () => showScreen('menu'));
+// Leaderboard back - refresh user stats on menu return
+document.getElementById('btn-lb-back').addEventListener('click', async () => {
+  try {
+    const statsData = await api('/api/user/stats');
+    if (statsData && state.user) {
+      Object.assign(state.user, statsData);
+      updateMenuStats();
+      updateAllCoinDisplays();
+    }
+  } catch (e) {
+    console.error('Failed to refresh stats:', e);
+  }
+  showScreen('menu');
+});
 
 // Shop
 document.getElementById('btn-shop-back').addEventListener('click', () => showScreen('menu'));
@@ -520,3 +604,9 @@ document.querySelectorAll('.shop-item[data-pack]').forEach(item => {
   });
 });
 document.getElementById('btn-watch-ad').addEventListener('click', watchAdReward);
+
+// Share score button
+const shareBtn = document.getElementById('btn-share-score');
+if (shareBtn) {
+  shareBtn.addEventListener('click', shareScore);
+}
