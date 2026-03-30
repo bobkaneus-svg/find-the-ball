@@ -330,6 +330,30 @@ function showGameOver(result) {
   if (tg) tg.HapticFeedback.notificationOccurred('error');
 
   document.getElementById('gameover-score').textContent = state.sessionScore;
+
+  // Show original photo with ball visible
+  const photo = document.getElementById('gameover-photo');
+  photo.src = result.originalPhoto;
+
+  // Position guess marker
+  const guessMarker = document.getElementById('gameover-guess');
+  guessMarker.style.left = `${result.guessPosition.x}%`;
+  guessMarker.style.top = `${result.guessPosition.y}%`;
+
+  // Position ball marker
+  const ballMarker = document.getElementById('gameover-ball');
+  ballMarker.style.left = `${result.ballPosition.x}%`;
+  ballMarker.style.top = `${result.ballPosition.y}%`;
+
+  // Draw distance line between guess and ball
+  const line = document.getElementById('gameover-distance-line');
+  photo.onload = () => {
+    line.setAttribute('x1', `${result.guessPosition.x}%`);
+    line.setAttribute('y1', `${result.guessPosition.y}%`);
+    line.setAttribute('x2', `${result.ballPosition.x}%`);
+    line.setAttribute('y2', `${result.ballPosition.y}%`);
+  };
+
   showScreen('gameover');
 }
 

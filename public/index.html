@@ -171,11 +171,26 @@
     <!-- GAME OVER SCREEN -->
     <div id="screen-gameover" class="screen">
       <div class="gameover-content">
-        <div class="gameover-top">
+        <div class="gameover-header">
           <h2 class="gameover-title">GAME OVER YOU SCORED</h2>
           <span class="gameover-score" id="gameover-score">0</span>
         </div>
-        <div class="gameover-separator"></div>
+
+        <div class="gameover-photo-container" id="gameover-photo-container">
+          <img id="gameover-photo" class="game-photo" alt="Game Over" draggable="false">
+          <div class="result-marker guess-marker" id="gameover-guess">
+            <div class="marker-dot guess-dot"></div>
+            <span class="marker-label">Toi</span>
+          </div>
+          <div class="result-marker ball-marker" id="gameover-ball">
+            <div class="marker-dot ball-dot"></div>
+            <span class="marker-label">Ballon</span>
+          </div>
+          <svg class="result-line" id="gameover-line">
+            <line id="gameover-distance-line" stroke="#FFD700" stroke-width="2" stroke-dasharray="8,4"/>
+          </svg>
+        </div>
+
         <div class="gameover-buttons">
           <button class="btn btn-gold btn-large" id="btn-restart">RESTART</button>
           <button class="btn btn-gold btn-large" id="btn-gameover-shop">SHOP</button>
