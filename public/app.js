@@ -28,7 +28,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Apply Telegram theme
     if (tg.themeParams) {
-      document.documentElement.style.setProperty('--tg-bg', tg.themeParams.bg_color || '#1a1a2e');
+      document.documentElement.style.setProperty('--tg-bg', tg.themeParams.bg_color || '#2a2a2a');
     }
   }
 
@@ -56,6 +56,7 @@ async function init() {
     // Dev mode fallback
     state.user = { telegramId: 12345, coins: 200, totalScore: 0, gamesPlayed: 0, bestRoundScore: 0, rank: 0 };
     updateAllCoinDisplays();
+    updateMenuStats();
 
     const elapsed = Date.now() - loadingStart;
     const remaining = 1500 - elapsed;
@@ -88,6 +89,39 @@ async function api(path, method = 'GET', body = null) {
   return data;
 }
 
+// ============ CUSTOM MODAL (iOS-style alert) ============
+
+function showModal(message) {
+  return new Promise((resolve) => {
+    const overlay = document.getElementById('custom-modal');
+    const msgEl = document.getElementById('modal-message');
+    const btnNo = document.getElementById('modal-btn-no');
+    const btnYes = document.getElementById('modal-btn-yes');
+
+    msgEl.textContent = message;
+    overlay.classList.add('active');
+
+    function cleanup() {
+      overlay.classList.remove('active');
+      btnNo.removeEventListener('click', onNo);
+      btnYes.removeEventListener('click', onYes);
+    }
+
+    function onNo() {
+      cleanup();
+      resolve(false);
+    }
+
+    function onYes() {
+      cleanup();
+      resolve(true);
+    }
+
+    btnNo.addEventListener('click', onNo);
+    btnYes.addEventListener('click', onYes);
+  });
+}
+
 // ============ SCREENS ============
 
 function showScreen(name) {
@@ -103,8 +137,6 @@ function showScreen(name) {
 function updateMenuStats() {
   if (!state.user) return;
   document.getElementById('menu-high-score').textContent = state.user.bestRoundScore || 0;
-  document.getElementById('menu-total-score').textContent = state.user.totalScore || 0;
-  document.getElementById('menu-rank').textContent = state.user.rank ? `#${state.user.rank}` : '#-';
 
   // Trophies
   const totalScore = state.user.totalScore || 0;
@@ -120,14 +152,21 @@ function updateMenuStats() {
 
 function updateAllCoinDisplays() {
   const coins = state.user?.coins || 0;
-  document.querySelectorAll('#menu-coins, #game-coins, #shop-coins').forEach(el => {
+  document.querySelectorAll('#game-coins, #shop-coins').forEach(el => {
     el.textContent = coins.toLocaleString();
   });
 }
 
 // ============ GAME ============
 
-async function startGame() {
+// Start a fresh game session (resets score)
+function startNewSession() {
+  state.sessionScore = 0;
+  loadNextRound();
+}
+
+// Continue session with next round (keeps score)
+async function loadNextRound() {
   try {
     const res = await api('/api/game/start', 'POST');
     state.currentRound = res;
@@ -142,17 +181,20 @@ async function startGame() {
     photo.src = res.photo.url;
 
     // Reset UI
-    document.getElementById('crosshair').classList.remove('visible', 'expanded');
+    const searchCircle = document.getElementById('search-circle');
+    searchCircle.classList.remove('visible', 'expanded', 'placed');
     document.getElementById('drag-hint').classList.remove('hidden');
     document.getElementById('quarter-overlay').classList.remove('active');
-    document.getElementById('expand-zone').classList.remove('visible');
     document.getElementById('btn-confirm').disabled = true;
     document.getElementById('btn-confirm').classList.remove('ready');
     document.getElementById('btn-reveal').classList.remove('used');
     document.getElementById('btn-expand').classList.remove('used');
     document.getElementById('btn-reveal').disabled = false;
     document.getElementById('btn-expand').disabled = false;
-    document.getElementById('game-score').textContent = state.sessionScore;
+    document.getElementById('game-score-text').textContent = `SCORE ${state.sessionScore}`;
+
+    // Update coins in HUD
+    updateAllCoinDisplays();
 
     // Clear quarter highlights
     document.querySelectorAll('.quarter').forEach(q => {
@@ -162,21 +204,22 @@ async function startGame() {
     showScreen('game');
     setupGameTouchHandlers();
   } catch (err) {
-    alert(err.message || 'Impossible de demarrer la partie');
+    showModal(err.message || 'Impossible de demarrer la partie');
   }
+}
+
+// Legacy alias
+function startGame() {
+  startNewSession();
 }
 
 function setupGameTouchHandlers() {
   const container = document.getElementById('photo-container');
-  const crosshair = document.getElementById('crosshair');
-  const hint = document.getElementById('drag-hint');
-  const confirmBtn = document.getElementById('btn-confirm');
 
-  // Remove old listeners
+  // Remove old listeners by cloning
   const newContainer = container.cloneNode(true);
   container.parentNode.replaceChild(newContainer, container);
 
-  // Re-assign references after clone
   const photoContainer = document.getElementById('photo-container');
 
   function handleMove(clientX, clientY) {
@@ -190,15 +233,11 @@ function setupGameTouchHandlers() {
 
     state.cursorPosition = { x: clampedX, y: clampedY };
 
-    const ch = document.getElementById('crosshair');
-    ch.style.left = `${clampedX}%`;
-    ch.style.top = `${clampedY}%`;
-    ch.classList.add('visible');
-
-    // Update expand zone position
-    const ez = document.getElementById('expand-zone');
-    ez.style.left = `${clampedX}%`;
-    ez.style.top = `${clampedY}%`;
+    const sc = document.getElementById('search-circle');
+    sc.style.left = `${clampedX}%`;
+    sc.style.top = `${clampedY}%`;
+    sc.classList.add('visible');
+    sc.classList.add('placed');
 
     // Hide hint
     if (!state.hintDismissed) {
@@ -270,11 +309,28 @@ async function submitGuess() {
       state.user.bestRoundScore = result.score;
     }
 
-    showResult(result);
+    // Check if game over (miss = 0 points)
+    if (result.rating === 'miss') {
+      // Update high score if session score is the best
+      if (state.sessionScore > (state.user.bestRoundScore || 0)) {
+        state.user.bestRoundScore = state.sessionScore;
+      }
+      showGameOver(result);
+    } else {
+      showResult(result);
+    }
   } catch (err) {
-    alert(err.message || 'Erreur');
+    showModal(err.message || 'Erreur');
     confirmBtn.disabled = false;
   }
+}
+
+function showGameOver(result) {
+  // Haptic
+  if (tg) tg.HapticFeedback.notificationOccurred('error');
+
+  document.getElementById('gameover-score').textContent = state.sessionScore;
+  showScreen('gameover');
 }
 
 function showResult(result) {
@@ -284,7 +340,7 @@ function showResult(result) {
 
   document.getElementById('result-emoji').textContent = result.emoji;
   document.getElementById('result-message').textContent = result.message;
-  document.getElementById('result-score').textContent = result.score;
+  document.getElementById('result-score').textContent = `+${result.score}`;
   document.getElementById('result-score').classList.add('score-animate');
 
   // Distance
@@ -294,7 +350,7 @@ function showResult(result) {
   const bonusContainer = document.getElementById('result-bonus-container');
   if (result.bonusCoins > 0) {
     bonusContainer.style.display = 'block';
-    document.getElementById('result-bonus').textContent = `+${result.bonusCoins} 🪙`;
+    document.getElementById('result-bonus').textContent = `+${result.bonusCoins}`;
   } else {
     bonusContainer.style.display = 'none';
   }
@@ -315,11 +371,7 @@ function showResult(result) {
 
   // Draw distance line
   const line = document.getElementById('distance-line');
-  const container = document.getElementById('result-photo-container');
-  // We'll set the line after photo loads
   resultPhoto.onload = () => {
-    const w = container.offsetWidth;
-    const h = container.offsetHeight;
     line.setAttribute('x1', `${result.guessPosition.x}%`);
     line.setAttribute('y1', `${result.guessPosition.y}%`);
     line.setAttribute('x2', `${result.ballPosition.x}%`);
@@ -330,8 +382,6 @@ function showResult(result) {
   if (tg) {
     if (result.rating === 'perfect' || result.rating === 'great') {
       tg.HapticFeedback.notificationOccurred('success');
-    } else if (result.rating === 'miss' || result.rating === 'far') {
-      tg.HapticFeedback.notificationOccurred('error');
     } else {
       tg.HapticFeedback.impactOccurred('medium');
     }
@@ -352,36 +402,25 @@ function showResult(result) {
   }
 
   showScreen('result');
-
-  // Share score feature
-  setTimeout(() => {
-    if (tg && tg.shareUrl) {
-      const shareBtn = document.getElementById('btn-share-score');
-      if (shareBtn) {
-        shareBtn.style.display = 'flex';
-      }
-    }
-  }, 500);
 }
 
 // ============ POWER-UPS ============
 
-function useRevealQuarter() {
+async function useRevealQuarter() {
   if (state.usedReveal) return;
   if ((state.user?.coins || 0) < 100) {
-    alert('Pas assez de coins! (100 requis)');
+    await showModal('Pas assez de coins! (100 requis)');
     return;
   }
 
-  if (!confirm('Reveler un quart?\n\n(100 Coins)')) return;
+  const confirmed = await showModal('Reveal quarter?\n(100 Coins)');
+  if (!confirmed) return;
 
   state.usedReveal = true;
   document.getElementById('btn-reveal').classList.add('used');
   document.getElementById('btn-reveal').disabled = true;
 
-  // Show quarter overlay - randomly reveal if ball is in each quarter
-  // Since we don't know ball position client-side, we just show the overlay
-  // In a real implementation, we'd ask the server
+  // Show quarter overlay
   const overlay = document.getElementById('quarter-overlay');
   overlay.classList.add('active');
 
@@ -393,29 +432,23 @@ function useRevealQuarter() {
   if (tg) tg.HapticFeedback.impactOccurred('light');
 }
 
-function useExpandArea() {
+async function useExpandArea() {
   if (state.usedExpand) return;
   if ((state.user?.coins || 0) < 50) {
-    alert('Pas assez de coins! (50 requis)');
+    await showModal('Pas assez de coins! (50 requis)');
     return;
   }
 
-  if (!confirm('Agrandir la zone de selection?\n\n(50 Coins)')) return;
+  const confirmed = await showModal('Expand search area?\n(50 Coins)');
+  if (!confirmed) return;
 
   state.usedExpand = true;
   document.getElementById('btn-expand').classList.add('used');
   document.getElementById('btn-expand').disabled = true;
 
-  // Show expanded crosshair
-  const crosshair = document.getElementById('crosshair');
-  crosshair.classList.add('expanded');
-
-  const expandZone = document.getElementById('expand-zone');
-  if (state.cursorPosition) {
-    expandZone.style.left = `${state.cursorPosition.x}%`;
-    expandZone.style.top = `${state.cursorPosition.y}%`;
-  }
-  expandZone.classList.add('visible');
+  // Show expanded search circle
+  const searchCircle = document.getElementById('search-circle');
+  searchCircle.classList.add('expanded');
 
   if (tg) tg.HapticFeedback.impactOccurred('light');
 }
@@ -443,7 +476,7 @@ async function showLeaderboard() {
       return;
     }
 
-    const medals = ['🥇', '🥈', '🥉'];
+    const medals = ['&#129351;', '&#129352;', '&#129353;'];
 
     lbData.leaderboard.forEach(entry => {
       const div = document.createElement('div');
@@ -474,8 +507,7 @@ async function buyPack(packSize) {
   try {
     // In production, integrate Telegram Stars payment
     if (tg) {
-      // TODO: tg.openInvoice for Telegram Stars
-      alert('Paiement Telegram Stars bientot disponible!\n\nPour le moment, utilise les pubs gratuites.');
+      await showModal('Paiement Telegram Stars bientot disponible!\nPour le moment, utilise les pubs gratuites.');
       return;
     }
 
@@ -483,24 +515,23 @@ async function buyPack(packSize) {
     state.user.coins = res.coins;
     updateAllCoinDisplays();
     if (tg) tg.HapticFeedback.notificationOccurred('success');
-    alert(`+${res.purchased} coins!`);
+    showToast(`+${res.purchased} coins!`);
   } catch (err) {
-    alert(err.message);
+    await showModal(err.message);
   }
 }
 
 async function watchAdReward() {
   try {
     // In production, integrate ad SDK
-    // Simulate ad watching
     if (tg) tg.HapticFeedback.impactOccurred('medium');
 
     const res = await api('/api/shop/ad-reward', 'POST');
     state.user.coins = res.coins;
     updateAllCoinDisplays();
-    alert(`+${res.reward} coins!`);
+    showToast(`+${res.reward} coins!`);
   } catch (err) {
-    alert(err.message);
+    await showModal(err.message);
   }
 }
 
@@ -548,8 +579,7 @@ function shareScore() {
 // ============ EVENT LISTENERS ============
 
 // Menu buttons
-document.getElementById('btn-play').addEventListener('click', startGame);
-document.getElementById('btn-leaderboard').addEventListener('click', showLeaderboard);
+document.getElementById('btn-play').addEventListener('click', startNewSession);
 document.getElementById('btn-shop').addEventListener('click', showShop);
 
 // Game buttons
@@ -564,15 +594,23 @@ document.getElementById('btn-expand').addEventListener('click', useExpandArea);
 document.getElementById('btn-resume').addEventListener('click', () => {
   document.getElementById('overlay-pause').classList.remove('active');
 });
+document.getElementById('btn-leaderboard').addEventListener('click', () => {
+  document.getElementById('overlay-pause').classList.remove('active');
+  showLeaderboard();
+});
 document.getElementById('btn-quit').addEventListener('click', () => {
   document.getElementById('overlay-pause').classList.remove('active');
+  // Quitting mid-game = game over with current score
+  if (state.sessionScore > (state.user.bestRoundScore || 0)) {
+    state.user.bestRoundScore = state.sessionScore;
+  }
   state.sessionScore = 0;
   updateMenuStats();
   showScreen('menu');
 });
 
-// Result buttons
-document.getElementById('btn-next-round').addEventListener('click', startGame);
+// Result buttons - continue session (don't reset score)
+document.getElementById('btn-next-round').addEventListener('click', loadNextRound);
 document.getElementById('btn-back-menu').addEventListener('click', () => {
   state.sessionScore = 0;
   updateMenuStats();
@@ -580,7 +618,19 @@ document.getElementById('btn-back-menu').addEventListener('click', () => {
   showScreen('menu');
 });
 
-// Leaderboard back - refresh user stats on menu return
+// Game Over buttons
+document.getElementById('btn-restart').addEventListener('click', startNewSession);
+document.getElementById('btn-gameover-shop').addEventListener('click', () => {
+  showShop();
+});
+document.getElementById('btn-gameover-menu').addEventListener('click', () => {
+  state.sessionScore = 0;
+  updateMenuStats();
+  updateAllCoinDisplays();
+  showScreen('menu');
+});
+
+// Leaderboard back
 document.getElementById('btn-lb-back').addEventListener('click', async () => {
   try {
     const statsData = await api('/api/user/stats');
