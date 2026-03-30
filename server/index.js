@@ -150,6 +150,38 @@ app.post('/api/game/start', authMiddleware, (req, res) => {
   res.json(result);
 });
 
+// Reveal quarter - tells which quadrant contains the ball
+app.post('/api/game/reveal', authMiddleware, (req, res) => {
+  const { roundId } = req.body;
+  if (!roundId) return res.status(400).json({ error: 'Missing roundId' });
+
+  const round = db.getRoundById.get(roundId);
+  if (!round) return res.status(404).json({ error: 'Round not found' });
+  if (round.user_id !== req.telegramUser.id) return res.status(403).json({ error: 'Not your round' });
+
+  const photo = db.getPhotoById.get(round.photo_id);
+  if (!photo) return res.status(404).json({ error: 'Photo not found' });
+
+  // Check coins
+  const user = db.getUserCoins.get(req.telegramUser.id);
+  if (!user || user.coins < 100) {
+    return res.status(400).json({ error: 'Not enough coins' });
+  }
+
+  // Deduct coins
+  db.updateUserCoins.run(-100, req.telegramUser.id);
+  db.logTransaction.run(req.telegramUser.id, -100, 'powerup', 'Reveal quarter');
+
+  // Determine which quarter: tl, tr, bl, br
+  const quarter = (photo.ball_x <= 50 ? 'l' : 'r');
+  const vQuarter = (photo.ball_y <= 50 ? 't' : 'b');
+  const ballQuarter = vQuarter + quarter; // e.g. "tl", "tr", "bl", "br"
+
+  const updatedUser = db.getUser.get(req.telegramUser.id);
+
+  res.json({ quarter: ballQuarter, coins: updatedUser.coins });
+});
+
 // Submit guess
 app.post('/api/game/guess', authMiddleware, (req, res) => {
   const { roundId, guessX, guessY, usedReveal, usedExpand } = req.body;
@@ -333,16 +365,14 @@ function seedDemoPhotos() {
   if (existing.length > 0) return;
 
   const demoPhotos = [
-    { original: 'demo_01.jpg', modified: 'demo_01.jpg', ball_x: 62, ball_y: 45, difficulty: 'easy', description: 'Corner kick scene' },
-    { original: 'demo_02.jpg', modified: 'demo_02.jpg', ball_x: 25, ball_y: 70, difficulty: 'medium', description: 'Dribbling past defender' },
-    { original: 'demo_03.jpg', modified: 'demo_03.jpg', ball_x: 80, ball_y: 55, difficulty: 'hard', description: 'Long pass across field' },
-    { original: 'demo_04.jpg', modified: 'demo_04.jpg', ball_x: 50, ball_y: 35, difficulty: 'easy', description: 'Kick-off position' },
-    { original: 'demo_05.jpg', modified: 'demo_05.jpg', ball_x: 15, ball_y: 60, difficulty: 'medium', description: 'Free kick lineup' },
-    { original: 'demo_06.jpg', modified: 'demo_06.jpg', ball_x: 70, ball_y: 80, difficulty: 'hard', description: 'Goal-line scramble' },
-    { original: 'demo_07.jpg', modified: 'demo_07.jpg', ball_x: 90, ball_y: 50, difficulty: 'easy', description: 'Throw-in moment' },
-    { original: 'demo_08.jpg', modified: 'demo_08.jpg', ball_x: 45, ball_y: 25, difficulty: 'medium', description: 'Header duel' },
-    { original: 'demo_09.jpg', modified: 'demo_09.jpg', ball_x: 35, ball_y: 55, difficulty: 'hard', description: 'Midfield battle' },
-    { original: 'demo_10.jpg', modified: 'demo_10.jpg', ball_x: 55, ball_y: 65, difficulty: 'easy', description: 'Penalty area action' }
+    { original: 'photo_01.jpg', modified: 'photo_01.jpg', ball_x: 55, ball_y: 72, difficulty: 'medium', description: 'Soccer player kicking the ball' },
+    { original: 'photo_02.jpg', modified: 'photo_02.jpg', ball_x: 48, ball_y: 65, difficulty: 'easy', description: 'Football field aerial view' },
+    { original: 'photo_03.jpg', modified: 'photo_03.jpg', ball_x: 42, ball_y: 58, difficulty: 'medium', description: 'Soccer match in progress' },
+    { original: 'photo_04.jpg', modified: 'photo_04.jpg', ball_x: 62, ball_y: 70, difficulty: 'easy', description: 'Football player with the ball' },
+    { original: 'photo_05.jpg', modified: 'photo_05.jpg', ball_x: 50, ball_y: 80, difficulty: 'hard', description: 'Stadium panoramic view' },
+    { original: 'photo_06.jpg', modified: 'photo_06.jpg', ball_x: 45, ball_y: 55, difficulty: 'easy', description: 'Soccer ball on the field' },
+    { original: 'photo_07.jpg', modified: 'photo_07.jpg', ball_x: 38, ball_y: 62, difficulty: 'medium', description: 'Football match action shot' },
+    { original: 'photo_08.jpg', modified: 'photo_08.jpg', ball_x: 58, ball_y: 68, difficulty: 'medium', description: 'Soccer player dribbling' }
   ];
 
   demoPhotos.forEach(p => {

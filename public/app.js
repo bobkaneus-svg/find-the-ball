@@ -440,20 +440,46 @@ async function useRevealQuarter() {
   const confirmed = await showModal('Reveal quarter?\n(100 Coins)');
   if (!confirmed) return;
 
-  state.usedReveal = true;
-  document.getElementById('btn-reveal').classList.add('used');
-  document.getElementById('btn-reveal').disabled = true;
+  try {
+    // Ask server which quarter contains the ball
+    const res = await api('/api/game/reveal', 'POST', { roundId: state.currentRound.roundId });
 
-  // Show quarter overlay
-  const overlay = document.getElementById('quarter-overlay');
-  overlay.classList.add('active');
+    state.usedReveal = true;
+    state.user.coins = res.coins;
+    updateAllCoinDisplays();
+    document.getElementById('btn-reveal').classList.add('used');
+    document.getElementById('btn-reveal').disabled = true;
 
-  // Auto-hide after 3 seconds
-  setTimeout(() => {
-    overlay.classList.remove('active');
-  }, 3000);
+    // Highlight quarters - green for ball quarter, red for others
+    const ballQ = res.quarter; // "tl", "tr", "bl", "br"
+    const quarters = { tl: 'q-tl', tr: 'q-tr', bl: 'q-bl', br: 'q-br' };
 
-  if (tg) tg.HapticFeedback.impactOccurred('light');
+    document.querySelectorAll('.quarter').forEach(q => {
+      q.classList.remove('revealed-yes', 'revealed-no');
+    });
+
+    Object.entries(quarters).forEach(([key, cls]) => {
+      const el = document.querySelector(`.${cls}`);
+      if (key === ballQ) {
+        el.classList.add('revealed-yes');
+      } else {
+        el.classList.add('revealed-no');
+      }
+    });
+
+    // Show quarter overlay
+    const overlay = document.getElementById('quarter-overlay');
+    overlay.classList.add('active');
+
+    // Auto-hide after 4 seconds
+    setTimeout(() => {
+      overlay.classList.remove('active');
+    }, 4000);
+
+    if (tg) tg.HapticFeedback.impactOccurred('light');
+  } catch (err) {
+    await showModal(err.message || 'Erreur');
+  }
 }
 
 async function useExpandArea() {
