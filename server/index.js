@@ -402,6 +402,140 @@ app.get('/api/admin/photos', authMiddleware, adminMiddleware, (req, res) => {
   res.json({ photos });
 });
 
+// ============ MARKER TOOL API ============
+
+// Get raw photos that need marking
+app.get('/api/admin/marker/photos', authMiddleware, adminMiddleware, (req, res) => {
+  const rawDir = path.join(__dirname, '..', 'public', 'photos', 'raw');
+  if (!fs.existsSync(rawDir)) return res.json({ photos: [], total: 0, marked: 0 });
+
+  const files = fs.readdirSync(rawDir).filter(f => /\.(jpg|jpeg|png|webp)$/i.test(f)).sort();
+
+  // Check which already have DB entries (stored raw filename in description)
+  const existing = db.getAllPhotos.all().map(p => p.description).filter(Boolean);
+
+  // Check skipped photos
+  const skippedPath = path.join(__dirname, '..', 'data', 'skipped-photos.json');
+  let skipped = [];
+  try {
+    if (fs.existsSync(skippedPath)) {
+      skipped = JSON.parse(fs.readFileSync(skippedPath, 'utf-8'));
+    }
+  } catch (e) { /* ignore */ }
+
+  const photos = files.map((f, i) => ({
+    id: i + 1,
+    filename: f,
+    url: `/photos/raw/${f}`,
+    marked: existing.includes(f) || skipped.includes(f)
+  }));
+
+  res.json({ photos, total: photos.length, marked: photos.filter(p => p.marked).length });
+});
+
+// Save ball position for a raw photo
+app.post('/api/admin/marker/save', authMiddleware, adminMiddleware, (req, res) => {
+  const { filename, ballX, ballY, radius } = req.body;
+  if (!filename || ballX == null || ballY == null) {
+    return res.status(400).json({ error: 'Missing required fields' });
+  }
+
+  const src = path.join(__dirname, '..', 'public', 'photos', 'raw', filename);
+  if (!fs.existsSync(src)) {
+    return res.status(404).json({ error: 'Raw photo not found' });
+  }
+
+  // Check if already exists in DB (by description = raw filename)
+  const existingPhotos = db.getAllPhotos.all().filter(p => p.description === filename);
+  if (existingPhotos.length > 0) {
+    return res.json({ success: true, message: 'Already marked (duplicate skipped)' });
+  }
+
+  // Copy file to originals
+  const dstDir = path.join(__dirname, '..', 'public', 'photos', 'originals');
+  if (!fs.existsSync(dstDir)) fs.mkdirSync(dstDir, { recursive: true });
+  const dst = path.join(dstDir, filename);
+  fs.copyFileSync(src, dst);
+
+  // Insert into DB with active=0 (pending processing)
+  // filename_modified = filename for now (will be replaced after AI inpainting)
+  db.addPhoto.run(filename, filename, parseFloat(ballX), parseFloat(ballY), parseFloat(radius) || 25, 'medium', 'football', filename);
+  // Set active=0 (pending) for the newly inserted photo
+  const inserted = db.db.prepare('SELECT id FROM photos WHERE description = ? ORDER BY id DESC LIMIT 1').get(filename);
+  if (inserted) {
+    db.updatePhotoActive.run(0, inserted.id);
+  }
+
+  res.json({ success: true });
+});
+
+// Skip a photo (mark as unusable)
+app.post('/api/admin/marker/skip', authMiddleware, adminMiddleware, (req, res) => {
+  const { filename } = req.body;
+  if (!filename) {
+    return res.status(400).json({ error: 'Missing filename' });
+  }
+
+  const skippedPath = path.join(__dirname, '..', 'data', 'skipped-photos.json');
+  let skipped = [];
+  try {
+    if (fs.existsSync(skippedPath)) {
+      skipped = JSON.parse(fs.readFileSync(skippedPath, 'utf-8'));
+    }
+  } catch (e) { /* ignore */ }
+
+  if (!skipped.includes(filename)) {
+    skipped.push(filename);
+    fs.writeFileSync(skippedPath, JSON.stringify(skipped, null, 2));
+  }
+
+  res.json({ success: true });
+});
+
+// Generate masks for all marked photos (for AI inpainting)
+app.post('/api/admin/marker/generate-masks', authMiddleware, adminMiddleware, async (req, res) => {
+  try {
+    const sharp = require('sharp');
+    const maskDir = path.join(__dirname, '..', 'public', 'photos', 'masks');
+    if (!fs.existsSync(maskDir)) fs.mkdirSync(maskDir, { recursive: true });
+
+    // Get all photos that have ball positions but aren't processed yet (active=0)
+    const photos = db.getPhotosByStatus.all(0);
+    let count = 0;
+
+    for (const photo of photos) {
+      if (photo.ball_x === 0 && photo.ball_y === 0) continue; // skipped photos
+
+      // Read the original image to get its actual dimensions
+      const origPath = path.join(__dirname, '..', 'public', 'photos', 'originals', photo.filename_original);
+      let width = 800, height = 600;
+      try {
+        const meta = await sharp(origPath).metadata();
+        width = meta.width || 800;
+        height = meta.height || 600;
+      } catch (e) { /* use defaults */ }
+
+      const cx = Math.round(photo.ball_x / 100 * width);
+      const cy = Math.round(photo.ball_y / 100 * height);
+      const r = Math.round(photo.ball_radius * 1.3); // slightly larger mask
+
+      const svg = `<svg width="${width}" height="${height}">
+        <rect width="${width}" height="${height}" fill="black"/>
+        <circle cx="${cx}" cy="${cy}" r="${r}" fill="white"/>
+      </svg>`;
+
+      const maskFilename = photo.filename_original.replace(/\.(jpg|jpeg|png|webp)$/i, '_mask.png');
+      await sharp(Buffer.from(svg)).png().toFile(path.join(maskDir, maskFilename));
+      count++;
+    }
+
+    res.json({ generated: count, maskDir: '/photos/masks/' });
+  } catch (e) {
+    console.error('Mask generation error:', e.message);
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // ============ TELEGRAM BOT ============
 
 function setupBot(bot) {

@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Ball Marker Tool</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #111;
+    color: #eee;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    overflow: hidden;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  /* Top bar */
+  .top-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 16px;
+    background: #1a1a2e;
+    border-bottom: 1px solid #333;
+    flex-shrink: 0;
+    gap: 8px;
+  }
+  .top-bar .counter {
+    font-size: 15px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .top-bar .nav-buttons {
+    display: flex;
+    gap: 6px;
+  }
+  .top-bar .progress-wrap {
+    flex: 1;
+    max-width: 200px;
+    height: 6px;
+    background: #333;
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .top-bar .progress-fill {
+    height: 100%;
+    background: #4ade80;
+    transition: width 0.3s;
+  }
+
+  /* Buttons */
+  .btn {
+    padding: 6px 14px;
+    border: none;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.15s;
+    touch-action: manipulation;
+  }
+  .btn:active { opacity: 0.7; }
+  .btn-nav { background: #333; color: #ccc; }
+  .btn-nav:hover { background: #444; }
+  .btn-skip { background: #f59e0b; color: #000; }
+  .btn-save { background: #22c55e; color: #000; }
+  .btn-save:disabled { background: #555; color: #888; cursor: not-allowed; }
+  .btn-process { background: #8b5cf6; color: #fff; }
+
+  /* Photo area */
+  .photo-area {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+    cursor: crosshair;
+  }
+  .photo-area img {
+    max-width: 100%;
+    max-height: 100%;
+    display: block;
+  }
+  .photo-area .marker-overlay {
+    position: absolute;
+    pointer-events: none;
+  }
+  .marker-overlay .circle {
+    position: absolute;
+    border: 2px solid #4ade80;
+    background: rgba(74, 222, 128, 0.2);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+  }
+  .marker-overlay .crosshair-h,
+  .marker-overlay .crosshair-v {
+    position: absolute;
+    background: rgba(74, 222, 128, 0.7);
+  }
+  .marker-overlay .crosshair-h {
+    height: 1px;
+    transform: translateY(-50%);
+  }
+  .marker-overlay .crosshair-v {
+    width: 1px;
+    transform: translateX(-50%);
+  }
+
+  /* Bottom bar */
+  .bottom-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 16px;
+    background: #1a1a2e;
+    border-top: 1px solid #333;
+    flex-shrink: 0;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .slider-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .slider-group label {
+    font-size: 13px;
+    color: #aaa;
+    white-space: nowrap;
+  }
+  .slider-group input[type=range] {
+    width: 120px;
+    accent-color: #4ade80;
+  }
+  .slider-group .val {
+    font-size: 13px;
+    font-weight: 600;
+    min-width: 30px;
+  }
+  .status {
+    font-size: 12px;
+    color: #888;
+    text-align: center;
+  }
+  .status.success { color: #4ade80; }
+  .status.error { color: #ef4444; }
+  .action-buttons {
+    display: flex;
+    gap: 6px;
+  }
+
+  /* Empty state */
+  .empty-state {
+    text-align: center;
+    padding: 40px;
+    color: #888;
+  }
+  .empty-state h2 { color: #ccc; margin-bottom: 12px; }
+
+  /* Process panel */
+  .process-panel {
+    display: none;
+    position: fixed;
+    bottom: 70px;
+    right: 16px;
+    background: #1e1e3a;
+    border: 1px solid #444;
+    border-radius: 10px;
+    padding: 16px;
+    width: 300px;
+    z-index: 100;
+  }
+  .process-panel h3 { margin-bottom: 8px; font-size: 14px; }
+  .process-panel p { font-size: 12px; color: #aaa; margin-bottom: 10px; }
+
+  /* Keyboard hints */
+  .kbd-hints {
+    position: fixed;
+    bottom: 60px;
+    left: 16px;
+    font-size: 11px;
+    color: #555;
+  }
+  .kbd-hints kbd {
+    background: #222;
+    border: 1px solid #444;
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-size: 10px;
+  }
+</style>
+</head>
+<body>
+
+<!-- Top Bar -->
+<div class="top-bar">
+  <div class="nav-buttons">
+    <button class="btn btn-nav" id="btnPrev" title="Previous (Left arrow)">&larr;</button>
+    <button class="btn btn-nav" id="btnNext" title="Next (Right arrow)">&rarr;</button>
+  </div>
+  <div class="counter" id="counter">Loading...</div>
+  <div class="progress-wrap"><div class="progress-fill" id="progressFill"></div></div>
+  <button class="btn btn-skip" id="btnSkip" title="Skip (S)">Skip</button>
+</div>
+
+<!-- Photo Area -->
+<div class="photo-area" id="photoArea">
+  <img id="photoImg" src="" alt="Photo" style="display:none;">
+  <div class="marker-overlay" id="markerOverlay" style="display:none;">
+    <div class="circle" id="markerCircle"></div>
+    <div class="crosshair-h" id="crosshairH"></div>
+    <div class="crosshair-v" id="crosshairV"></div>
+  </div>
+  <div class="empty-state" id="emptyState">
+    <h2>Ball Marker Tool</h2>
+    <p>Loading photos...</p>
+  </div>
+</div>
+
+<!-- Bottom Bar -->
+<div class="bottom-bar">
+  <div class="slider-group">
+    <label>Radius:</label>
+    <input type="range" id="radiusSlider" min="10" max="60" value="25">
+    <span class="val" id="radiusVal">25</span>
+  </div>
+  <div class="status" id="status"></div>
+  <div class="action-buttons">
+    <button class="btn btn-process" id="btnProcess" title="Generate masks">Process AI</button>
+    <button class="btn btn-save" id="btnSave" disabled title="Save (Enter)">Save</button>
+  </div>
+</div>
+
+<!-- Keyboard hints (desktop only) -->
+<div class="kbd-hints" id="kbdHints">
+  <kbd>&larr;</kbd><kbd>&rarr;</kbd> nav &nbsp;
+  <kbd>Enter</kbd> save &nbsp;
+  <kbd>S</kbd> skip
+</div>
+
+<!-- Process Panel -->
+<div class="process-panel" id="processPanel">
+  <h3>Generate AI Masks</h3>
+  <p>This will create black masks with white circles at each marked ball position. Use these masks with an inpainting tool (LaMa, Replicate, etc.) to remove the ball from photos.</p>
+  <button class="btn btn-process" id="btnGenerateMasks" style="width:100%;margin-bottom:8px;">Generate Masks Now</button>
+  <div id="processResult" style="font-size:12px;color:#aaa;"></div>
+  <button class="btn btn-nav" id="btnCloseProcess" style="width:100%;margin-top:6px;">Close</button>
+</div>
+
+<script>
+const API_KEY = 'ftb-admin-2024';
+const BASE = '';
+
+let photos = [];
+let currentIndex = 0;
+let markerPos = null; // { pctX, pctY } in percentage of image
+
+const photoImg = document.getElementById('photoImg');
+const photoArea = document.getElementById('photoArea');
+const markerOverlay = document.getElementById('markerOverlay');
+const markerCircle = document.getElementById('markerCircle');
+const crosshairH = document.getElementById('crosshairH');
+const crosshairV = document.getElementById('crosshairV');
+const counter = document.getElementById('counter');
+const progressFill = document.getElementById('progressFill');
+const radiusSlider = document.getElementById('radiusSlider');
+const radiusVal = document.getElementById('radiusVal');
+const btnSave = document.getElementById('btnSave');
+const btnSkip = document.getElementById('btnSkip');
+const btnPrev = document.getElementById('btnPrev');
+const btnNext = document.getElementById('btnNext');
+const btnProcess = document.getElementById('btnProcess');
+const status = document.getElementById('status');
+const emptyState = document.getElementById('emptyState');
+const processPanel = document.getElementById('processPanel');
+
+// Load photos
+async function loadPhotos() {
+  try {
+    const resp = await fetch(`${BASE}/api/admin/marker/photos?key=${API_KEY}`);
+    const data = await resp.json();
+    photos = data.photos || [];
+    if (photos.length === 0) {
+      emptyState.innerHTML = '<h2>No Photos</h2><p>Add raw photos to <code>public/photos/raw/</code> first.</p>';
+      return;
+    }
+    // Start at first unmarked photo
+    const firstUnmarked = photos.findIndex(p => !p.marked);
+    currentIndex = firstUnmarked >= 0 ? firstUnmarked : 0;
+    showPhoto();
+  } catch (e) {
+    emptyState.innerHTML = `<h2>Error</h2><p>${e.message}</p>`;
+  }
+}
+
+function showPhoto() {
+  if (photos.length === 0) return;
+  const photo = photos[currentIndex];
+  photoImg.src = photo.url;
+  photoImg.style.display = 'block';
+  emptyState.style.display = 'none';
+
+  // Reset marker
+  markerPos = null;
+  markerOverlay.style.display = 'none';
+  btnSave.disabled = true;
+
+  // Update counter
+  const markedCount = photos.filter(p => p.marked).length;
+  counter.textContent = `Photo ${currentIndex + 1} / ${photos.length}  (${markedCount} marked)`;
+  progressFill.style.width = `${(markedCount / photos.length) * 100}%`;
+
+  // Show if already marked
+  if (photo.marked) {
+    setStatus('Already marked', 'success');
+  } else {
+    setStatus('Click on the ball center', '');
+  }
+}
+
+function setStatus(text, cls) {
+  status.textContent = text;
+  status.className = 'status' + (cls ? ' ' + cls : '');
+}
+
+// Radius slider
+radiusSlider.addEventListener('input', () => {
+  radiusVal.textContent = radiusSlider.value;
+  if (markerPos) updateMarkerVisual();
+});
+
+// Click to place marker
+photoArea.addEventListener('click', (e) => {
+  if (photos.length === 0) return;
+  const rect = photoImg.getBoundingClientRect();
+  // Check click is on the image
+  const x = e.clientX - rect.left;
+  const y = e.clientY - rect.top;
+  if (x < 0 || y < 0 || x > rect.width || y > rect.height) return;
+
+  const pctX = (x / rect.width) * 100;
+  const pctY = (y / rect.height) * 100;
+  markerPos = { pctX, pctY };
+
+  updateMarkerVisual();
+  markerOverlay.style.display = 'block';
+  btnSave.disabled = false;
+  setStatus(`Position: ${pctX.toFixed(1)}%, ${pctY.toFixed(1)}%`, '');
+});
+
+// Touch support
+photoArea.addEventListener('touchstart', (e) => {
+  if (photos.length === 0) return;
+  e.preventDefault();
+  const touch = e.touches[0];
+  const rect = photoImg.getBoundingClientRect();
+  const x = touch.clientX - rect.left;
+  const y = touch.clientY - rect.top;
+  if (x < 0 || y < 0 || x > rect.width || y > rect.height) return;
+
+  const pctX = (x / rect.width) * 100;
+  const pctY = (y / rect.height) * 100;
+  markerPos = { pctX, pctY };
+
+  updateMarkerVisual();
+  markerOverlay.style.display = 'block';
+  btnSave.disabled = false;
+  setStatus(`Position: ${pctX.toFixed(1)}%, ${pctY.toFixed(1)}%`, '');
+}, { passive: false });
+
+function updateMarkerVisual() {
+  if (!markerPos) return;
+  const rect = photoImg.getBoundingClientRect();
+  const areaRect = photoArea.getBoundingClientRect();
+
+  // Position relative to photoArea
+  const imgOffsetX = rect.left - areaRect.left;
+  const imgOffsetY = rect.top - areaRect.top;
+  const px = imgOffsetX + (markerPos.pctX / 100) * rect.width;
+  const py = imgOffsetY + (markerPos.pctY / 100) * rect.height;
+
+  const r = parseInt(radiusSlider.value);
+  const d = r * 2;
+
+  // Overlay covers the image area
+  markerOverlay.style.left = '0';
+  markerOverlay.style.top = '0';
+  markerOverlay.style.width = '100%';
+  markerOverlay.style.height = '100%';
+
+  markerCircle.style.left = px + 'px';
+  markerCircle.style.top = py + 'px';
+  markerCircle.style.width = d + 'px';
+  markerCircle.style.height = d + 'px';
+
+  // Crosshairs spanning the image
+  crosshairH.style.left = imgOffsetX + 'px';
+  crosshairH.style.top = py + 'px';
+  crosshairH.style.width = rect.width + 'px';
+
+  crosshairV.style.left = px + 'px';
+  crosshairV.style.top = imgOffsetY + 'px';
+  crosshairV.style.height = rect.height + 'px';
+}
+
+// Recalculate marker on resize
+window.addEventListener('resize', () => {
+  if (markerPos) updateMarkerVisual();
+});
+
+// Save
+btnSave.addEventListener('click', saveMarker);
+async function saveMarker() {
+  if (!markerPos || photos.length === 0) return;
+  const photo = photos[currentIndex];
+  btnSave.disabled = true;
+  setStatus('Saving...', '');
+
+  try {
+    const resp = await fetch(`${BASE}/api/admin/marker/save?key=${API_KEY}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        filename: photo.filename,
+        ballX: markerPos.pctX,
+        ballY: markerPos.pctY,
+        radius: parseInt(radiusSlider.value)
+      })
+    });
+    const data = await resp.json();
+    if (data.success) {
+      photo.marked = true;
+      setStatus('Saved!', 'success');
+      // Auto-advance after short delay
+      setTimeout(() => {
+        if (currentIndex < photos.length - 1) {
+          currentIndex++;
+          showPhoto();
+        } else {
+          setStatus('All photos done!', 'success');
+        }
+      }, 300);
+    } else {
+      setStatus(data.error || 'Save failed', 'error');
+      btnSave.disabled = false;
+    }
+  } catch (e) {
+    setStatus('Network error: ' + e.message, 'error');
+    btnSave.disabled = false;
+  }
+}
+
+// Skip
+btnSkip.addEventListener('click', skipPhoto);
+async function skipPhoto() {
+  if (photos.length === 0) return;
+  const photo = photos[currentIndex];
+  setStatus('Skipping...', '');
+
+  try {
+    const resp = await fetch(`${BASE}/api/admin/marker/skip?key=${API_KEY}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ filename: photo.filename })
+    });
+    const data = await resp.json();
+    if (data.success) {
+      photo.marked = true;
+      setStatus('Skipped', 'success');
+      setTimeout(() => {
+        if (currentIndex < photos.length - 1) {
+          currentIndex++;
+          showPhoto();
+        }
+      }, 200);
+    }
+  } catch (e) {
+    setStatus('Error: ' + e.message, 'error');
+  }
+}
+
+// Navigation
+btnPrev.addEventListener('click', () => {
+  if (currentIndex > 0) { currentIndex--; showPhoto(); }
+});
+btnNext.addEventListener('click', () => {
+  if (currentIndex < photos.length - 1) { currentIndex++; showPhoto(); }
+});
+
+// Keyboard shortcuts
+document.addEventListener('keydown', (e) => {
+  if (e.target.tagName === 'INPUT') return;
+  switch (e.key) {
+    case 'ArrowLeft':
+      e.preventDefault();
+      btnPrev.click();
+      break;
+    case 'ArrowRight':
+      e.preventDefault();
+      btnNext.click();
+      break;
+    case 'Enter':
+      e.preventDefault();
+      if (!btnSave.disabled) btnSave.click();
+      break;
+    case 's':
+    case 'S':
+      e.preventDefault();
+      btnSkip.click();
+      break;
+  }
+});
+
+// Process panel toggle
+btnProcess.addEventListener('click', () => {
+  processPanel.style.display = processPanel.style.display === 'none' ? 'block' : 'none';
+});
+document.getElementById('btnCloseProcess').addEventListener('click', () => {
+  processPanel.style.display = 'none';
+});
+
+// Generate masks
+document.getElementById('btnGenerateMasks').addEventListener('click', async () => {
+  const resultEl = document.getElementById('processResult');
+  resultEl.textContent = 'Generating masks...';
+
+  try {
+    const resp = await fetch(`${BASE}/api/admin/marker/generate-masks?key=${API_KEY}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' }
+    });
+    const data = await resp.json();
+    if (data.error) {
+      resultEl.innerHTML = `<span style="color:#ef4444;">Error: ${data.error}</span>`;
+    } else {
+      resultEl.innerHTML = `<span style="color:#4ade80;">Generated ${data.generated} masks!</span><br>Masks saved to: <code>${data.maskDir}</code><br><br>Use these with <a href="https://replicate.com/andreasjansson/stable-diffusion-inpainting" target="_blank" style="color:#8b5cf6;">Replicate Inpainting</a> or LaMa to remove the ball.`;
+    }
+  } catch (e) {
+    resultEl.innerHTML = `<span style="color:#ef4444;">${e.message}</span>`;
+  }
+});
+
+// Hide keyboard hints on mobile
+if ('ontouchstart' in window) {
+  document.getElementById('kbdHints').style.display = 'none';
+}
+
+// Init
+loadPhotos();
+</script>
+</body>
+</html>
