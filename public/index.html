@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Find the Ball ⚽</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div id="app">
+
+    <!-- LOADING SCREEN -->
+    <div id="screen-loading" class="screen active">
+      <div class="loading-content">
+        <div class="ball-bounce">⚽</div>
+        <h1 class="game-title">FIND THE BALL</h1>
+        <p class="loading-text">Chargement...</p>
+      </div>
+    </div>
+
+    <!-- MAIN MENU -->
+    <div id="screen-menu" class="screen">
+      <div class="menu-header">
+        <h1 class="game-title">FIND THE BALL</h1>
+        <div class="coin-display">
+          <span class="coin-icon">🪙</span>
+          <span id="menu-coins">0</span>
+        </div>
+      </div>
+
+      <div class="menu-stats">
+        <div class="stat-card">
+          <span class="stat-value" id="menu-high-score">0</span>
+          <span class="stat-label">Meilleur Score</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-value" id="menu-total-score">0</span>
+          <span class="stat-label">Score Total</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-value" id="menu-rank">#-</span>
+          <span class="stat-label">Classement</span>
+        </div>
+      </div>
+
+      <div class="menu-trophies" id="menu-trophies">
+        <div class="trophy" data-threshold="100">
+          <div class="trophy-icon">🏆</div>
+          <span>100+</span>
+        </div>
+        <div class="trophy" data-threshold="500">
+          <div class="trophy-icon">🏆</div>
+          <span>500+</span>
+        </div>
+        <div class="trophy" data-threshold="2000">
+          <div class="trophy-icon">🏆</div>
+          <span>2000+</span>
+        </div>
+        <div class="trophy" data-threshold="5000">
+          <div class="trophy-icon">🏆</div>
+          <span>5000+</span>
+        </div>
+      </div>
+
+      <div class="menu-buttons">
+        <button class="btn btn-primary btn-large" id="btn-play">
+          <span class="btn-icon">🎮</span> JOUER
+        </button>
+        <button class="btn btn-secondary" id="btn-leaderboard">
+          <span class="btn-icon">🏆</span> CLASSEMENT
+        </button>
+        <button class="btn btn-secondary" id="btn-shop">
+          <span class="btn-icon">🛒</span> BOUTIQUE
+        </button>
+      </div>
+
+      <div class="version">v1.0</div>
+    </div>
+
+    <!-- GAME SCREEN -->
+    <div id="screen-game" class="screen">
+      <div class="game-hud">
+        <button class="hud-btn" id="btn-pause">⏸️</button>
+        <div class="game-score-display">
+          <span class="score-label">SCORE</span>
+          <span class="score-value" id="game-score">0</span>
+        </div>
+        <div class="coin-display small">
+          <span class="coin-icon">🪙</span>
+          <span id="game-coins">0</span>
+        </div>
+      </div>
+
+      <div class="game-photo-container" id="photo-container">
+        <img id="game-photo" class="game-photo" alt="Find the ball" draggable="false">
+        <div class="crosshair" id="crosshair">
+          <div class="crosshair-circle"></div>
+          <div class="crosshair-dot"></div>
+        </div>
+        <div class="drag-hint" id="drag-hint">
+          <div class="hint-icon">👆</div>
+          <p>Touche et glisse pour placer ton curseur</p>
+        </div>
+        <!-- Quarter overlay for reveal power-up -->
+        <div class="quarter-overlay" id="quarter-overlay">
+          <div class="quarter q-tl" data-q="tl"></div>
+          <div class="quarter q-tr" data-q="tr"></div>
+          <div class="quarter q-bl" data-q="bl"></div>
+          <div class="quarter q-br" data-q="br"></div>
+        </div>
+        <!-- Expand zone indicator -->
+        <div class="expand-zone" id="expand-zone"></div>
+      </div>
+
+      <div class="game-actions">
+        <button class="action-btn" id="btn-reveal" title="Reveler un quart (100 coins)">
+          <span class="action-icon">🔍</span>
+          <span class="action-cost">100</span>
+        </button>
+        <button class="action-btn confirm-btn" id="btn-confirm" disabled>
+          <span class="action-icon">✔️</span>
+        </button>
+        <button class="action-btn" id="btn-expand" title="Agrandir la zone (50 coins)">
+          <span class="action-icon">↔️</span>
+          <span class="action-cost">50</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- RESULT SCREEN -->
+    <div id="screen-result" class="screen">
+      <div class="result-header" id="result-header">
+        <div class="result-emoji" id="result-emoji">🎯</div>
+        <h2 class="result-message" id="result-message">PARFAIT!</h2>
+        <div class="result-score">
+          <span class="result-score-value" id="result-score">0</span>
+          <span class="result-score-label">points</span>
+        </div>
+      </div>
+
+      <div class="result-photo-container" id="result-photo-container">
+        <img id="result-photo" class="game-photo" alt="Result" draggable="false">
+        <div class="result-marker guess-marker" id="result-guess">
+          <div class="marker-dot guess-dot"></div>
+          <span class="marker-label">Toi</span>
+        </div>
+        <div class="result-marker ball-marker" id="result-ball">
+          <div class="marker-dot ball-dot"></div>
+          <span class="marker-label">Ballon</span>
+        </div>
+        <svg class="result-line" id="result-line">
+          <line id="distance-line" stroke="#FFD700" stroke-width="2" stroke-dasharray="8,4"/>
+        </svg>
+      </div>
+
+      <div class="result-details">
+        <div class="result-detail">
+          <span class="detail-label">Distance</span>
+          <span class="detail-value" id="result-distance">0%</span>
+        </div>
+        <div class="result-detail" id="result-bonus-container" style="display:none">
+          <span class="detail-label">Bonus</span>
+          <span class="detail-value bonus" id="result-bonus">+0 🪙</span>
+        </div>
+      </div>
+
+      <div class="result-buttons">
+        <button class="btn btn-primary btn-large" id="btn-next-round">
+          PHOTO SUIVANTE ➡️
+        </button>
+        <button class="btn btn-secondary" id="btn-back-menu">
+          MENU
+        </button>
+      </div>
+    </div>
+
+    <!-- LEADERBOARD SCREEN -->
+    <div id="screen-leaderboard" class="screen">
+      <div class="screen-header">
+        <button class="back-btn" id="btn-lb-back">←</button>
+        <h2>CLASSEMENT</h2>
+        <div class="spacer"></div>
+      </div>
+
+      <div class="lb-prizes">
+        <div class="prize-badge gold">🥇 500€</div>
+        <div class="prize-badge silver">🥈 200€</div>
+        <div class="prize-badge bronze">🥉 100€</div>
+      </div>
+      <p class="lb-subtitle">Top 50 joueurs recompenses chaque saison!</p>
+
+      <div class="lb-user-rank" id="lb-user-rank">
+        <span>Ton classement: </span>
+        <strong id="lb-my-rank">#-</strong>
+      </div>
+
+      <div class="lb-list" id="lb-list">
+        <!-- Populated dynamically -->
+      </div>
+    </div>
+
+    <!-- SHOP SCREEN -->
+    <div id="screen-shop" class="screen">
+      <div class="screen-header">
+        <button class="back-btn" id="btn-shop-back">←</button>
+        <h2>BOUTIQUE</h2>
+        <div class="spacer"></div>
+      </div>
+
+      <div class="shop-balance">
+        <span class="coin-icon big">🪙</span>
+        <span id="shop-coins">0</span>
+      </div>
+
+      <div class="shop-list">
+        <div class="shop-item" data-pack="500">
+          <div class="shop-item-left">
+            <span class="coin-icon">🪙</span>
+            <span>+ 500 Coins</span>
+          </div>
+          <span class="shop-price">0.99€</span>
+        </div>
+        <div class="shop-item" data-pack="1000">
+          <div class="shop-item-left">
+            <span class="coin-icon">🪙</span>
+            <span>+ 1,000 Coins</span>
+          </div>
+          <span class="shop-price">1.99€</span>
+        </div>
+        <div class="shop-item" data-pack="2000">
+          <div class="shop-item-left">
+            <span class="coin-icon">🪙</span>
+            <span>+ 2,000 Coins</span>
+          </div>
+          <span class="shop-price">2.99€</span>
+        </div>
+        <div class="shop-item" data-pack="5000">
+          <div class="shop-item-left">
+            <span class="coin-icon">🪙</span>
+            <span>+ 5,000 Coins</span>
+          </div>
+          <span class="shop-price">5.99€</span>
+        </div>
+        <div class="shop-item" data-pack="10000">
+          <div class="shop-item-left">
+            <span class="coin-icon">🪙</span>
+            <span>+ 10,000 Coins</span>
+          </div>
+          <span class="shop-price">9.99€</span>
+        </div>
+        <div class="shop-item" data-pack="20000">
+          <div class="shop-item-left">
+            <span class="coin-icon">🪙</span>
+            <span>+ 20,000 Coins</span>
+          </div>
+          <span class="shop-price">14.99€</span>
+        </div>
+      </div>
+
+      <div class="shop-ad-reward">
+        <div class="shop-item ad-item" id="btn-watch-ad">
+          <div class="shop-item-left">
+            <span class="coin-icon">🪙</span>
+            <span>+ 50 Coins</span>
+            <small>Regarde une pub</small>
+          </div>
+          <span class="shop-price free">Gratuit</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAUSE OVERLAY -->
+    <div id="overlay-pause" class="overlay">
+      <div class="overlay-content">
+        <h2>⏸️ PAUSE</h2>
+        <button class="btn btn-primary" id="btn-resume">REPRENDRE</button>
+        <button class="btn btn-secondary" id="btn-quit">QUITTER</button>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
