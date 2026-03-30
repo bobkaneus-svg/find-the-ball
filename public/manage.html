@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Find the Ball - Gestion des photos</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family:'Inter',sans-serif; background:#1a1a1a; color:#fff; min-height:100vh; }
+
+    /* Header */
+    .header { background:#222; padding:16px 24px; display:flex; align-items:center; justify-content:space-between; border-bottom:2px solid #F5C518; }
+    .header h1 { font-size:20px; color:#F5C518; }
+    .header .stats { font-size:14px; color:#999; }
+    .header .stats b { color:#F5C518; }
+
+    /* Layout */
+    .container { max-width:1200px; margin:0 auto; padding:24px; }
+
+    /* Steps */
+    .steps { display:flex; gap:8px; margin-bottom:24px; }
+    .step { flex:1; padding:12px; background:#2a2a2a; border-radius:8px; text-align:center; border:2px solid #333; opacity:0.4; }
+    .step.active { border-color:#F5C518; opacity:1; }
+    .step.done { border-color:#4CAF50; opacity:1; }
+    .step-num { font-size:24px; font-weight:900; color:#F5C518; }
+    .step.done .step-num { color:#4CAF50; }
+    .step-label { font-size:12px; color:#999; margin-top:4px; }
+
+    /* Upload zone */
+    .upload-zone { border:3px dashed #444; border-radius:12px; padding:40px; text-align:center; cursor:pointer; transition:border-color 0.2s; margin-bottom:24px; }
+    .upload-zone:hover { border-color:#F5C518; }
+    .upload-zone.dragover { border-color:#F5C518; background:rgba(245,197,24,0.05); }
+    .upload-zone input { display:none; }
+    .upload-zone p { color:#999; font-size:16px; }
+    .upload-zone .icon { font-size:48px; margin-bottom:12px; }
+
+    /* Photo workspace */
+    .workspace { display:none; margin-bottom:24px; }
+    .workspace.visible { display:block; }
+    .photo-frame { position:relative; display:inline-block; cursor:crosshair; max-width:100%; border-radius:8px; overflow:hidden; background:#000; }
+    .photo-frame img { display:block; max-width:100%; max-height:65vh; }
+    .ball-marker { position:absolute; border:3px solid #4CAF50; border-radius:50%; transform:translate(-50%,-50%); pointer-events:none; box-shadow:0 0 0 2px rgba(0,0,0,0.5), 0 0 20px rgba(76,175,80,0.4); }
+    .ball-marker::before, .ball-marker::after { content:''; position:absolute; background:#4CAF50; }
+    .ball-marker::before { width:1px; height:100%; left:50%; top:0; transform:translateX(-50%); }
+    .ball-marker::after { width:100%; height:1px; top:50%; left:0; transform:translateY(-50%); }
+    .ball-center { position:absolute; width:6px; height:6px; background:#F5C518; border-radius:50%; transform:translate(-50%,-50%); pointer-events:none; z-index:5; box-shadow:0 0 6px #F5C518; }
+
+    /* Controls */
+    .controls { display:flex; gap:12px; align-items:center; margin-top:16px; flex-wrap:wrap; }
+    .controls label { font-size:13px; color:#999; }
+    .controls input[type=range] { width:120px; accent-color:#F5C518; }
+    .controls select { background:#333; color:#fff; border:1px solid #555; padding:6px 10px; border-radius:6px; font-size:13px; }
+
+    /* Buttons */
+    .btn { padding:12px 24px; border:none; border-radius:8px; font-weight:700; font-size:14px; cursor:pointer; transition:transform 0.1s; }
+    .btn:active { transform:scale(0.97); }
+    .btn-primary { background:linear-gradient(180deg,#F5C518,#D4A80F); color:#000; }
+    .btn-success { background:#4CAF50; color:#fff; }
+    .btn-danger { background:#e74c3c; color:#fff; }
+    .btn-outline { background:transparent; border:2px solid #555; color:#fff; }
+    .btn:disabled { opacity:0.3; cursor:not-allowed; }
+
+    /* Info box */
+    .info { background:#2a2a2a; border-left:4px solid #F5C518; padding:12px 16px; border-radius:0 8px 8px 0; margin-bottom:24px; font-size:14px; color:#ccc; }
+    .info b { color:#F5C518; }
+
+    /* Photo grid (existing photos) */
+    .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:16px; margin-top:24px; }
+    .grid-card { background:#2a2a2a; border-radius:8px; overflow:hidden; position:relative; }
+    .grid-card img { width:100%; aspect-ratio:4/3; object-fit:cover; display:block; }
+    .grid-card .badge { position:absolute; top:8px; right:8px; background:#4CAF50; color:#fff; font-size:11px; font-weight:700; padding:3px 8px; border-radius:4px; }
+    .grid-card .badge.pending { background:#F5C518; color:#000; }
+    .grid-card .card-info { padding:8px 12px; font-size:12px; color:#999; }
+    .grid-card .card-actions { padding:4px 12px 8px; display:flex; gap:6px; }
+    .grid-card .card-actions button { padding:4px 10px; font-size:11px; }
+    .grid-dot { position:absolute; width:10px; height:10px; background:#4CAF50; border:2px solid #fff; border-radius:50%; transform:translate(-50%,-50%); pointer-events:none; }
+
+    /* Toast */
+    .toast { position:fixed; top:20px; left:50%; transform:translateX(-50%) translateY(-100px); background:#4CAF50; color:#fff; padding:12px 24px; border-radius:8px; font-weight:700; transition:transform 0.3s; z-index:100; }
+    .toast.show { transform:translateX(-50%) translateY(0); }
+    .toast.error { background:#e74c3c; }
+
+    /* Tabs */
+    .tabs { display:flex; gap:4px; margin-bottom:16px; }
+    .tab { padding:8px 16px; background:#2a2a2a; border:none; color:#999; font-weight:600; font-size:14px; cursor:pointer; border-radius:8px 8px 0 0; }
+    .tab.active { background:#333; color:#F5C518; }
+
+    @media (max-width:600px) {
+      .steps { flex-direction:column; }
+      .controls { flex-direction:column; align-items:flex-start; }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>Find the Ball - Gestion</h1>
+    <div class="stats">Photos actives: <b id="stat-active">0</b> | En attente: <b id="stat-pending">0</b></div>
+  </div>
+
+  <div class="container">
+    <!-- Tabs -->
+    <div class="tabs">
+      <button class="tab active" onclick="showTab('add')">Ajouter une photo</button>
+      <button class="tab" onclick="showTab('list')">Photos existantes</button>
+    </div>
+
+    <!-- ADD TAB -->
+    <div id="tab-add">
+      <!-- Steps indicator -->
+      <div class="steps">
+        <div class="step active" id="step1"><div class="step-num">1</div><div class="step-label">Photo avec ballon</div></div>
+        <div class="step" id="step2"><div class="step-num">2</div><div class="step-label">Marquer le centre</div></div>
+        <div class="step" id="step3"><div class="step-num">3</div><div class="step-label">Photo sans ballon</div></div>
+        <div class="step" id="step4"><div class="step-num">4</div><div class="step-label">Publier</div></div>
+      </div>
+
+      <!-- STEP 1: Upload original -->
+      <div id="zone-step1">
+        <div class="info">
+          <b>Etape 1:</b> Uploade la photo originale avec le ballon visible.
+        </div>
+        <div class="upload-zone" id="upload-original">
+          <div class="icon">📸</div>
+          <p>Clique ou glisse la photo <b>avec le ballon</b></p>
+          <input type="file" accept="image/*" id="input-original">
+        </div>
+      </div>
+
+      <!-- STEP 2: Mark ball center -->
+      <div id="zone-step2" class="workspace">
+        <div class="info">
+          <b>Etape 2:</b> Clique sur le <b>centre exact du ballon</b>. Ajuste le rayon si necessaire.
+        </div>
+        <div class="photo-frame" id="frame-original">
+          <img id="img-original" alt="Photo originale">
+          <div class="ball-marker" id="ball-marker" style="display:none"></div>
+          <div class="ball-center" id="ball-center" style="display:none"></div>
+        </div>
+        <div class="controls">
+          <label>Rayon: <span id="radius-value">25</span>px</label>
+          <input type="range" id="radius-slider" min="8" max="80" value="25">
+          <label>Difficulte:</label>
+          <select id="difficulty-select">
+            <option value="easy">Facile</option>
+            <option value="medium" selected>Moyen</option>
+            <option value="hard">Difficile</option>
+          </select>
+          <button class="btn btn-primary" id="btn-validate-mark" disabled>Valider le centre</button>
+        </div>
+      </div>
+
+      <!-- STEP 3: Upload modified -->
+      <div id="zone-step3" class="workspace">
+        <div class="info">
+          <b>Etape 3:</b> Uploade la <b>meme photo sans le ballon</b> (editee avec un outil AI comme Remove Objects, ClipDrop, Photoshop...). Le point vert montre le centre que tu as marque.
+        </div>
+        <div class="upload-zone" id="upload-modified">
+          <div class="icon">🎨</div>
+          <p>Clique ou glisse la photo <b>sans le ballon</b></p>
+          <input type="file" accept="image/*" id="input-modified">
+        </div>
+        <div class="photo-frame" id="frame-modified" style="display:none">
+          <img id="img-modified" alt="Photo modifiee">
+          <div class="ball-center" id="ball-center-preview" style="display:none"></div>
+        </div>
+        <div class="controls" id="controls-step3" style="display:none">
+          <button class="btn btn-success" id="btn-publish">Publier dans le jeu</button>
+          <button class="btn btn-outline" id="btn-reset">Recommencer</button>
+        </div>
+      </div>
+
+      <!-- STEP 4: Done -->
+      <div id="zone-step4" class="workspace">
+        <div class="info" style="border-color:#4CAF50">
+          <b>Publie !</b> La photo est maintenant disponible dans le jeu. Tu peux en ajouter une autre.
+        </div>
+        <button class="btn btn-primary" onclick="resetAll()">Ajouter une autre photo</button>
+      </div>
+    </div>
+
+    <!-- LIST TAB -->
+    <div id="tab-list" style="display:none">
+      <div class="grid" id="photos-grid">
+        <!-- Populated dynamically -->
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const KEY = new URLSearchParams(window.location.search).get('key') || 'ftb-admin-2024';
+    const API = '';
+
+    // State
+    let currentState = {
+      originalFile: null,
+      modifiedFile: null,
+      ballX: null, // percentage
+      ballY: null, // percentage
+      radius: 25,
+      difficulty: 'medium'
+    };
+
+    // ============ TABS ============
+    function showTab(tab) {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.getElementById('tab-add').style.display = tab === 'add' ? 'block' : 'none';
+      document.getElementById('tab-list').style.display = tab === 'list' ? 'block' : 'none';
+      event.target.classList.add('active');
+      if (tab === 'list') loadPhotosList();
+    }
+
+    // ============ STEP 1: Upload original ============
+    const uploadOriginal = document.getElementById('upload-original');
+    const inputOriginal = document.getElementById('input-original');
+
+    uploadOriginal.addEventListener('click', () => inputOriginal.click());
+    uploadOriginal.addEventListener('dragover', e => { e.preventDefault(); uploadOriginal.classList.add('dragover'); });
+    uploadOriginal.addEventListener('dragleave', () => uploadOriginal.classList.remove('dragover'));
+    uploadOriginal.addEventListener('drop', e => {
+      e.preventDefault();
+      uploadOriginal.classList.remove('dragover');
+      if (e.dataTransfer.files[0]) handleOriginalFile(e.dataTransfer.files[0]);
+    });
+    inputOriginal.addEventListener('change', () => {
+      if (inputOriginal.files[0]) handleOriginalFile(inputOriginal.files[0]);
+    });
+
+    function handleOriginalFile(file) {
+      currentState.originalFile = file;
+      const img = document.getElementById('img-original');
+      img.src = URL.createObjectURL(file);
+      img.onload = () => {
+        goToStep(2);
+      };
+    }
+
+    // ============ STEP 2: Mark ball ============
+    const frameOriginal = document.getElementById('frame-original');
+    const marker = document.getElementById('ball-marker');
+    const center = document.getElementById('ball-center');
+    const radiusSlider = document.getElementById('radius-slider');
+    const btnValidate = document.getElementById('btn-validate-mark');
+
+    frameOriginal.addEventListener('click', (e) => {
+      const rect = frameOriginal.getBoundingClientRect();
+      const img = document.getElementById('img-original');
+      const imgRect = img.getBoundingClientRect();
+
+      const x = e.clientX - imgRect.left;
+      const y = e.clientY - imgRect.top;
+      const pctX = (x / imgRect.width) * 100;
+      const pctY = (y / imgRect.height) * 100;
+
+      currentState.ballX = pctX;
+      currentState.ballY = pctY;
+
+      updateMarker();
+      btnValidate.disabled = false;
+    });
+
+    radiusSlider.addEventListener('input', () => {
+      currentState.radius = parseInt(radiusSlider.value);
+      document.getElementById('radius-value').textContent = currentState.radius;
+      if (currentState.ballX !== null) updateMarker();
+    });
+
+    function updateMarker() {
+      const img = document.getElementById('img-original');
+      const r = currentState.radius;
+
+      marker.style.display = 'block';
+      marker.style.left = currentState.ballX + '%';
+      marker.style.top = currentState.ballY + '%';
+      marker.style.width = (r * 2) + 'px';
+      marker.style.height = (r * 2) + 'px';
+
+      center.style.display = 'block';
+      center.style.left = currentState.ballX + '%';
+      center.style.top = currentState.ballY + '%';
+    }
+
+    btnValidate.addEventListener('click', () => {
+      currentState.difficulty = document.getElementById('difficulty-select').value;
+      goToStep(3);
+    });
+
+    // ============ STEP 3: Upload modified ============
+    const uploadModified = document.getElementById('upload-modified');
+    const inputModified = document.getElementById('input-modified');
+
+    uploadModified.addEventListener('click', () => inputModified.click());
+    uploadModified.addEventListener('dragover', e => { e.preventDefault(); uploadModified.classList.add('dragover'); });
+    uploadModified.addEventListener('dragleave', () => uploadModified.classList.remove('dragover'));
+    uploadModified.addEventListener('drop', e => {
+      e.preventDefault();
+      uploadModified.classList.remove('dragover');
+      if (e.dataTransfer.files[0]) handleModifiedFile(e.dataTransfer.files[0]);
+    });
+    inputModified.addEventListener('change', () => {
+      if (inputModified.files[0]) handleModifiedFile(inputModified.files[0]);
+    });
+
+    function handleModifiedFile(file) {
+      currentState.modifiedFile = file;
+      const img = document.getElementById('img-modified');
+      img.src = URL.createObjectURL(file);
+
+      document.getElementById('frame-modified').style.display = 'inline-block';
+      document.getElementById('controls-step3').style.display = 'flex';
+      uploadModified.style.display = 'none';
+
+      // Show ball center on modified photo
+      const cp = document.getElementById('ball-center-preview');
+      cp.style.display = 'block';
+      cp.style.left = currentState.ballX + '%';
+      cp.style.top = currentState.ballY + '%';
+    }
+
+    // ============ PUBLISH ============
+    document.getElementById('btn-publish').addEventListener('click', async () => {
+      const btn = document.getElementById('btn-publish');
+      btn.disabled = true;
+      btn.textContent = 'Publication...';
+
+      try {
+        const formData = new FormData();
+        formData.append('original', currentState.originalFile);
+        formData.append('modified', currentState.modifiedFile);
+        formData.append('ball_x', currentState.ballX.toFixed(2));
+        formData.append('ball_y', currentState.ballY.toFixed(2));
+        formData.append('ball_radius', currentState.radius);
+        formData.append('difficulty', currentState.difficulty);
+
+        const res = await fetch(`${API}/api/manage/publish?key=${KEY}`, {
+          method: 'POST',
+          body: formData
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error);
+
+        toast('Photo publiee ! ID: ' + data.id, 'success');
+        goToStep(4);
+        loadStats();
+      } catch (err) {
+        toast('Erreur: ' + err.message, 'error');
+        btn.disabled = false;
+        btn.textContent = 'Publier dans le jeu';
+      }
+    });
+
+    document.getElementById('btn-reset').addEventListener('click', resetAll);
+
+    // ============ NAVIGATION ============
+    function goToStep(n) {
+      for (let i = 1; i <= 4; i++) {
+        const step = document.getElementById('step' + i);
+        const zone = document.getElementById('zone-step' + i);
+        step.classList.remove('active', 'done');
+        if (zone) zone.classList.remove('visible');
+        if (zone) zone.style.display = 'none';
+
+        if (i < n) step.classList.add('done');
+        if (i === n) step.classList.add('active');
+      }
+
+      const zone = document.getElementById('zone-step' + n);
+      if (zone) { zone.classList.add('visible'); zone.style.display = 'block'; }
+    }
+
+    function resetAll() {
+      currentState = { originalFile: null, modifiedFile: null, ballX: null, ballY: null, radius: 25, difficulty: 'medium' };
+      marker.style.display = 'none';
+      center.style.display = 'none';
+      document.getElementById('ball-center-preview').style.display = 'none';
+      document.getElementById('frame-modified').style.display = 'none';
+      document.getElementById('controls-step3').style.display = 'none';
+      uploadModified.style.display = '';
+      btnValidate.disabled = true;
+      inputOriginal.value = '';
+      inputModified.value = '';
+      radiusSlider.value = 25;
+      document.getElementById('radius-value').textContent = '25';
+      document.getElementById('btn-publish').disabled = false;
+      document.getElementById('btn-publish').textContent = 'Publier dans le jeu';
+      goToStep(1);
+    }
+
+    // ============ PHOTOS LIST ============
+    async function loadPhotosList() {
+      try {
+        const res = await fetch(`${API}/api/manage/photos?key=${KEY}`);
+        const data = await res.json();
+        const grid = document.getElementById('photos-grid');
+        grid.innerHTML = '';
+
+        data.photos.forEach(p => {
+          const card = document.createElement('div');
+          card.className = 'grid-card';
+          card.innerHTML = `
+            <div style="position:relative">
+              <img src="/photos/modified/${p.filename_modified}" alt="${p.description || ''}">
+              <div class="grid-dot" style="left:${p.ball_x}%;top:${p.ball_y}%"></div>
+              <span class="badge ${p.active === 1 ? '' : 'pending'}">${p.active === 1 ? 'Active' : 'Inactive'}</span>
+            </div>
+            <div class="card-info">
+              #${p.id} | ${p.difficulty} | Ball: ${Math.round(p.ball_x)}%, ${Math.round(p.ball_y)}%
+            </div>
+            <div class="card-actions">
+              ${p.active !== 1 ? `<button class="btn btn-success" onclick="togglePhoto(${p.id},1)">Activer</button>` : ''}
+              ${p.active === 1 ? `<button class="btn btn-outline" onclick="togglePhoto(${p.id},0)">Desactiver</button>` : ''}
+              <button class="btn btn-danger" onclick="deletePhoto(${p.id})">Supprimer</button>
+            </div>
+          `;
+          grid.appendChild(card);
+        });
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    async function togglePhoto(id, active) {
+      await fetch(`${API}/api/manage/toggle/${id}?key=${KEY}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ active })
+      });
+      loadPhotosList();
+      loadStats();
+    }
+
+    async function deletePhoto(id) {
+      if (!confirm('Supprimer cette photo ?')) return;
+      await fetch(`${API}/api/manage/delete/${id}?key=${KEY}`, { method: 'POST' });
+      loadPhotosList();
+      loadStats();
+    }
+
+    // ============ STATS ============
+    async function loadStats() {
+      try {
+        const res = await fetch(`${API}/api/manage/stats?key=${KEY}`);
+        const data = await res.json();
+        document.getElementById('stat-active').textContent = data.active;
+        document.getElementById('stat-pending').textContent = data.pending;
+      } catch (e) {}
+    }
+
+    // ============ TOAST ============
+    function toast(msg, type = 'success') {
+      const el = document.getElementById('toast');
+      el.textContent = msg;
+      el.className = 'toast show' + (type === 'error' ? ' error' : '');
+      setTimeout(() => el.className = 'toast', 3000);
+    }
+
+    // Init
+    loadStats();
+  </script>
+</body>
+</html>

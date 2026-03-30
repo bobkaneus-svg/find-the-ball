@@ -264,6 +264,90 @@ app.post('/api/shop/ad-reward', authMiddleware, (req, res) => {
   res.json({ coins: user.coins, reward: REWARD });
 });
 
+// ============ MANAGE TOOL (photo upload + marking) ============
+
+// Upload config for manage tool
+const manageStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const folder = file.fieldname === 'original' ? 'originals' : 'modified';
+    const dir = path.join(__dirname, '..', 'public', 'photos', folder);
+    cb(null, dir);
+  },
+  filename: (req, file, cb) => {
+    const ext = path.extname(file.originalname) || '.jpg';
+    cb(null, `ftb_${Date.now()}_${crypto.randomBytes(3).toString('hex')}${ext}`);
+  }
+});
+const manageUpload = multer({ storage: manageStorage, limits: { fileSize: 15 * 1024 * 1024 } });
+
+// Publish a photo pair (original + modified + ball position)
+app.post('/api/manage/publish',
+  authMiddleware, adminMiddleware,
+  manageUpload.fields([{ name: 'original', maxCount: 1 }, { name: 'modified', maxCount: 1 }]),
+  (req, res) => {
+    const { ball_x, ball_y, ball_radius, difficulty } = req.body;
+
+    if (!req.files?.original?.[0] || !req.files?.modified?.[0]) {
+      return res.status(400).json({ error: 'Les deux photos sont requises' });
+    }
+    if (!ball_x || !ball_y) {
+      return res.status(400).json({ error: 'Position du ballon requise' });
+    }
+
+    const result = db.addPhoto.run(
+      req.files.original[0].filename,
+      req.files.modified[0].filename,
+      parseFloat(ball_x),
+      parseFloat(ball_y),
+      parseFloat(ball_radius) || 25,
+      difficulty || 'medium',
+      'football',
+      `Uploaded ${new Date().toISOString().split('T')[0]}`
+    );
+
+    // Auto-activate
+    db.updatePhotoActive.run(1, result.lastInsertRowid);
+
+    res.json({ id: result.lastInsertRowid, message: 'Photo publiee!' });
+  }
+);
+
+// List all photos for manage tool
+app.get('/api/manage/photos', authMiddleware, adminMiddleware, (req, res) => {
+  const photos = db.getAllPhotosAdmin.all(200, 0);
+  res.json({ photos });
+});
+
+// Toggle photo active/inactive
+app.post('/api/manage/toggle/:id', authMiddleware, adminMiddleware, (req, res) => {
+  const { active } = req.body;
+  db.updatePhotoActive.run(active, parseInt(req.params.id));
+  res.json({ success: true });
+});
+
+// Delete a photo
+app.post('/api/manage/delete/:id', authMiddleware, adminMiddleware, (req, res) => {
+  const photo = db.getPhotoById.get(parseInt(req.params.id));
+  if (!photo) return res.status(404).json({ error: 'Photo non trouvee' });
+
+  const fs = require('fs');
+  // Delete files
+  const origPath = path.join(__dirname, '..', 'public', 'photos', 'originals', photo.filename_original);
+  const modPath = path.join(__dirname, '..', 'public', 'photos', 'modified', photo.filename_modified);
+  try { fs.unlinkSync(origPath); } catch (e) {}
+  try { fs.unlinkSync(modPath); } catch (e) {}
+
+  // Delete from DB
+  db.db.prepare('DELETE FROM photos WHERE id = ?').run(parseInt(req.params.id));
+  res.json({ success: true });
+});
+
+// Stats
+app.get('/api/manage/stats', authMiddleware, adminMiddleware, (req, res) => {
+  const stats = db.getPhotoStats.get();
+  res.json({ active: stats.approved || 0, pending: stats.pending || 0, total: stats.total || 0 });
+});
+
 // ============ ADMIN PIPELINE ROUTES ============
 
 const { fork } = require('child_process');
