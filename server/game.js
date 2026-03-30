@@ -91,11 +91,17 @@ function startNewRound(telegramId) {
 
   const round = db.createRound.run(telegramId, photo.id);
 
+  // Photos uploaded via manage tool are in /uploads/, demo photos in /photos/
+  const isUploaded = photo.filename_modified.startsWith('ftb_');
+  const modifiedUrl = isUploaded
+    ? `/uploads/modified/${photo.filename_modified}`
+    : `/photos/modified/${photo.filename_modified}`;
+
   return {
     roundId: round.lastInsertRowid,
     photo: {
       id: photo.id,
-      url: `/photos/modified/${photo.filename_modified}`,
+      url: modifiedUrl,
       difficulty: photo.difficulty,
       sport: photo.sport,
       description: photo.description
@@ -158,7 +164,9 @@ function submitGuess(roundId, telegramId, guessX, guessY, usedReveal, usedExpand
       x: photo.ball_x,
       y: photo.ball_y
     },
-    originalPhoto: `/photos/originals/${photo.filename_original}`,
+    originalPhoto: photo.filename_original.startsWith('ftb_')
+      ? `/uploads/originals/${photo.filename_original}`
+      : `/photos/originals/${photo.filename_original}`,
     guessPosition: { x: guessX, y: guessY }
   };
 }

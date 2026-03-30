@@ -400,9 +400,10 @@
         data.photos.forEach(p => {
           const card = document.createElement('div');
           card.className = 'grid-card';
+          const imgBase = p.filename_modified.startsWith('ftb_') ? '/uploads/modified/' : '/photos/modified/';
           card.innerHTML = `
             <div style="position:relative">
-              <img src="/photos/modified/${p.filename_modified}" alt="${p.description || ''}">
+              <img src="${imgBase}${p.filename_modified}" alt="${p.description || ''}">
               <div class="grid-dot" style="left:${p.ball_x}%;top:${p.ball_y}%"></div>
               <span class="badge ${p.active === 1 ? '' : 'pending'}">${p.active === 1 ? 'Active' : 'Inactive'}</span>
             </div>

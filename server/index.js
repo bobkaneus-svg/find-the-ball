@@ -39,6 +39,21 @@ app.use((req, res, next) => {
 
 app.use(express.static(path.join(__dirname, '..', 'public')));
 
+// Persistent upload directory (Railway volume at /app/data or local data/)
+const DATA_DIR = path.join(__dirname, '..', 'data');
+const UPLOADS_DIR = path.join(DATA_DIR, 'uploads');
+const UPLOADS_ORIGINALS = path.join(UPLOADS_DIR, 'originals');
+const UPLOADS_MODIFIED = path.join(UPLOADS_DIR, 'modified');
+
+// Ensure upload dirs exist
+[UPLOADS_ORIGINALS, UPLOADS_MODIFIED].forEach(dir => {
+  const fsMod = require('fs');
+  if (!fsMod.existsSync(dir)) fsMod.mkdirSync(dir, { recursive: true });
+});
+
+// Serve uploaded photos from persistent volume
+app.use('/uploads', express.static(UPLOADS_DIR));
+
 // Photo upload config
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -266,11 +281,10 @@ app.post('/api/shop/ad-reward', authMiddleware, (req, res) => {
 
 // ============ MANAGE TOOL (photo upload + marking) ============
 
-// Upload config for manage tool
+// Upload config for manage tool - saves to persistent volume
 const manageStorage = multer.diskStorage({
   destination: (req, file, cb) => {
-    const folder = file.fieldname === 'original' ? 'originals' : 'modified';
-    const dir = path.join(__dirname, '..', 'public', 'photos', folder);
+    const dir = file.fieldname === 'original' ? UPLOADS_ORIGINALS : UPLOADS_MODIFIED;
     cb(null, dir);
   },
   filename: (req, file, cb) => {
@@ -688,39 +702,10 @@ function setupBot(bot) {
 
 // ============ SEED DEMO DATA ============
 
-function seedDemoPhotos() {
-  const existing = db.getAllPhotos.all();
-  // Check if photos point to real files, re-seed if not
-  if (existing.length > 0) {
-    const fs = require('fs');
-    const firstPhoto = existing[0];
-    const photoPath = path.join(__dirname, '..', 'public', 'photos', 'modified', firstPhoto.filename_modified);
-    if (fs.existsSync(photoPath)) return; // Photos are valid
-    // Old records with wrong filenames - clear and re-seed
-    db.db.exec('DELETE FROM game_rounds');
-    db.db.exec('DELETE FROM photos');
-    console.log('Cleared stale photo records, re-seeding...');
-  }
-
-  const demoPhotos = [
-    { original: 'photo_01.jpg', modified: 'photo_01.jpg', ball_x: 51.4, ball_y: 59.8, ball_radius: 16, difficulty: 'easy', description: 'Soccer player kicking' },
-    { original: 'photo_02.jpg', modified: 'photo_02.jpg', ball_x: 51.6, ball_y: 22.2, ball_radius: 18, difficulty: 'medium', description: 'Football field view' },
-    { original: 'photo_03.jpg', modified: 'photo_03.jpg', ball_x: 70.4, ball_y: 26.8, ball_radius: 18, difficulty: 'medium', description: 'Soccer match action' },
-    { original: 'photo_04.jpg', modified: 'photo_04.jpg', ball_x: 24.9, ball_y: 55.8, ball_radius: 18, difficulty: 'easy', description: 'Football player dribbling' },
-    { original: 'photo_05.jpg', modified: 'photo_05.jpg', ball_x: 40.4, ball_y: 32.8, ball_radius: 16, difficulty: 'easy', description: 'Stadium panorama' },
-    { original: 'photo_06.jpg', modified: 'photo_06.jpg', ball_x: 13.4, ball_y: 36.5, ball_radius: 28, difficulty: 'hard', description: 'Soccer ball close-up' },
-    { original: 'photo_07.jpg', modified: 'photo_07.jpg', ball_x: 37.4, ball_y: 64.8, ball_radius: 25, difficulty: 'medium', description: 'Football match play' },
-    { original: 'photo_08.jpg', modified: 'photo_08.jpg', ball_x: 49.6, ball_y: 66.2, ball_radius: 16, difficulty: 'medium', description: 'Soccer player action' }
-  ];
-
-  demoPhotos.forEach(p => {
-    db.addPhoto.run(p.original, p.modified, p.ball_x, p.ball_y, p.ball_radius || 30, p.difficulty, 'football', p.description);
-  });
-
-  console.log(`Seeded ${demoPhotos.length} demo photos`);
-}
-
-seedDemoPhotos();
+// No auto-seeding - all photos are managed via /manage.html
+// This prevents uploaded photos from being overwritten on redeploy
+const photoCount = db.getAllPhotos.all().length;
+console.log(`Photos in database: ${photoCount}`);
 
 // Start server
 app.listen(PORT, () => {
