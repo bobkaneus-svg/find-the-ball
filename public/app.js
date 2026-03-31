@@ -410,17 +410,37 @@ document.addEventListener('DOMContentLoaded', () => {
     tg = window.Telegram.WebApp;
     tg.ready();
     tg.expand();
-    // Request fullscreen mode (removes Telegram header)
+
+    // Set header/background color to match app
+    if (tg.setHeaderColor) tg.setHeaderColor('#0e0e0e');
+    if (tg.setBackgroundColor) tg.setBackgroundColor('#0e0e0e');
+
+    // Apply Telegram safe area insets as CSS custom properties
+    // contentSafeAreaInset = Telegram UI (header bar)
+    // safeAreaInset = device (notch, status bar)
+    function applyTgSafeAreas() {
+      const csa = tg.contentSafeAreaInset || {};
+      const sa = tg.safeAreaInset || {};
+      const topInset = (sa.top || 0) + (csa.top || 0);
+      const bottomInset = (sa.bottom || 0) + (csa.bottom || 0);
+      // Fallback: if APIs not available but we're in Telegram, use minimum safe padding
+      const minTop = (topInset === 0 && tg.platform !== 'unknown') ? 60 : topInset;
+      document.documentElement.style.setProperty('--tg-safe-top', minTop + 'px');
+      document.documentElement.style.setProperty('--tg-safe-bottom', (bottomInset || 0) + 'px');
+    }
+    applyTgSafeAreas();
+
+    // Listen for changes (orientation, fullscreen toggle)
+    if (tg.onEvent) {
+      tg.onEvent('contentSafeAreaChanged', applyTgSafeAreas);
+      tg.onEvent('safeAreaChanged', applyTgSafeAreas);
+    }
+
+    // Try fullscreen (removes Telegram header on supported clients)
     if (tg.requestFullscreen) {
-      tg.requestFullscreen();
+      try { tg.requestFullscreen(); } catch (e) { /* not supported */ }
     }
-    // Set header color to match app background
-    if (tg.setHeaderColor) {
-      tg.setHeaderColor('#0e0e0e');
-    }
-    if (tg.setBackgroundColor) {
-      tg.setBackgroundColor('#0e0e0e');
-    }
+
     initData = tg.initData;
   }
 
