@@ -170,8 +170,9 @@ function submitGuess(roundId, telegramId, guessX, guessY, usedReveal, usedExpand
   const photo = db.getPhotoById.get(round.photo_id);
   if (!photo) return { error: 'Photo not found' };
 
-  // Calculate score — uses ball radius from photo + search circle overlap logic
-  const result = calculateScore(guessX, guessY, photo.ball_x, photo.ball_y, photo.ball_radius || 16, usedExpand);
+  // Calculate score — fixed gameplay ball radius (independent of visual radius in manage tool)
+  const GAMEPLAY_BALL_RADIUS = 5; // % of image
+  const result = calculateScore(guessX, guessY, photo.ball_x, photo.ball_y, GAMEPLAY_BALL_RADIUS, usedExpand);
 
   // Deduct coins for expand power-up atomically (reveal already deducted via /api/game/reveal)
   if (usedExpand) {
