@@ -144,48 +144,49 @@ body {
 
 /* ============ MAIN MENU ============ */
 #screen-menu {
-  padding: var(--space-6) var(--space-6);
-  padding-top: calc(var(--space-6) + var(--tg-safe-top, var(--safe-top)));
-  padding-bottom: calc(var(--space-6) + var(--tg-safe-bottom, var(--safe-bottom)));
+  padding: var(--space-4) var(--space-6);
+  padding-top: calc(var(--space-4) + var(--tg-safe-top, var(--safe-top)));
+  padding-bottom: calc(var(--space-4) + var(--tg-safe-bottom, var(--safe-bottom)));
   align-items: center;
+  justify-content: space-between;
 }
 
 .menu-content {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: var(--space-4);
   width: 100%;
   max-width: 400px;
   height: 100%;
+  justify-content: space-between;
 }
 
-/* Hero section */
-.menu-hero {
+/* Top: title */
+.menu-top {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: var(--space-2);
+  gap: var(--space-1);
+  padding-top: var(--space-4);
 }
 
 .hero-ball {
-  font-size: 72px;
+  font-size: 56px;
   animation: heroBounce 2s ease-in-out infinite;
   filter: drop-shadow(0 8px 24px rgba(255, 184, 0, 0.3));
 }
 @keyframes heroBounce {
   0%, 100% { transform: translateY(0) rotate(0deg); }
-  25% { transform: translateY(-12px) rotate(-5deg); }
+  25% { transform: translateY(-10px) rotate(-5deg); }
   50% { transform: translateY(0) rotate(0deg); }
-  75% { transform: translateY(-8px) rotate(5deg); }
+  75% { transform: translateY(-6px) rotate(5deg); }
 }
 
 .menu-title {
   font-family: 'Space Grotesk', sans-serif;
-  font-size: 36px;
+  font-size: 28px;
   font-weight: 700;
   letter-spacing: 3px;
-  color: var(--on-surface);
   text-align: center;
   background: linear-gradient(135deg, var(--on-surface), var(--primary));
   -webkit-background-clip: text;
@@ -193,111 +194,31 @@ body {
   background-clip: text;
 }
 
-.menu-subtitle {
-  font-family: 'Manrope', sans-serif;
-  font-size: 14px;
-  color: var(--on-surface-variant);
-  letter-spacing: 1px;
-}
-
-/* High score */
-.high-score-section {
-  text-align: center;
+/* Center: high score */
+.menu-center {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2px;
-  background: var(--surface-container-low);
-  padding: var(--space-4) var(--space-8);
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--outline-variant);
+  gap: 4px;
 }
 
 .high-score-label {
   font-family: 'Manrope', sans-serif;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   color: var(--on-surface-variant);
   text-transform: uppercase;
-  letter-spacing: 3px;
+  letter-spacing: 4px;
 }
 
 .high-score-value {
   font-family: 'Space Grotesk', sans-serif;
-  font-size: 52px;
+  font-size: 72px;
   font-weight: 700;
   color: var(--primary);
   line-height: 1;
-  text-shadow: 0 0 40px rgba(255, 184, 0, 0.15);
+  text-shadow: 0 0 60px rgba(255, 184, 0, 0.2);
 }
-
-/* How to play steps */
-.menu-steps {
-  width: 100%;
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
-  gap: var(--space-2);
-  padding: var(--space-3) 0;
-}
-
-.menu-step {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
-  text-align: center;
-  position: relative;
-}
-
-.menu-step-icon {
-  font-size: 32px;
-  height: 56px;
-  width: 56px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--surface-container-low);
-  border: 1px solid var(--outline-variant);
-  border-radius: var(--radius-lg);
-}
-
-.menu-step-num {
-  position: absolute;
-  top: -6px;
-  right: calc(50% - 34px);
-  width: 20px;
-  height: 20px;
-  border-radius: var(--radius-full);
-  background: linear-gradient(135deg, var(--primary), var(--primary-container));
-  color: var(--on-primary);
-  font-family: 'Space Grotesk', sans-serif;
-  font-size: 11px;
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  line-height: 1;
-}
-
-.menu-step-text {
-  font-family: 'Manrope', sans-serif;
-  font-size: 11px;
-  color: var(--on-surface-variant);
-  line-height: 1.3;
-  max-width: 110px;
-}
-
-.menu-step-arrow {
-  color: var(--outline-variant);
-  font-size: 16px;
-  margin-top: 20px;
-  flex-shrink: 0;
-}
-
-/* Spacer to push buttons to bottom */
-.menu-spacer { flex: 1; }
 
 /* Menu buttons */
 .menu-buttons {
