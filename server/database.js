@@ -72,10 +72,29 @@ db.exec(`
     FOREIGN KEY (user_id) REFERENCES users(telegram_id)
   );
 
+  CREATE TABLE IF NOT EXISTS user_badges (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    badge_id TEXT NOT NULL,
+    unlocked_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(user_id, badge_id),
+    FOREIGN KEY (user_id) REFERENCES users(telegram_id)
+  );
+
   CREATE INDEX IF NOT EXISTS idx_users_telegram ON users(telegram_id);
   CREATE INDEX IF NOT EXISTS idx_leaderboard_score ON leaderboard(total_score DESC);
   CREATE INDEX IF NOT EXISTS idx_game_rounds_user ON game_rounds(user_id);
+  CREATE INDEX IF NOT EXISTS idx_user_badges_user ON user_badges(user_id);
 `);
+
+// Add badge-related columns to users table (safe with try/catch since ALTER TABLE errors if column exists)
+try { db.exec('ALTER TABLE users ADD COLUMN perfect_count INTEGER DEFAULT 0'); } catch (e) { /* column already exists */ }
+try { db.exec('ALTER TABLE users ADD COLUMN current_streak INTEGER DEFAULT 0'); } catch (e) { /* column already exists */ }
+try { db.exec('ALTER TABLE users ADD COLUMN best_streak INTEGER DEFAULT 0'); } catch (e) { /* column already exists */ }
+try { db.exec('ALTER TABLE users ADD COLUMN last_round_score INTEGER DEFAULT 0'); } catch (e) { /* column already exists */ }
+try { db.exec('ALTER TABLE users ADD COLUMN best_session_score INTEGER DEFAULT 0'); } catch (e) { /* column already exists */ }
+try { db.exec('ALTER TABLE users ADD COLUMN referred_by INTEGER DEFAULT NULL'); } catch (e) { /* column already exists */ }
+try { db.exec('ALTER TABLE users ADD COLUMN referral_rewarded INTEGER DEFAULT 0'); } catch (e) { /* column already exists */ }
 
 // User operations
 const getUser = db.prepare('SELECT * FROM users WHERE telegram_id = ?');
@@ -127,18 +146,21 @@ const completeRound = db.prepare(`
 `);
 const getRoundById = db.prepare('SELECT * FROM game_rounds WHERE id = ?');
 
-// Leaderboard operations
+// Leaderboard operations (ranked by best session score = cumulative score until game over)
 const getLeaderboard = db.prepare(`
-  SELECT u.telegram_id, u.username, u.first_name, u.total_score, u.games_played, u.best_round_score
+  SELECT u.telegram_id, u.username, u.first_name, u.total_score, u.games_played, u.best_round_score, u.best_session_score
   FROM users u
   WHERE u.games_played > 0
-  ORDER BY u.total_score DESC
+  ORDER BY u.best_session_score DESC
   LIMIT ?
 `);
 const getUserRank = db.prepare(`
   SELECT COUNT(*) + 1 as rank FROM users
-  WHERE total_score > (SELECT total_score FROM users WHERE telegram_id = ?)
+  WHERE best_session_score > (SELECT best_session_score FROM users WHERE telegram_id = ?)
   AND games_played > 0
+`);
+const updateBestSessionScore = db.prepare(`
+  UPDATE users SET best_session_score = MAX(best_session_score, ?) WHERE telegram_id = ?
 `);
 
 // Admin pipeline operations
@@ -153,6 +175,14 @@ const getPhotoStats = db.prepare(`
     SUM(CASE WHEN active = -1 THEN 1 ELSE 0 END) as rejected
   FROM photos
 `);
+
+// Badge operations
+const getUserBadges = db.prepare('SELECT * FROM user_badges WHERE user_id = ?');
+const addBadge = db.prepare('INSERT OR IGNORE INTO user_badges (user_id, badge_id) VALUES (?, ?)');
+const updateUserStreak = db.prepare('UPDATE users SET current_streak = ?, best_streak = MAX(best_streak, ?) WHERE telegram_id = ?');
+const updatePerfectCount = db.prepare('UPDATE users SET perfect_count = perfect_count + 1 WHERE telegram_id = ?');
+const resetStreak = db.prepare('UPDATE users SET current_streak = 0 WHERE telegram_id = ?');
+const updateLastRoundScore = db.prepare('UPDATE users SET last_round_score = ? WHERE telegram_id = ?');
 
 // Transaction logging
 const logTransaction = db.prepare(`
@@ -181,5 +211,16 @@ module.exports = {
   getPhotosByStatus,
   getAllPhotosAdmin,
   updatePhotoActive,
-  getPhotoStats
+  getPhotoStats,
+  getUserBadges,
+  addBadge,
+  updateUserStreak,
+  updatePerfectCount,
+  resetStreak,
+  updateLastRoundScore,
+  updateBestSessionScore,
+  setReferredBy: db.prepare('UPDATE users SET referred_by = ? WHERE telegram_id = ? AND referred_by IS NULL'),
+  getReferrer: db.prepare('SELECT referred_by FROM users WHERE telegram_id = ?'),
+  markReferralRewarded: db.prepare('UPDATE users SET referral_rewarded = 1 WHERE telegram_id = ?'),
+  getReferralStatus: db.prepare('SELECT referred_by, referral_rewarded, games_played FROM users WHERE telegram_id = ?')
 };

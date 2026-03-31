@@ -37,7 +37,11 @@
     <!-- MAIN MENU -->
     <div id="screen-menu" class="screen">
       <div class="menu-content">
-        <h1 class="menu-title">MAIN MENU</h1>
+        <div class="menu-hero">
+          <div class="hero-ball">&#9917;</div>
+          <h1 class="menu-title">FIND THE BALL</h1>
+          <p class="menu-subtitle" data-i18n="menu_subtitle">Can you spot it?</p>
+        </div>
 
         <div class="high-score-section">
           <span class="high-score-label" data-i18n="high_score">HIGH SCORE</span>
@@ -46,26 +50,40 @@
 
         <div class="menu-trophies" id="menu-trophies">
           <div class="trophy-shelf">
-            <div class="trophy trophy-left" data-threshold="500">
-              <div class="trophy-icon">&#127942;</div>
-              <span>500+</span>
+            <div class="trophy" data-threshold="500">
+              <div class="trophy-icon">&#129353;</div>
+              <span class="trophy-label">500+</span>
             </div>
-            <div class="trophy trophy-center" data-threshold="5000">
-              <div class="trophy-icon">&#127942;</div>
-              <span>5000+</span>
+            <div class="trophy" data-threshold="2000">
+              <div class="trophy-icon">&#129352;</div>
+              <span class="trophy-label">2 000+</span>
             </div>
-            <div class="trophy trophy-right" data-threshold="2000">
-              <div class="trophy-icon">&#127942;</div>
-              <span>2000+</span>
+            <div class="trophy" data-threshold="5000">
+              <div class="trophy-icon">&#129351;</div>
+              <span class="trophy-label">5 000+</span>
             </div>
           </div>
-          <div class="trophy-shelf-bar"></div>
+          <div class="trophy-progress">
+            <div class="trophy-progress-fill" id="trophy-progress-fill"></div>
+          </div>
+        </div>
+
+        <div class="menu-badges" id="menu-badges">
+          <div class="badges-header">
+            <span class="badges-title" data-i18n="badges">BADGES</span>
+            <span class="badges-count" id="badges-count">0/18</span>
+          </div>
+          <div class="badges-scroll" id="badges-scroll">
+            <!-- Populated dynamically -->
+          </div>
         </div>
 
         <div class="menu-buttons">
-          <button class="btn btn-gold btn-large" id="btn-play" data-i18n="start_game">START GAME</button>
-          <button class="btn btn-gold btn-large" id="btn-menu-leaderboard" data-i18n="leaderboard">LEADERBOARD</button>
-          <button class="btn btn-gold btn-large" id="btn-shop" data-i18n="shop">SHOP</button>
+          <button class="btn btn-play-main" id="btn-play" data-i18n="start_game">START GAME</button>
+          <div class="menu-buttons-row">
+            <button class="btn btn-secondary btn-half" id="btn-menu-leaderboard" data-i18n="leaderboard">LEADERBOARD</button>
+            <button class="btn btn-secondary btn-half" id="btn-shop" data-i18n="shop">SHOP</button>
+          </div>
         </div>
 
         <div class="version">v1.0</div>
@@ -247,114 +265,97 @@
         <span class="shop-coin-icon">&#9917;</span>
       </div>
 
-      <!-- Payment method tabs -->
-      <div class="shop-payment-tabs">
-        <button class="shop-tab active" id="shop-tab-stars" onclick="switchPayTab('stars')">&#11088; Stars</button>
-        <button class="shop-tab" id="shop-tab-ton" onclick="switchPayTab('ton')">&#128142; TON</button>
-      </div>
-
-      <!-- Stars packs -->
-      <div class="shop-list" id="shop-list-stars">
-        <div class="shop-item" data-pack="500" data-stars="50">
+      <!-- Packs list with $ prices -->
+      <div class="shop-list" id="shop-list">
+        <div class="shop-item" data-pack="500" data-price="0.99" data-stars="50" data-ton="0.5">
           <div class="shop-item-left">
             <span class="shop-item-coin">&#9917;</span>
             <span>+ 500 Coins</span>
           </div>
-          <span class="shop-price">&#11088; 50</span>
+          <span class="shop-price">$0.99</span>
         </div>
-        <div class="shop-item" data-pack="1000" data-stars="95">
+        <div class="shop-item" data-pack="1000" data-price="1.99" data-stars="95" data-ton="0.9">
           <div class="shop-item-left">
             <span class="shop-item-coin">&#9917;</span>
             <span>+ 1 000 Coins</span>
           </div>
-          <span class="shop-price">&#11088; 95</span>
+          <span class="shop-price">$1.99</span>
         </div>
-        <div class="shop-item" data-pack="2000" data-stars="180">
+        <div class="shop-item" data-pack="2000" data-price="3.49" data-stars="180" data-ton="1.5">
           <div class="shop-item-left">
             <span class="shop-item-coin">&#9917;</span>
             <span>+ 2 000 Coins</span>
           </div>
-          <span class="shop-price">&#11088; 180</span>
+          <span class="shop-price">$3.49</span>
         </div>
-        <div class="shop-item" data-pack="5000" data-stars="400">
+        <div class="shop-item popular" data-pack="5000" data-price="7.99" data-stars="400" data-ton="3">
+          <div class="shop-popular-badge">POPULAR</div>
           <div class="shop-item-left">
             <span class="shop-item-coin">&#9917;</span>
             <span>+ 5 000 Coins</span>
           </div>
-          <span class="shop-price">&#11088; 400</span>
+          <span class="shop-price">$7.99</span>
         </div>
-        <div class="shop-item" data-pack="10000" data-stars="750">
+        <div class="shop-item" data-pack="10000" data-price="14.99" data-stars="750" data-ton="5">
           <div class="shop-item-left">
             <span class="shop-item-coin">&#9917;</span>
             <span>+ 10 000 Coins</span>
           </div>
-          <span class="shop-price">&#11088; 750</span>
+          <span class="shop-price">$14.99</span>
         </div>
-        <div class="shop-item" data-pack="20000" data-stars="1400">
+        <div class="shop-item" data-pack="20000" data-price="27.99" data-stars="1400" data-ton="9">
           <div class="shop-item-left">
             <span class="shop-item-coin">&#9917;</span>
             <span>+ 20 000 Coins</span>
           </div>
-          <span class="shop-price">&#11088; 1 400</span>
-        </div>
-      </div>
-
-      <!-- TON packs -->
-      <div class="shop-list" id="shop-list-ton" style="display:none">
-        <div class="shop-item" data-pack="500" data-ton="0.5">
-          <div class="shop-item-left">
-            <span class="shop-item-coin">&#9917;</span>
-            <span>+ 500 Coins</span>
-          </div>
-          <span class="shop-price">&#128142; 0.5 TON</span>
-        </div>
-        <div class="shop-item" data-pack="1000" data-ton="0.9">
-          <div class="shop-item-left">
-            <span class="shop-item-coin">&#9917;</span>
-            <span>+ 1 000 Coins</span>
-          </div>
-          <span class="shop-price">&#128142; 0.9 TON</span>
-        </div>
-        <div class="shop-item" data-pack="2000" data-ton="1.5">
-          <div class="shop-item-left">
-            <span class="shop-item-coin">&#9917;</span>
-            <span>+ 2 000 Coins</span>
-          </div>
-          <span class="shop-price">&#128142; 1.5 TON</span>
-        </div>
-        <div class="shop-item" data-pack="5000" data-ton="3">
-          <div class="shop-item-left">
-            <span class="shop-item-coin">&#9917;</span>
-            <span>+ 5 000 Coins</span>
-          </div>
-          <span class="shop-price">&#128142; 3 TON</span>
-        </div>
-        <div class="shop-item" data-pack="10000" data-ton="5">
-          <div class="shop-item-left">
-            <span class="shop-item-coin">&#9917;</span>
-            <span>+ 10 000 Coins</span>
-          </div>
-          <span class="shop-price">&#128142; 5 TON</span>
-        </div>
-        <div class="shop-item" data-pack="20000" data-ton="9">
-          <div class="shop-item-left">
-            <span class="shop-item-coin">&#9917;</span>
-            <span>+ 20 000 Coins</span>
-          </div>
-          <span class="shop-price">&#128142; 9 TON</span>
+          <span class="shop-price">$27.99</span>
         </div>
       </div>
 
       <div class="shop-separator"></div>
 
-      <div class="shop-ad-reward">
-        <div class="shop-item ad-item" id="btn-watch-ad">
+      <div class="shop-invite-reward">
+        <div class="shop-item invite-item" id="btn-invite-friend">
           <div class="shop-item-left">
-            <span class="shop-item-coin">&#9917;</span>
-            <span data-i18n="watch_ad">+ 50 Coins / Watch One Video Ad</span>
+            <span class="shop-item-coin">&#127873;</span>
+            <span data-i18n="invite_friend">Invite a friend — earn 10 000 coins!</span>
           </div>
           <span class="shop-price free">Free</span>
         </div>
+      </div>
+    </div>
+
+    <!-- PAYMENT BOTTOM SHEET -->
+    <div id="payment-sheet" class="bottom-sheet">
+      <div class="bottom-sheet-backdrop" id="payment-sheet-backdrop"></div>
+      <div class="bottom-sheet-content" id="payment-sheet-content">
+        <div class="sheet-handle"></div>
+        <button class="sheet-close" id="payment-sheet-close">&#10005;</button>
+        <div class="sheet-pack-info">
+          <span class="sheet-pack-icon">&#9917;</span>
+          <span class="sheet-pack-label" id="sheet-pack-label">+ 500 Coins</span>
+        </div>
+        <div class="sheet-price" id="sheet-price">$0.99</div>
+        <div class="sheet-buttons">
+          <button class="sheet-pay-btn sheet-pay-stars" id="sheet-btn-stars">
+            <span class="sheet-pay-label" data-i18n="buy_with_stars">BUY WITH</span>
+            <span class="sheet-pay-amount" id="sheet-stars-amount">&#11088; 50</span>
+          </button>
+          <button class="sheet-pay-btn sheet-pay-ton" id="sheet-btn-ton">
+            <span class="sheet-pay-label" data-i18n="buy_with_ton">BUY WITH</span>
+            <span class="sheet-pay-amount" id="sheet-ton-amount">&#128142; 0.5 TON</span>
+          </button>
+        </div>
+        <p class="sheet-disclaimer" data-i18n="payment_disclaimer">Transaction may take a few minutes to process.</p>
+      </div>
+    </div>
+
+    <!-- BADGES OVERLAY -->
+    <div id="overlay-badges" class="overlay">
+      <div class="overlay-content badges-overlay-content">
+        <h2 data-i18n="badges">BADGES</h2>
+        <div class="badges-grid" id="badges-grid"></div>
+        <button class="btn btn-secondary" id="btn-badges-close" data-i18n="menu">CLOSE</button>
       </div>
     </div>
 

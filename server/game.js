@@ -1,5 +1,45 @@
 const db = require('./database');
 
+// Reference to Telegram bot (set by index.js)
+let telegramBot = null;
+function setBot(bot) { telegramBot = bot; }
+
+const REFERRAL_REWARD = 10000;
+const REFERRAL_MIN_GAMES = 5;
+
+function checkReferralReward(telegramId) {
+  try {
+    const refStatus = db.getReferralStatus.get(telegramId);
+    if (!refStatus || !refStatus.referred_by || refStatus.referral_rewarded) return;
+
+    // Check if this referred user has reached the required games
+    if (refStatus.games_played >= REFERRAL_MIN_GAMES) {
+      const referrerId = refStatus.referred_by;
+
+      // Reward the referrer
+      db.updateUserCoins.run(REFERRAL_REWARD, referrerId);
+      db.logTransaction.run(referrerId, REFERRAL_REWARD, 'referral_reward', `Referral reward: user ${telegramId} played ${REFERRAL_MIN_GAMES} games`);
+
+      // Mark as rewarded so we don't reward twice
+      db.markReferralRewarded.run(telegramId);
+
+      // Send Telegram notification to referrer
+      if (telegramBot) {
+        const referredUser = db.getUser.get(telegramId);
+        const name = referredUser?.first_name || referredUser?.username || 'Un ami';
+        telegramBot.sendMessage(referrerId,
+          `🎉 *+${REFERRAL_REWARD.toLocaleString()} coins!*\n\n${name} a joue ${REFERRAL_MIN_GAMES} parties grace a ton invitation!\nTes coins ont ete credites automatiquement. Continue a inviter tes amis!`,
+          { parse_mode: 'Markdown' }
+        ).catch(err => console.error('Failed to send referral notification:', err.message));
+      }
+
+      console.log(`Referral reward: ${REFERRAL_REWARD} coins to user ${referrerId} (referred ${telegramId})`);
+    }
+  } catch (e) {
+    console.error('Referral check error:', e.message);
+  }
+}
+
 // Scoring constants
 const MAX_SCORE = 1000;
 const PERFECT_RADIUS = 15;    // pixels - within ball = perfect
@@ -149,6 +189,12 @@ function submitGuess(roundId, telegramId, guessX, guessY, usedReveal, usedExpand
     db.logTransaction.run(telegramId, bonusCoins, 'reward', `Score reward: ${result.rating}`);
   }
 
+  // Check referral reward: if this user was referred and just hit 5 games, reward referrer
+  checkReferralReward(telegramId);
+
+  // Check and award badges
+  const newBadges = checkAndAwardBadges(telegramId, result);
+
   return {
     score: result.score,
     distance: result.distance,
@@ -156,6 +202,7 @@ function submitGuess(roundId, telegramId, guessX, guessY, usedReveal, usedExpand
     emoji: getRatingEmoji(result.rating),
     message: getRatingMessage(result.rating, result.score),
     bonusCoins,
+    newBadges,
     ballPosition: {
       x: photo.ball_x,
       y: photo.ball_y
@@ -176,8 +223,83 @@ function getLeaderboardData(limit = 50) {
     totalScore: entry.total_score,
     gamesPlayed: entry.games_played,
     bestScore: entry.best_round_score,
+    bestSessionScore: entry.best_session_score || 0,
     avgScore: entry.games_played > 0 ? Math.round(entry.total_score / entry.games_played) : 0
   }));
+}
+
+function endSession(telegramId, sessionScore) {
+  if (sessionScore > 0) {
+    db.updateBestSessionScore.run(sessionScore, telegramId);
+  }
+  const user = db.getUser.get(telegramId);
+  return {
+    bestSessionScore: user?.best_session_score || 0
+  };
+}
+
+function checkAndAwardBadges(telegramId, result) {
+  const newBadges = [];
+
+  // Get current user data
+  const userData = db.getUser.get(telegramId);
+  if (!userData) return newBadges;
+
+  const existingBadges = db.getUserBadges.all(telegramId).map(b => b.badge_id);
+
+  function award(badgeId) {
+    if (!existingBadges.includes(badgeId)) {
+      db.addBadge.run(telegramId, badgeId);
+      newBadges.push(badgeId);
+    }
+  }
+
+  // Games played milestones
+  if (userData.games_played >= 1) award('first_game');
+  if (userData.games_played >= 10) award('veteran');
+  if (userData.games_played >= 50) award('addict');
+  if (userData.games_played >= 100) award('legend');
+
+  // Precision badges
+  if (result.rating === 'perfect') {
+    db.updatePerfectCount.run(telegramId);
+    const updated = db.getUser.get(telegramId);
+    if (updated.perfect_count >= 1) award('sharpshooter');
+    if (updated.perfect_count >= 5) award('eagle_eye');
+    if (updated.perfect_count >= 10) award('sniper');
+  }
+
+  // Streak badges (good round = not miss/far)
+  if (result.rating !== 'miss' && result.rating !== 'far') {
+    const newStreak = (userData.current_streak || 0) + 1;
+    db.updateUserStreak.run(newStreak, newStreak, telegramId);
+    if (newStreak >= 3) award('hot_streak_3');
+    if (newStreak >= 5) award('unstoppable_5');
+    if (newStreak >= 10) award('machine_10');
+    if (newStreak >= 20) award('god_mode_20');
+  } else {
+    db.resetStreak.run(telegramId);
+  }
+
+  // Total score badges
+  if (userData.total_score >= 1000) award('scorer_1k');
+  if (userData.total_score >= 5000) award('scorer_5k');
+  if (userData.total_score >= 25000) award('scorer_25k');
+  if (userData.total_score >= 100000) award('scorer_100k');
+
+  // Coin collector
+  if (userData.coins >= 5000) award('coin_collector');
+
+  // Comeback kid: score 800+ after having scored under 200 on previous round
+  const lastScore = userData.last_round_score || 0;
+  if (lastScore > 0 && lastScore < 200 && result.score >= 800) {
+    award('comeback_kid');
+  }
+
+  // Save this round's score as last_round_score for next comeback check
+  db.updateLastRoundScore.run(result.score, telegramId);
+
+  return newBadges;
 }
 
 function getUserStats(telegramId) {
@@ -191,6 +313,7 @@ function getUserStats(telegramId) {
     totalScore: user.total_score,
     gamesPlayed: user.games_played,
     bestRoundScore: user.best_round_score,
+    bestSessionScore: user.best_session_score || 0,
     avgScore: user.games_played > 0 ? Math.round(user.total_score / user.games_played) : 0,
     rank: rank?.rank || 0
   };
@@ -202,6 +325,9 @@ module.exports = {
   submitGuess,
   getLeaderboardData,
   getUserStats,
+  endSession,
+  checkAndAwardBadges,
+  setBot,
   REVEAL_QUARTER_COST,
   EXPAND_AREA_COST
 };

@@ -19,6 +19,7 @@ const ADMIN_SECRET = process.env.ADMIN_SECRET || 'ftb-admin-2024';
 let bot;
 if (BOT_TOKEN) {
   bot = new TelegramBot(BOT_TOKEN, { polling: true });
+  game.setBot(bot);
   setupBot(bot);
   console.log('Telegram bot started');
 }
@@ -163,6 +164,13 @@ app.post('/api/auth', authMiddleware, (req, res) => {
   });
 });
 
+// Get invite link for referral
+app.get('/api/invite-link', authMiddleware, (req, res) => {
+  const botUsername = process.env.BOT_USERNAME || 'FindTheBallBot';
+  const link = `https://t.me/${botUsername}?start=ref_${req.telegramUser.id}`;
+  res.json({ link });
+});
+
 // Start a new round
 app.post('/api/game/start', authMiddleware, (req, res) => {
   const lastPhotoId = req.body?.lastPhotoId || 0;
@@ -229,6 +237,16 @@ app.post('/api/game/guess', authMiddleware, (req, res) => {
   res.json(result);
 });
 
+// End session (game over) - save best session score
+app.post('/api/game/end-session', authMiddleware, (req, res) => {
+  const { sessionScore } = req.body;
+  if (sessionScore == null) {
+    return res.status(400).json({ error: 'Missing sessionScore' });
+  }
+  const result = game.endSession(req.telegramUser.id, parseInt(sessionScore));
+  res.json(result);
+});
+
 // Get user stats
 app.get('/api/user/stats', authMiddleware, (req, res) => {
   const stats = game.getUserStats(req.telegramUser.id);
@@ -236,6 +254,61 @@ app.get('/api/user/stats', authMiddleware, (req, res) => {
     return res.status(404).json({ error: 'User not found' });
   }
   res.json(stats);
+});
+
+// Get user badges
+app.get('/api/user/badges', authMiddleware, (req, res) => {
+  const telegramId = req.telegramUser.id;
+  const unlockedBadges = db.getUserBadges.all(telegramId);
+  const userData = db.getUser.get(telegramId);
+
+  // All badge definitions with progress info
+  const BADGE_DEFS = {
+    first_game:    { category: 'milestone', target: 1,      current: userData?.games_played || 0 },
+    veteran:       { category: 'milestone', target: 10,     current: userData?.games_played || 0 },
+    addict:        { category: 'milestone', target: 50,     current: userData?.games_played || 0 },
+    legend:        { category: 'milestone', target: 100,    current: userData?.games_played || 0 },
+    sharpshooter:  { category: 'precision', target: 1,      current: userData?.perfect_count || 0 },
+    eagle_eye:     { category: 'precision', target: 5,      current: userData?.perfect_count || 0 },
+    sniper:        { category: 'precision', target: 10,     current: userData?.perfect_count || 0 },
+    hot_streak_3:  { category: 'streak',    target: 3,      current: userData?.best_streak || 0 },
+    unstoppable_5: { category: 'streak',    target: 5,      current: userData?.best_streak || 0 },
+    machine_10:    { category: 'streak',    target: 10,     current: userData?.best_streak || 0 },
+    god_mode_20:   { category: 'streak',    target: 20,     current: userData?.best_streak || 0 },
+    scorer_1k:     { category: 'score',     target: 1000,   current: userData?.total_score || 0 },
+    scorer_5k:     { category: 'score',     target: 5000,   current: userData?.total_score || 0 },
+    scorer_25k:    { category: 'score',     target: 25000,  current: userData?.total_score || 0 },
+    scorer_100k:   { category: 'score',     target: 100000, current: userData?.total_score || 0 },
+    comeback_kid:  { category: 'special',   target: 1,      current: 0 },
+    coin_collector:{ category: 'special',   target: 5000,   current: userData?.coins || 0 },
+    social_star:   { category: 'special',   target: 1,      current: 0 }
+  };
+
+  const unlockedMap = {};
+  unlockedBadges.forEach(b => { unlockedMap[b.badge_id] = b.unlocked_at; });
+
+  const badges = Object.entries(BADGE_DEFS).map(([id, def]) => ({
+    id,
+    category: def.category,
+    unlocked: !!unlockedMap[id],
+    unlockedAt: unlockedMap[id] || null,
+    progress: Math.min(def.current, def.target),
+    target: def.target
+  }));
+
+  res.json({
+    badges,
+    unlocked: unlockedBadges.length,
+    total: Object.keys(BADGE_DEFS).length
+  });
+});
+
+// Award social_star badge when sharing
+app.post('/api/user/badges/social', authMiddleware, (req, res) => {
+  const telegramId = req.telegramUser.id;
+  db.addBadge.run(telegramId, 'social_star');
+  const isNew = db.getUserBadges.all(telegramId).some(b => b.badge_id === 'social_star');
+  res.json({ awarded: isNew, badgeId: 'social_star' });
 });
 
 // Get leaderboard
@@ -723,8 +796,23 @@ function setupBot(bot) {
     }
   });
 
-  bot.onText(/\/start/, (msg) => {
+  bot.onText(/\/start(.*)/, (msg, match) => {
     const chatId = msg.chat.id;
+    const userId = msg.from.id;
+    const param = (match[1] || '').trim();
+
+    // Handle referral: /start ref_123456
+    if (param.startsWith('ref_')) {
+      const referrerId = parseInt(param.replace('ref_', ''));
+      if (referrerId && referrerId !== userId) {
+        // Create user first if needed
+        db.createUser.run(userId, msg.from.username || null, msg.from.first_name || null);
+        // Set referrer (only if not already referred)
+        db.setReferredBy.run(referrerId, userId);
+        console.log(`Referral: user ${userId} referred by ${referrerId}`);
+      }
+    }
+
     bot.sendMessage(chatId, '⚽ *Find the Ball!*\n\nPeux-tu deviner ou se cache le ballon?\n\nRegarde bien la photo, analyse les indices et place ton curseur le plus pres possible!\n\n🏆 Les 50 meilleurs joueurs gagnent des recompenses!', {
       parse_mode: 'Markdown',
       reply_markup: {
@@ -774,7 +862,7 @@ function setupBot(bot) {
       return bot.sendMessage(chatId, 'Commence a jouer pour voir tes stats!');
     }
 
-    bot.sendMessage(chatId, `📊 *Tes statistiques*\n\n💰 Coins: ${stats.coins}\n🎯 Score total: ${stats.totalScore}\n🎮 Parties: ${stats.gamesPlayed}\n⭐ Meilleur score: ${stats.bestRoundScore}\n📈 Moyenne: ${stats.avgScore}\n🏅 Classement: #${stats.rank}`, {
+    bot.sendMessage(chatId, `📊 *Tes statistiques*\n\n💰 Coins: ${stats.coins}\n🎯 Score total: ${stats.totalScore}\n🎮 Parties: ${stats.gamesPlayed}\n⭐ Meilleur session: ${stats.bestSessionScore}\n📈 Moyenne: ${stats.avgScore}\n🏅 Classement: #${stats.rank}`, {
       parse_mode: 'Markdown'
     });
   });

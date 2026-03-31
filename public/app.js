@@ -23,7 +23,11 @@ const state = {
 const TRANSLATIONS = {
   en: {
     loading: 'Loading...', high_score: 'HIGH SCORE', start_game: 'START GAME',
-    leaderboard: 'LEADERBOARD', shop: 'SHOP', drag_hint: 'Touch and drag to place your cursor',
+    leaderboard: 'LEADERBOARD', shop: 'SHOP', menu_subtitle: 'Can you spot it?',
+    drag_hint: 'Touch and drag to place your cursor',
+    buy_with_stars: 'BUY WITH', buy_with_ton: 'BUY WITH',
+    payment_disclaimer: 'Transaction may take a few minutes to process.',
+    invite_friend: 'Invite a friend — earn 10 000 coins!',
     points: 'points', you: 'You', ball: 'Ball', precision: 'Precision', bonus: 'Bonus',
     next_photo: 'NEXT PHOTO', share_score: 'SHARE MY SCORE', menu: 'MENU',
     play_again: 'PLAY AGAIN', main_menu: 'MAIN MENU', pause: 'PAUSE',
@@ -39,11 +43,16 @@ const TRANSLATIONS = {
     rating_great: ['EXCELLENT!', 'SO CLOSE!', 'ALMOST PERFECT!'],
     rating_good: ['WELL PLAYED!', 'NOT BAD!', 'GOOD INSTINCT!'],
     rating_ok: ['CORRECT', "IT'LL DO", 'COULD BE BETTER'],
-    share_text: "I scored {score} points on Find the Ball! Can you do better?"
+    share_text: "I scored {score} points on Find the Ball! Can you do better?",
+    badges: 'BADGES', badge_unlocked: 'BADGE UNLOCKED!'
   },
   fr: {
     loading: 'Chargement...', high_score: 'MEILLEUR SCORE', start_game: 'JOUER',
-    leaderboard: 'CLASSEMENT', shop: 'BOUTIQUE', drag_hint: 'Touche et glisse pour placer ton curseur',
+    leaderboard: 'CLASSEMENT', shop: 'BOUTIQUE', menu_subtitle: 'Sauras-tu le trouver ?',
+    drag_hint: 'Touche et glisse pour placer ton curseur',
+    buy_with_stars: 'PAYER AVEC', buy_with_ton: 'PAYER AVEC',
+    payment_disclaimer: 'La transaction peut prendre quelques minutes.',
+    invite_friend: 'Invite un ami — gagne 10 000 coins !',
     points: 'points', you: 'Toi', ball: 'Ballon', precision: 'Precision', bonus: 'Bonus',
     next_photo: 'PHOTO SUIVANTE', share_score: 'PARTAGER MON SCORE', menu: 'MENU',
     play_again: 'REJOUER', main_menu: 'MENU PRINCIPAL', pause: 'PAUSE',
@@ -58,7 +67,8 @@ const TRANSLATIONS = {
     rating_great: ['EXCELLENT !', 'TRES PROCHE !', 'PRESQUE PARFAIT !'],
     rating_good: ['BIEN JOUE !', 'PAS MAL !', 'BON INSTINCT !'],
     rating_ok: ['CORRECT', 'CA PASSE', 'PEUT MIEUX FAIRE'],
-    share_text: "J'ai marque {score} points sur Find the Ball ! Tu peux faire mieux ?"
+    share_text: "J'ai marque {score} points sur Find the Ball ! Tu peux faire mieux ?",
+    badges: 'BADGES', badge_unlocked: 'BADGE DEBLOQUE !'
   },
   es: {
     loading: 'Cargando...', high_score: 'MEJOR PUNTUACION', start_game: 'JUGAR',
@@ -77,7 +87,8 @@ const TRANSLATIONS = {
     rating_great: ['EXCELENTE!', 'MUY CERCA!', 'CASI PERFECTO!'],
     rating_good: ['BIEN JUGADO!', 'NADA MAL!', 'BUEN INSTINTO!'],
     rating_ok: ['CORRECTO', 'VALE', 'PUEDE MEJORAR'],
-    share_text: "He conseguido {score} puntos en Find the Ball! Puedes superarme?"
+    share_text: "He conseguido {score} puntos en Find the Ball! Puedes superarme?",
+    badges: 'INSIGNIAS', badge_unlocked: 'INSIGNIA DESBLOQUEADA!'
   },
   pt: {
     loading: 'Carregando...', high_score: 'RECORDE', start_game: 'JOGAR',
@@ -96,7 +107,8 @@ const TRANSLATIONS = {
     rating_great: ['EXCELENTE!', 'MUITO PERTO!', 'QUASE PERFEITO!'],
     rating_good: ['BEM JOGADO!', 'NADA MAL!', 'BOM INSTINTO!'],
     rating_ok: ['CORRETO', 'PASSOU', 'PODE MELHORAR'],
-    share_text: "Fiz {score} pontos no Find the Ball! Consegue me superar?"
+    share_text: "Fiz {score} pontos no Find the Ball! Consegue me superar?",
+    badges: 'MEDALHAS', badge_unlocked: 'MEDALHA DESBLOQUEADA!'
   },
   de: {
     loading: 'Laden...', high_score: 'HIGHSCORE', start_game: 'SPIEL STARTEN',
@@ -115,7 +127,8 @@ const TRANSLATIONS = {
     rating_great: ['AUSGEZEICHNET!', 'GANZ NAH!', 'FAST PERFEKT!'],
     rating_good: ['GUT GESPIELT!', 'NICHT SCHLECHT!', 'GUTER INSTINKT!'],
     rating_ok: ['KORREKT', 'GEHT SO', 'KANN BESSER'],
-    share_text: "Ich habe {score} Punkte bei Find the Ball erreicht! Kannst du das toppen?"
+    share_text: "Ich habe {score} Punkte bei Find the Ball erreicht! Kannst du das toppen?",
+    badges: 'ABZEICHEN', badge_unlocked: 'ABZEICHEN FREIGESCHALTET!'
   },
   ru: {
     loading: 'Загрузка...', high_score: 'РЕКОРД', start_game: 'ИГРАТЬ',
@@ -134,7 +147,8 @@ const TRANSLATIONS = {
     rating_great: ['ОТЛИЧНО!', 'ОЧЕНЬ БЛИЗКО!', 'ПОЧТИ ИДЕАЛЬНО!'],
     rating_good: ['ХОРОШО!', 'НЕПЛОХО!', 'ХОРОШИЙ ИНСТИНКТ!'],
     rating_ok: ['НОРМАЛЬНО', 'СОЙДЁТ', 'МОЖНО ЛУЧШЕ'],
-    share_text: "Я набрал {score} очков в Find the Ball! Сможешь лучше?"
+    share_text: "Я набрал {score} очков в Find the Ball! Сможешь лучше?",
+    badges: 'ЗНАЧКИ', badge_unlocked: 'ЗНАЧОК ПОЛУЧЕН!'
   },
   tr: {
     loading: 'Yukleniyor...', high_score: 'EN YUKSEK SKOR', start_game: 'OYNA',
@@ -153,7 +167,8 @@ const TRANSLATIONS = {
     rating_great: ['HARIKA!', 'COK YAKIN!', 'NEREDEYSE MUKEMMEL!'],
     rating_good: ['IYI OYNADIN!', 'FENA DEGIL!', 'IYI ICGUDU!'],
     rating_ok: ['DOGRU', 'IDARE EDER', 'DAHA IYI OLABILIR'],
-    share_text: "Find the Ball'da {score} puan aldim! Beni gecebilir misin?"
+    share_text: "Find the Ball'da {score} puan aldim! Beni gecebilir misin?",
+    badges: 'ROZETLER', badge_unlocked: 'ROZET ACILDI!'
   },
   ar: {
     loading: '...جاري التحميل', high_score: 'أعلى نتيجة', start_game: 'ابدأ اللعب',
@@ -172,7 +187,8 @@ const TRANSLATIONS = {
     rating_great: ['!ممتاز', '!قريب جداً', '!شبه مثالي'],
     rating_good: ['!أحسنت', '!ليس سيئاً', '!حدس جيد'],
     rating_ok: ['صحيح', 'مقبول', 'يمكن أفضل'],
-    share_text: "حققت {score} نقطة في Find the Ball! هل تستطيع التفوق علي؟"
+    share_text: "حققت {score} نقطة في Find the Ball! هل تستطيع التفوق علي؟",
+    badges: 'الشارات', badge_unlocked: 'تم فتح شارة!'
   },
   zh: {
     loading: '加载中...', high_score: '最高分', start_game: '开始游戏',
@@ -191,12 +207,159 @@ const TRANSLATIONS = {
     rating_great: ['太棒了！', '非常接近！', '几乎完美！'],
     rating_good: ['不错！', '还行！', '好直觉！'],
     rating_ok: ['一般', '还行吧', '可以更好'],
-    share_text: "我在Find the Ball中获得了{score}分！你能超过我吗？"
+    share_text: "我在Find the Ball中获得了{score}分！你能超过我吗？",
+    badges: '徽章', badge_unlocked: '徽章解锁！'
   }
 };
 
 function t(key) {
   return (TRANSLATIONS[currentLang] && TRANSLATIONS[currentLang][key]) || TRANSLATIONS.en[key] || key;
+}
+
+// ============ BADGE DEFINITIONS ============
+
+const BADGES = {
+  first_game:    { emoji: '\u{1F3AE}', name: { en: 'First Game', fr: 'Premiere Partie', es: 'Primera Partida', pt: 'Primeira Partida', de: 'Erstes Spiel', ru: 'Первая Игра', tr: 'Ilk Oyun', ar: 'أول لعبة', zh: '首次游戏' } },
+  veteran:       { emoji: '\u{1F3AF}', name: { en: 'Veteran', fr: 'Veteran', es: 'Veterano', pt: 'Veterano', de: 'Veteran', ru: 'Ветеран', tr: 'Veteran', ar: 'محترف', zh: '老手' } },
+  addict:        { emoji: '\u{1F525}', name: { en: 'Addict', fr: 'Accro', es: 'Adicto', pt: 'Viciado', de: 'Suchtig', ru: 'Фанат', tr: 'Bagimlisi', ar: 'مدمن', zh: '上瘾' } },
+  legend:        { emoji: '\u{1F451}', name: { en: 'Legend', fr: 'Legende', es: 'Leyenda', pt: 'Lenda', de: 'Legende', ru: 'Легенда', tr: 'Efsane', ar: 'أسطورة', zh: '传奇' } },
+  sharpshooter:  { emoji: '\u{1F3AF}', name: { en: 'Sharpshooter', fr: 'Tireur d\'Elite', es: 'Francotirador', pt: 'Atirador', de: 'Scharfschutze', ru: 'Снайпер', tr: 'Keskin Nisanci', ar: 'قناص', zh: '神射手' } },
+  eagle_eye:     { emoji: '\u{1F985}', name: { en: 'Eagle Eye', fr: 'Oeil d\'Aigle', es: 'Ojo de Aguila', pt: 'Olho de Aguia', de: 'Adlerauge', ru: 'Орлиный Глаз', tr: 'Kartal Goz', ar: 'عين النسر', zh: '鹰眼' } },
+  sniper:        { emoji: '\u{1F52B}', name: { en: 'Sniper', fr: 'Sniper', es: 'Francotirador Pro', pt: 'Sniper', de: 'Sniper', ru: 'Элитный Снайпер', tr: 'Sniper', ar: 'قناص محترف', zh: '狙击手' } },
+  hot_streak_3:  { emoji: '\u{1F525}', name: { en: 'Hot Streak', fr: 'Serie Chaude', es: 'Racha Caliente', pt: 'Sequencia Quente', de: 'Heisse Serie', ru: 'Горячая Серия', tr: 'Sicak Seri', ar: 'سلسلة ساخنة', zh: '连胜' } },
+  unstoppable_5: { emoji: '\u26A1', name: { en: 'Unstoppable', fr: 'Inarretable', es: 'Imparable', pt: 'Imparavel', de: 'Unaufhaltbar', ru: 'Неудержимый', tr: 'Durdurulamaz', ar: 'لا يوقف', zh: '势不可挡' } },
+  machine_10:    { emoji: '\u{1F916}', name: { en: 'Machine', fr: 'Machine', es: 'Maquina', pt: 'Maquina', de: 'Maschine', ru: 'Машина', tr: 'Makine', ar: 'آلة', zh: '机器' } },
+  god_mode_20:   { emoji: '\u{1F31F}', name: { en: 'God Mode', fr: 'Mode Dieu', es: 'Modo Dios', pt: 'Modo Deus', de: 'Gott-Modus', ru: 'Режим Бога', tr: 'Tanri Modu', ar: 'وضع إلهي', zh: '神模式' } },
+  scorer_1k:     { emoji: '\u2B50', name: { en: '1K Scorer', fr: '1K Points', es: '1K Puntos', pt: '1K Pontos', de: '1K Punkte', ru: '1К Очков', tr: '1K Puan', ar: '1 ألف نقطة', zh: '1千分' } },
+  scorer_5k:     { emoji: '\u{1F31F}', name: { en: '5K Scorer', fr: '5K Points', es: '5K Puntos', pt: '5K Pontos', de: '5K Punkte', ru: '5К Очков', tr: '5K Puan', ar: '5 آلاف نقطة', zh: '5千分' } },
+  scorer_25k:    { emoji: '\u{1F4AB}', name: { en: '25K Scorer', fr: '25K Points', es: '25K Puntos', pt: '25K Pontos', de: '25K Punkte', ru: '25К Очков', tr: '25K Puan', ar: '25 ألف نقطة', zh: '2.5万分' } },
+  scorer_100k:   { emoji: '\u{1F3C6}', name: { en: '100K Scorer', fr: '100K Points', es: '100K Puntos', pt: '100K Pontos', de: '100K Punkte', ru: '100К Очков', tr: '100K Puan', ar: '100 ألف نقطة', zh: '10万分' } },
+  comeback_kid:  { emoji: '\u{1F4AA}', name: { en: 'Comeback Kid', fr: 'Retour en Force', es: 'Regreso Epico', pt: 'Volta por Cima', de: 'Comeback Kid', ru: 'Камбэк', tr: 'Geri Donus', ar: 'عودة قوية', zh: '逆袭' } },
+  coin_collector:{ emoji: '\u{1F4B0}', name: { en: 'Coin Collector', fr: 'Collectionneur', es: 'Coleccionista', pt: 'Colecionador', de: 'Sammler', ru: 'Коллекционер', tr: 'Koleksiyoncu', ar: 'جامع العملات', zh: '收集者' } },
+  social_star:   { emoji: '\u{1F4E3}', name: { en: 'Social Star', fr: 'Star Sociale', es: 'Estrella Social', pt: 'Estrela Social', de: 'Social Star', ru: 'Звезда', tr: 'Sosyal Yildiz', ar: 'نجم اجتماعي', zh: '社交达人' } }
+};
+
+let userBadgesData = null;
+let newlyUnlockedBadges = [];
+
+function getBadgeName(badgeId) {
+  const badge = BADGES[badgeId];
+  if (!badge) return badgeId;
+  return badge.name[currentLang] || badge.name.en || badgeId;
+}
+
+async function loadBadges() {
+  try {
+    const data = await api('/api/user/badges');
+    userBadgesData = data;
+    renderMenuBadges(data);
+    return data;
+  } catch (e) {
+    console.error('Failed to load badges:', e);
+    return null;
+  }
+}
+
+function renderMenuBadges(data) {
+  if (!data) return;
+
+  // Update count
+  const countEl = document.getElementById('badges-count');
+  if (countEl) countEl.textContent = `${data.unlocked}/${data.total}`;
+
+  // Render scroll row
+  const scroll = document.getElementById('badges-scroll');
+  if (!scroll) return;
+  scroll.innerHTML = '';
+
+  // Show unlocked first, then locked
+  const sorted = [...data.badges].sort((a, b) => {
+    if (a.unlocked && !b.unlocked) return -1;
+    if (!a.unlocked && b.unlocked) return 1;
+    return 0;
+  });
+
+  sorted.forEach(badge => {
+    const def = BADGES[badge.id];
+    if (!def) return;
+    const item = document.createElement('div');
+    item.className = 'badge-item' + (badge.unlocked ? '' : ' locked');
+    if (newlyUnlockedBadges.includes(badge.id)) {
+      item.classList.add('new');
+    }
+    item.textContent = def.emoji;
+    item.title = getBadgeName(badge.id);
+    scroll.appendChild(item);
+  });
+}
+
+function renderBadgesOverlay(data) {
+  if (!data) return;
+  const grid = document.getElementById('badges-grid');
+  if (!grid) return;
+  grid.innerHTML = '';
+
+  data.badges.forEach(badge => {
+    const def = BADGES[badge.id];
+    if (!def) return;
+
+    const item = document.createElement('div');
+    item.className = 'badge-grid-item' + (badge.unlocked ? '' : ' locked');
+
+    const progressPct = badge.target > 0 ? Math.min(100, Math.round((badge.progress / badge.target) * 100)) : 0;
+
+    item.innerHTML = `
+      <div class="badge-grid-emoji">${def.emoji}</div>
+      <div class="badge-grid-name">${getBadgeName(badge.id)}</div>
+      <div class="badge-grid-progress">${badge.unlocked ? '\u2705' : `${badge.progress}/${badge.target}`}</div>
+      ${!badge.unlocked ? `<div class="badge-grid-progress-bar"><div class="badge-grid-progress-fill" style="width:${progressPct}%"></div></div>` : ''}
+    `;
+    grid.appendChild(item);
+  });
+}
+
+function showBadgeToast(badgeId) {
+  const def = BADGES[badgeId];
+  if (!def) return;
+
+  const container = document.getElementById('toast-container');
+  if (!container) return;
+
+  const toast = document.createElement('div');
+  toast.className = 'toast badge-toast';
+  toast.innerHTML = `
+    <span class="badge-toast-emoji">${def.emoji}</span>
+    <div class="badge-toast-text">
+      <span class="badge-toast-label">${t('badge_unlocked')}</span>
+      <span class="badge-toast-name">${getBadgeName(badgeId)}</span>
+    </div>
+  `;
+  container.appendChild(toast);
+
+  requestAnimationFrame(() => {
+    toast.classList.add('visible');
+  });
+
+  // Haptic
+  if (tg) tg.HapticFeedback.notificationOccurred('success');
+
+  setTimeout(() => {
+    toast.classList.remove('visible');
+    setTimeout(() => toast.remove(), 300);
+  }, 4000);
+}
+
+function handleNewBadges(badges) {
+  if (!badges || badges.length === 0) return;
+  newlyUnlockedBadges = badges;
+
+  // Show toast for each new badge with staggered timing
+  badges.forEach((badgeId, i) => {
+    setTimeout(() => showBadgeToast(badgeId), i * 1500);
+  });
+
+  // Reload badges data
+  loadBadges();
 }
 
 function tRating(rating) {
@@ -266,6 +429,7 @@ async function init() {
     state.user = res.user;
     updateAllCoinDisplays();
     updateMenuStats();
+    loadBadges();
 
     // Ensure loading screen is visible for at least 1.5s
     const elapsed = Date.now() - loadingStart;
@@ -278,7 +442,7 @@ async function init() {
   } catch (err) {
     console.error('Auth failed:', err);
     // Dev mode fallback
-    state.user = { telegramId: 12345, coins: 200, totalScore: 0, gamesPlayed: 0, bestRoundScore: 0, rank: 0 };
+    state.user = { telegramId: 12345, coins: 200, totalScore: 0, gamesPlayed: 0, bestRoundScore: 0, bestSessionScore: 0, rank: 0 };
     updateAllCoinDisplays();
     updateMenuStats();
 
@@ -407,18 +571,35 @@ function goBack() {
 
 function updateMenuStats() {
   if (!state.user) return;
-  document.getElementById('menu-high-score').textContent = state.user.bestRoundScore || 0;
+  const best = state.user.bestSessionScore || 0;
+  document.getElementById('menu-high-score').textContent = best.toLocaleString();
 
-  // Trophies
-  const totalScore = state.user.totalScore || 0;
+  // Trophies based on best session score
+  const thresholds = [500, 2000, 5000];
   document.querySelectorAll('.trophy').forEach(t => {
     const threshold = parseInt(t.dataset.threshold);
-    if (totalScore >= threshold) {
+    if (best >= threshold) {
       t.classList.add('unlocked');
     } else {
       t.classList.remove('unlocked');
     }
   });
+
+  // Progress bar: fill between last unlocked and next threshold
+  const progressFill = document.getElementById('trophy-progress-fill');
+  if (progressFill) {
+    let pct = 0;
+    if (best >= 5000) {
+      pct = 100;
+    } else if (best >= 2000) {
+      pct = 66 + 34 * ((best - 2000) / 3000);
+    } else if (best >= 500) {
+      pct = 33 + 33 * ((best - 500) / 1500);
+    } else {
+      pct = 33 * (best / 500);
+    }
+    progressFill.style.width = `${Math.min(100, Math.round(pct))}%`;
+  }
 }
 
 function updateAllCoinDisplays() {
@@ -429,6 +610,18 @@ function updateAllCoinDisplays() {
 }
 
 // ============ GAME ============
+
+// Save session score to server on game over or quit
+async function endSession(sessionScore) {
+  try {
+    const res = await api('/api/game/end-session', 'POST', { sessionScore });
+    if (res.bestSessionScore != null) {
+      state.user.bestSessionScore = res.bestSessionScore;
+    }
+  } catch (e) {
+    console.error('Failed to save session score:', e);
+  }
+}
 
 // Start a fresh game session (resets score)
 function startNewSession() {
@@ -651,17 +844,18 @@ async function submitGuess() {
     state.user.coins += (result.bonusCoins || 0);
     state.user.totalScore = (state.user.totalScore || 0) + result.score;
     state.user.gamesPlayed = (state.user.gamesPlayed || 0) + 1;
-    if (result.score > (state.user.bestRoundScore || 0)) {
-      state.user.bestRoundScore = result.score;
+
+    // Handle new badges
+    if (result.newBadges && result.newBadges.length > 0) {
+      handleNewBadges(result.newBadges);
     }
 
     // Game over when too far (far or miss = you lose)
     if (result.rating === 'miss' || result.rating === 'far') {
       // Score from this bad round does NOT count
       state.sessionScore -= result.score;
-      if (state.sessionScore > (state.user.bestRoundScore || 0)) {
-        state.user.bestRoundScore = state.sessionScore;
-      }
+      // Save best session score to server
+      await endSession(state.sessionScore);
       showGameOver(result);
     } else {
       // Preload next photo while showing result
@@ -755,7 +949,7 @@ async function showGameOver(result) {
       div.innerHTML = `
         <span class="go-lb-rank">${medals[entry.rank - 1] || entry.rank}</span>
         <span class="go-lb-name">${escapeHtml(entry.username)}${isMe ? ' (toi)' : ''}</span>
-        <span class="go-lb-pts">${entry.totalScore.toLocaleString()}</span>
+        <span class="go-lb-pts">${(entry.bestSessionScore || 0).toLocaleString()}</span>
       `;
       list.appendChild(div);
     });
@@ -772,7 +966,7 @@ async function showGameOver(result) {
       myDiv.innerHTML = `
         <span class="go-lb-rank">${myRank}</span>
         <span class="go-lb-name">${escapeHtml(state.user?.username || state.user?.firstName || 'Toi')} (toi)</span>
-        <span class="go-lb-pts">${statsData.totalScore.toLocaleString()}</span>
+        <span class="go-lb-pts">${(statsData.bestSessionScore || 0).toLocaleString()}</span>
       `;
       list.appendChild(myDiv);
     }
@@ -960,7 +1154,7 @@ async function showLeaderboard() {
           <div class="lb-name">${escapeHtml(entry.username)}</div>
           <div class="lb-games">${entry.gamesPlayed} parties | Moy: ${entry.avgScore}</div>
         </div>
-        <span class="lb-score">${entry.totalScore.toLocaleString()}</span>
+        <span class="lb-score">${(entry.bestSessionScore || 0).toLocaleString()}</span>
       `;
       list.appendChild(div);
     });
@@ -971,96 +1165,78 @@ async function showLeaderboard() {
 
 // ============ SHOP ============
 
-let currentPayMethod = 'stars';
+let selectedPack = null;
 
 function showShop() {
   updateAllCoinDisplays();
   showScreen('shop');
 }
 
-function switchPayTab(method) {
-  currentPayMethod = method;
-  document.getElementById('shop-tab-stars').classList.toggle('active', method === 'stars');
-  document.getElementById('shop-tab-ton').classList.toggle('active', method === 'ton');
-  document.getElementById('shop-list-stars').style.display = method === 'stars' ? 'block' : 'none';
-  document.getElementById('shop-list-ton').style.display = method === 'ton' ? 'block' : 'none';
+// Open bottom sheet with pack details
+function openPaymentSheet(element) {
+  const pack = element.dataset.pack;
+  const price = element.dataset.price;
+  const stars = element.dataset.stars;
+  const ton = element.dataset.ton;
+
+  selectedPack = { pack: parseInt(pack), price, stars: parseInt(stars), ton: parseFloat(ton) };
+
+  document.getElementById('sheet-pack-label').textContent = `+ ${parseInt(pack).toLocaleString()} Coins`;
+  document.getElementById('sheet-price').textContent = `$${price}`;
+  document.getElementById('sheet-stars-amount').innerHTML = `&#11088; ${stars}`;
+  document.getElementById('sheet-ton-amount').innerHTML = `&#128142; ${ton} TON`;
+
+  document.getElementById('payment-sheet').classList.add('active');
 }
 
-async function buyPack(packSize, element) {
-  if (currentPayMethod === 'stars') {
-    await buyWithStars(packSize, element);
-  } else {
-    await buyWithTon(packSize, element);
-  }
+function closePaymentSheet() {
+  document.getElementById('payment-sheet').classList.remove('active');
+  selectedPack = null;
 }
 
-async function buyWithStars(packSize, element) {
-  const starsAmount = element?.dataset?.stars;
-  if (!starsAmount) return;
+async function buyWithStars() {
+  if (!selectedPack) return;
+  const { pack, stars } = selectedPack;
 
   try {
-    // Create invoice via server
-    const invoiceRes = await api('/api/shop/create-invoice', 'POST', {
-      pack: packSize,
-      stars: parseInt(starsAmount)
-    });
+    const invoiceRes = await api('/api/shop/create-invoice', 'POST', { pack, stars });
 
     if (invoiceRes.invoiceLink && tg?.openInvoice) {
-      // Open Telegram Stars payment
       tg.openInvoice(invoiceRes.invoiceLink, async (status) => {
         if (status === 'paid') {
-          // Confirm payment and credit coins
-          const res = await api('/api/shop/confirm-stars', 'POST', { pack: packSize });
+          const res = await api('/api/shop/confirm-stars', 'POST', { pack });
           state.user.coins = res.coins;
           updateAllCoinDisplays();
-          showToast(`+${packSize} coins!`);
+          showToast(`+${pack} coins!`);
           if (tg) tg.HapticFeedback.notificationOccurred('success');
+          closePaymentSheet();
         }
       });
     } else {
-      // Fallback: direct purchase (dev mode)
-      const res = await api('/api/shop/buy', 'POST', { pack: packSize });
+      const res = await api('/api/shop/buy', 'POST', { pack });
       state.user.coins = res.coins;
       updateAllCoinDisplays();
       showToast(`+${res.purchased} coins!`);
+      closePaymentSheet();
     }
   } catch (err) {
     await showModal(err.message || 'Payment error');
   }
 }
 
-async function buyWithTon(packSize, element) {
-  const tonAmount = element?.dataset?.ton;
-  if (!tonAmount) return;
+async function buyWithTon() {
+  if (!selectedPack) return;
+  const { pack, ton } = selectedPack;
 
   try {
-    // Get TON payment address from server
-    const res = await api('/api/shop/ton-invoice', 'POST', {
-      pack: packSize,
-      ton: parseFloat(tonAmount)
-    });
-
+    const res = await api('/api/shop/ton-invoice', 'POST', { pack, ton });
     if (res.paymentUrl) {
-      // Open TON payment link (TonKeeper / Tonhub deeplink)
       window.open(res.paymentUrl, '_blank');
-      showToast('Complete payment in your TON wallet');
+      showToast(t('payment_disclaimer'));
+      closePaymentSheet();
     }
   } catch (err) {
     await showModal(err.message || 'Payment error');
-  }
-}
-
-async function watchAdReward() {
-  try {
-    // In production, integrate ad SDK
-    if (tg) tg.HapticFeedback.impactOccurred('medium');
-
-    const res = await api('/api/shop/ad-reward', 'POST');
-    state.user.coins = res.coins;
-    updateAllCoinDisplays();
-    showToast(`+${res.reward} coins!`);
-  } catch (err) {
-    await showModal(err.message);
   }
 }
 
@@ -1097,6 +1273,13 @@ function shareScore() {
   const score = state.sessionScore;
   const shareText = t('share_text').replace('{score}', score);
 
+  // Award social_star badge
+  api('/api/user/badges/social', 'POST').then(res => {
+    if (res && res.awarded) {
+      handleNewBadges(['social_star']);
+    }
+  }).catch(() => {});
+
   if (tg && tg.shareUrl) {
     const url = window.location.origin || 'https://t.me/FindTheBallBot';
     tg.shareUrl(url, shareText);
@@ -1128,12 +1311,10 @@ document.getElementById('btn-leaderboard').addEventListener('click', () => {
   document.getElementById('overlay-pause').classList.remove('active');
   showLeaderboard();
 });
-document.getElementById('btn-quit').addEventListener('click', () => {
+document.getElementById('btn-quit').addEventListener('click', async () => {
   document.getElementById('overlay-pause').classList.remove('active');
-  // Quitting mid-game = game over with current score
-  if (state.sessionScore > (state.user.bestRoundScore || 0)) {
-    state.user.bestRoundScore = state.sessionScore;
-  }
+  // Quitting mid-game = save session score
+  await endSession(state.sessionScore);
   state.sessionScore = 0;
   updateMenuStats();
   showScreen('menu');
@@ -1145,6 +1326,7 @@ document.getElementById('btn-back-menu').addEventListener('click', () => {
   state.sessionScore = 0;
   updateMenuStats();
   updateAllCoinDisplays();
+  loadBadges();
   showScreen('menu');
 });
 
@@ -1154,6 +1336,7 @@ document.getElementById('btn-gameover-menu').addEventListener('click', () => {
   state.sessionScore = 0;
   updateMenuStats();
   updateAllCoinDisplays();
+  loadBadges();
   showScreen('menu');
 });
 
@@ -1174,16 +1357,45 @@ document.getElementById('btn-lb-back').addEventListener('click', async () => {
 
 // Shop
 document.getElementById('btn-shop-back').addEventListener('click', goBack);
-document.querySelectorAll('.shop-item[data-pack]').forEach(item => {
-  item.addEventListener('click', () => {
-    const pack = parseInt(item.dataset.pack);
-    buyPack(pack, item);
-  });
+document.querySelectorAll('#shop-list .shop-item[data-pack]').forEach(item => {
+  item.addEventListener('click', () => openPaymentSheet(item));
 });
-document.getElementById('btn-watch-ad').addEventListener('click', watchAdReward);
+
+// Invite friend
+document.getElementById('btn-invite-friend').addEventListener('click', async () => {
+  try {
+    const res = await api('/api/invite-link');
+    if (res.link && tg) {
+      tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(res.link)}&text=${encodeURIComponent(t('share_text').replace('{score}', ''))}`);
+    } else if (res.link) {
+      navigator.clipboard?.writeText(res.link);
+      showToast('Link copied!');
+    }
+  } catch (e) {
+    console.error('Invite error:', e);
+  }
+});
+
+// Payment bottom sheet
+document.getElementById('payment-sheet-backdrop').addEventListener('click', closePaymentSheet);
+document.getElementById('payment-sheet-close').addEventListener('click', closePaymentSheet);
+document.getElementById('sheet-btn-stars').addEventListener('click', buyWithStars);
+document.getElementById('sheet-btn-ton').addEventListener('click', buyWithTon);
 
 // Share score button
 const shareBtn = document.getElementById('btn-share-score');
 if (shareBtn) {
   shareBtn.addEventListener('click', shareScore);
 }
+
+// Badges section - open overlay
+document.getElementById('menu-badges').addEventListener('click', async () => {
+  const data = userBadgesData || await loadBadges();
+  renderBadgesOverlay(data);
+  document.getElementById('overlay-badges').classList.add('active');
+});
+
+// Badges overlay close
+document.getElementById('btn-badges-close').addEventListener('click', () => {
+  document.getElementById('overlay-badges').classList.remove('active');
+});
