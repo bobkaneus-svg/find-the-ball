@@ -867,11 +867,11 @@ function setupBot(bot) {
       }
     }
 
-    bot.sendMessage(chatId, '⚽ *Find the Ball!*\n\nPeux-tu deviner ou se cache le ballon?\n\nRegarde bien la photo, analyse les indices et place ton curseur le plus pres possible!\n\n🏆 Les 50 meilleurs joueurs gagnent des recompenses!', {
+    bot.sendMessage(chatId, '⚽ *Find the Ball!*\n\nCan you guess where the ball is hiding?\n\nLook at the photo, spot the clues and place your cursor as close as possible!\n\n🏆 Top 3 players win coins every day!', {
       parse_mode: 'Markdown',
       reply_markup: {
         inline_keyboard: [[
-          { text: '🎮 Jouer', web_app: { url: WEBAPP_URL } }
+          { text: '🎮 Play', web_app: { url: WEBAPP_URL } }
         ]]
       }
     });
@@ -882,7 +882,7 @@ function setupBot(bot) {
     const lb = game.getLeaderboardData(10);
 
     if (lb.length === 0) {
-      return bot.sendMessage(chatId, 'Pas encore de joueurs dans le classement!');
+      return bot.sendMessage(chatId, 'No players on the leaderboard yet! Be the first!');
     }
 
     let text = '🏆 *Top 10 - Find the Ball*\n\n';
@@ -890,16 +890,16 @@ function setupBot(bot) {
 
     lb.forEach((entry, i) => {
       const medal = medals[i] || `${i + 1}.`;
-      text += `${medal} *${entry.username}* — ${entry.totalScore} pts (${entry.gamesPlayed} parties)\n`;
+      text += `${medal} *${entry.username}* — ${entry.totalScore} pts (${entry.gamesPlayed} games)\n`;
     });
 
-    text += '\n_Joue pour apparaitre dans le classement!_';
+    text += '\n_Play to get on the leaderboard!_';
 
     bot.sendMessage(chatId, text, {
       parse_mode: 'Markdown',
       reply_markup: {
         inline_keyboard: [[
-          { text: '🎮 Jouer maintenant', web_app: { url: WEBAPP_URL } }
+          { text: '🎮 Play now', web_app: { url: WEBAPP_URL } }
         ]]
       }
     });
@@ -913,16 +913,16 @@ function setupBot(bot) {
     const stats = game.getUserStats(userId);
 
     if (!stats) {
-      return bot.sendMessage(chatId, 'Commence a jouer pour voir tes stats!');
+      return bot.sendMessage(chatId, 'Start playing to see your stats!');
     }
 
-    bot.sendMessage(chatId, `📊 *Tes statistiques*\n\n💰 Coins: ${stats.coins}\n🎯 Score total: ${stats.totalScore}\n🎮 Parties: ${stats.gamesPlayed}\n⭐ Meilleur session: ${stats.bestSessionScore}\n📈 Moyenne: ${stats.avgScore}\n🏅 Classement: #${stats.rank}`, {
+    bot.sendMessage(chatId, `📊 *Your stats*\n\n💰 Coins: ${stats.coins}\n🎯 Total score: ${stats.totalScore}\n🎮 Games: ${stats.gamesPlayed}\n⭐ Best session: ${stats.bestSessionScore}\n📈 Average: ${stats.avgScore}\n🏅 Rank: #${stats.rank}`, {
       parse_mode: 'Markdown'
     });
   });
 
   bot.onText(/\/help/, (msg) => {
-    bot.sendMessage(msg.chat.id, `⚽ *Comment jouer a Find the Ball*\n\n1️⃣ Une photo de foot s'affiche — le ballon a ete efface!\n2️⃣ Analyse les indices: regard des joueurs, position des pieds, du corps\n3️⃣ Touche l'ecran la ou tu penses que le ballon se trouvait\n4️⃣ Plus tu es proche, plus tu gagnes de points!\n\n💡 *Power-ups:*\n🔍 Reveler un quart (100 coins) — montre si le ballon est dans un quart\n↔️ Agrandir la zone (50 coins) — augmente ta zone de selection\n\n🏆 *Recompenses:*\nTop 3 = Gros lots!\nTop 50 = Cash rewards!\n\n/start - Jouer\n/leaderboard - Classement\n/stats - Tes stats`, {
+    bot.sendMessage(msg.chat.id, `⚽ *How to play Find the Ball*\n\n1️⃣ A football photo appears — the ball has been erased!\n2️⃣ Look for clues: players' eyes, feet position, body language\n3️⃣ Tap where you think the ball was\n4️⃣ The closer you are, the more points you score!\n\n💡 *Power-ups:*\n🔍 Reveal quarter (100 coins) — shows which quarter has the ball\n↔️ Expand area (50 coins) — increases your search zone\n\n🏆 *Rewards:*\nTop 3 daily = Coin prizes!\nInvite friends = 10,000 coins!\n\n/start - Play\n/leaderboard - Rankings\n/stats - Your stats`, {
       parse_mode: 'Markdown'
     });
   });
@@ -970,7 +970,7 @@ function performDailyReset() {
         if (bot) {
           const medals = ['', '🥇', '🥈', '🥉'];
           bot.sendMessage(winner.telegram_id,
-            `${medals[rank]} *Felicitations!*\n\nTu as termine *#${rank}* du classement quotidien avec *${winner.daily_best_session}* points!\n\n+${prize} coins credites!`,
+            `${medals[rank]} *Congratulations!*\n\nYou finished *#${rank}* on today's leaderboard with *${winner.daily_best_session}* points!\n\n+${prize} coins credited!`,
             { parse_mode: 'Markdown' }
           ).catch(err => console.error('Failed to notify winner:', err.message));
         }

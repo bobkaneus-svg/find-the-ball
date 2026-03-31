@@ -28,7 +28,7 @@ function checkReferralReward(telegramId) {
         const referredUser = db.getUser.get(telegramId);
         const name = referredUser?.first_name || referredUser?.username || 'Un ami';
         telegramBot.sendMessage(referrerId,
-          `🎉 *+${REFERRAL_REWARD.toLocaleString()} coins!*\n\n${name} a joue ${REFERRAL_MIN_GAMES} parties grace a ton invitation!\nTes coins ont ete credites automatiquement. Continue a inviter tes amis!`,
+          `🎉 *+${REFERRAL_REWARD.toLocaleString()} coins!*\n\n${name} played ${REFERRAL_MIN_GAMES} games thanks to your invite!\nYour coins have been credited automatically. Keep inviting friends!`,
           { parse_mode: 'Markdown' }
         ).catch(err => console.error('Failed to send referral notification:', err.message));
       }
