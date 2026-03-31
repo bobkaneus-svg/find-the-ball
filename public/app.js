@@ -584,9 +584,9 @@ async function submitGuess() {
       usedExpand: state.usedExpand
     });
 
-    // Update user state
+    // Update user state (coins already deducted server-side for power-ups)
     state.sessionScore += result.score;
-    state.user.coins = state.user.coins - (state.usedReveal ? 100 : 0) - (state.usedExpand ? 50 : 0) + (result.bonusCoins || 0);
+    state.user.coins += (result.bonusCoins || 0);
     state.user.totalScore = (state.user.totalScore || 0) + result.score;
     state.user.gamesPlayed = (state.user.gamesPlayed || 0) + 1;
     if (result.score > (state.user.bestRoundScore || 0)) {
@@ -841,7 +841,10 @@ async function useExpandArea() {
   const confirmed = await showModal(t('expand_confirm'));
   if (!confirmed) return;
 
+  // Pre-check: will server accept? (coins already checked above)
   state.usedExpand = true;
+  state.user.coins -= 50;
+  updateAllCoinDisplays();
   document.getElementById('btn-expand').classList.add('used');
   document.getElementById('btn-expand').disabled = true;
 

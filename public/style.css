@@ -565,6 +565,12 @@ body {
   line-height: 1.1;
   color: var(--on-surface);
 }
+.action-svg {
+  color: var(--on-surface);
+  display: block;
+}
+.confirm-svg { color: rgba(255,255,255,0.5); }
+.action-btn.confirm-btn.ready .confirm-svg { color: #fff; }
 .confirm-icon { font-size: 24px; color: #fff; }
 
 .action-cost {

@@ -121,18 +121,14 @@ function submitGuess(roundId, telegramId, guessX, guessY, usedReveal, usedExpand
   // Calculate score
   const result = calculateScore(guessX, guessY, photo.ball_x, photo.ball_y, 100, 100);
 
-  // Deduct coins for power-ups used
-  let coinsCost = 0;
-  if (usedReveal) coinsCost += REVEAL_QUARTER_COST;
-  if (usedExpand) coinsCost += EXPAND_AREA_COST;
-
-  if (coinsCost > 0) {
+  // Deduct coins for expand power-up only (reveal is already deducted via /api/game/reveal)
+  if (usedExpand) {
     const user = db.getUserCoins.get(telegramId);
-    if (!user || user.coins < coinsCost) {
+    if (!user || user.coins < EXPAND_AREA_COST) {
       return { error: 'Not enough coins' };
     }
-    db.updateUserCoins.run(-coinsCost, telegramId);
-    db.logTransaction.run(telegramId, -coinsCost, 'powerup', `Power-ups used in round ${roundId}`);
+    db.updateUserCoins.run(-EXPAND_AREA_COST, telegramId);
+    db.logTransaction.run(telegramId, -EXPAND_AREA_COST, 'powerup', `Expand area in round ${roundId}`);
   }
 
   // Complete the round
