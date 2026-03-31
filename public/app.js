@@ -28,6 +28,7 @@ const TRANSLATIONS = {
     buy_with_stars: 'BUY WITH', buy_with_ton: 'BUY WITH',
     payment_disclaimer: 'Transaction may take a few minutes to process.',
     invite_friend: 'Invite a friend — earn 10 000 coins!',
+    lb_resets_in: 'Resets in',
     points: 'points', you: 'You', ball: 'Ball', precision: 'Precision', bonus: 'Bonus',
     next_photo: 'NEXT PHOTO', share_score: 'SHARE MY SCORE', menu: 'MENU',
     play_again: 'PLAY AGAIN', main_menu: 'MAIN MENU', pause: 'PAUSE',
@@ -53,6 +54,7 @@ const TRANSLATIONS = {
     buy_with_stars: 'PAYER AVEC', buy_with_ton: 'PAYER AVEC',
     payment_disclaimer: 'La transaction peut prendre quelques minutes.',
     invite_friend: 'Invite un ami — gagne 10 000 coins !',
+    lb_resets_in: 'Reset dans',
     points: 'points', you: 'Toi', ball: 'Ballon', precision: 'Precision', bonus: 'Bonus',
     next_photo: 'PHOTO SUIVANTE', share_score: 'PARTAGER MON SCORE', menu: 'MENU',
     play_again: 'REJOUER', main_menu: 'MENU PRINCIPAL', pause: 'PAUSE',
@@ -219,24 +221,24 @@ function t(key) {
 // ============ BADGE DEFINITIONS ============
 
 const BADGES = {
-  first_game:    { emoji: '\u{1F3AE}', name: { en: 'First Game', fr: 'Premiere Partie', es: 'Primera Partida', pt: 'Primeira Partida', de: 'Erstes Spiel', ru: 'Первая Игра', tr: 'Ilk Oyun', ar: 'أول لعبة', zh: '首次游戏' } },
-  veteran:       { emoji: '\u{1F3AF}', name: { en: 'Veteran', fr: 'Veteran', es: 'Veterano', pt: 'Veterano', de: 'Veteran', ru: 'Ветеран', tr: 'Veteran', ar: 'محترف', zh: '老手' } },
-  addict:        { emoji: '\u{1F525}', name: { en: 'Addict', fr: 'Accro', es: 'Adicto', pt: 'Viciado', de: 'Suchtig', ru: 'Фанат', tr: 'Bagimlisi', ar: 'مدمن', zh: '上瘾' } },
-  legend:        { emoji: '\u{1F451}', name: { en: 'Legend', fr: 'Legende', es: 'Leyenda', pt: 'Lenda', de: 'Legende', ru: 'Легенда', tr: 'Efsane', ar: 'أسطورة', zh: '传奇' } },
-  sharpshooter:  { emoji: '\u{1F3AF}', name: { en: 'Sharpshooter', fr: 'Tireur d\'Elite', es: 'Francotirador', pt: 'Atirador', de: 'Scharfschutze', ru: 'Снайпер', tr: 'Keskin Nisanci', ar: 'قناص', zh: '神射手' } },
-  eagle_eye:     { emoji: '\u{1F985}', name: { en: 'Eagle Eye', fr: 'Oeil d\'Aigle', es: 'Ojo de Aguila', pt: 'Olho de Aguia', de: 'Adlerauge', ru: 'Орлиный Глаз', tr: 'Kartal Goz', ar: 'عين النسر', zh: '鹰眼' } },
-  sniper:        { emoji: '\u{1F52B}', name: { en: 'Sniper', fr: 'Sniper', es: 'Francotirador Pro', pt: 'Sniper', de: 'Sniper', ru: 'Элитный Снайпер', tr: 'Sniper', ar: 'قناص محترف', zh: '狙击手' } },
-  hot_streak_3:  { emoji: '\u{1F525}', name: { en: 'Hot Streak', fr: 'Serie Chaude', es: 'Racha Caliente', pt: 'Sequencia Quente', de: 'Heisse Serie', ru: 'Горячая Серия', tr: 'Sicak Seri', ar: 'سلسلة ساخنة', zh: '连胜' } },
-  unstoppable_5: { emoji: '\u26A1', name: { en: 'Unstoppable', fr: 'Inarretable', es: 'Imparable', pt: 'Imparavel', de: 'Unaufhaltbar', ru: 'Неудержимый', tr: 'Durdurulamaz', ar: 'لا يوقف', zh: '势不可挡' } },
-  machine_10:    { emoji: '\u{1F916}', name: { en: 'Machine', fr: 'Machine', es: 'Maquina', pt: 'Maquina', de: 'Maschine', ru: 'Машина', tr: 'Makine', ar: 'آلة', zh: '机器' } },
-  god_mode_20:   { emoji: '\u{1F31F}', name: { en: 'God Mode', fr: 'Mode Dieu', es: 'Modo Dios', pt: 'Modo Deus', de: 'Gott-Modus', ru: 'Режим Бога', tr: 'Tanri Modu', ar: 'وضع إلهي', zh: '神模式' } },
-  scorer_1k:     { emoji: '\u2B50', name: { en: '1K Scorer', fr: '1K Points', es: '1K Puntos', pt: '1K Pontos', de: '1K Punkte', ru: '1К Очков', tr: '1K Puan', ar: '1 ألف نقطة', zh: '1千分' } },
-  scorer_5k:     { emoji: '\u{1F31F}', name: { en: '5K Scorer', fr: '5K Points', es: '5K Puntos', pt: '5K Pontos', de: '5K Punkte', ru: '5К Очков', tr: '5K Puan', ar: '5 آلاف نقطة', zh: '5千分' } },
-  scorer_25k:    { emoji: '\u{1F4AB}', name: { en: '25K Scorer', fr: '25K Points', es: '25K Puntos', pt: '25K Pontos', de: '25K Punkte', ru: '25К Очков', tr: '25K Puan', ar: '25 ألف نقطة', zh: '2.5万分' } },
-  scorer_100k:   { emoji: '\u{1F3C6}', name: { en: '100K Scorer', fr: '100K Points', es: '100K Puntos', pt: '100K Pontos', de: '100K Punkte', ru: '100К Очков', tr: '100K Puan', ar: '100 ألف نقطة', zh: '10万分' } },
-  comeback_kid:  { emoji: '\u{1F4AA}', name: { en: 'Comeback Kid', fr: 'Retour en Force', es: 'Regreso Epico', pt: 'Volta por Cima', de: 'Comeback Kid', ru: 'Камбэк', tr: 'Geri Donus', ar: 'عودة قوية', zh: '逆袭' } },
-  coin_collector:{ emoji: '\u{1F4B0}', name: { en: 'Coin Collector', fr: 'Collectionneur', es: 'Coleccionista', pt: 'Colecionador', de: 'Sammler', ru: 'Коллекционер', tr: 'Koleksiyoncu', ar: 'جامع العملات', zh: '收集者' } },
-  social_star:   { emoji: '\u{1F4E3}', name: { en: 'Social Star', fr: 'Star Sociale', es: 'Estrella Social', pt: 'Estrela Social', de: 'Social Star', ru: 'Звезда', tr: 'Sosyal Yildiz', ar: 'نجم اجتماعي', zh: '社交达人' } }
+  first_game:    { emoji: '\u{1F3AE}', name: { en: 'First Game', fr: 'Premiere Partie' }, desc: { en: 'Play 1 game', fr: 'Jouer 1 partie' } },
+  veteran:       { emoji: '\u{1F3AF}', name: { en: 'Veteran', fr: 'Veteran' }, desc: { en: 'Play 10 games', fr: 'Jouer 10 parties' } },
+  addict:        { emoji: '\u{1F525}', name: { en: 'Addict', fr: 'Accro' }, desc: { en: 'Play 50 games', fr: 'Jouer 50 parties' } },
+  legend:        { emoji: '\u{1F451}', name: { en: 'Legend', fr: 'Legende' }, desc: { en: 'Play 100 games', fr: 'Jouer 100 parties' } },
+  sharpshooter:  { emoji: '\u{1F3AF}', name: { en: 'Sharpshooter', fr: 'Tireur d\'Elite' }, desc: { en: '1 perfect shot', fr: '1 tir parfait' } },
+  eagle_eye:     { emoji: '\u{1F985}', name: { en: 'Eagle Eye', fr: 'Oeil d\'Aigle' }, desc: { en: '5 perfect shots', fr: '5 tirs parfaits' } },
+  sniper:        { emoji: '\u{1F52B}', name: { en: 'Sniper', fr: 'Sniper' }, desc: { en: '10 perfect shots', fr: '10 tirs parfaits' } },
+  hot_streak_3:  { emoji: '\u{1F525}', name: { en: 'Hot Streak', fr: 'Serie Chaude' }, desc: { en: '3 good rounds in a row', fr: '3 bons rounds d\'affilee' } },
+  unstoppable_5: { emoji: '\u26A1', name: { en: 'Unstoppable', fr: 'Inarretable' }, desc: { en: '5 good rounds in a row', fr: '5 bons rounds d\'affilee' } },
+  machine_10:    { emoji: '\u{1F916}', name: { en: 'Machine', fr: 'Machine' }, desc: { en: '10 good rounds in a row', fr: '10 bons rounds d\'affilee' } },
+  god_mode_20:   { emoji: '\u{1F31F}', name: { en: 'God Mode', fr: 'Mode Dieu' }, desc: { en: '20 good rounds in a row', fr: '20 bons rounds d\'affilee' } },
+  scorer_1k:     { emoji: '\u2B50', name: { en: '1K Scorer', fr: '1K Points' }, desc: { en: 'Reach 1 000 total points', fr: 'Atteindre 1 000 points au total' } },
+  scorer_5k:     { emoji: '\u{1F31F}', name: { en: '5K Scorer', fr: '5K Points' }, desc: { en: 'Reach 5 000 total points', fr: 'Atteindre 5 000 points au total' } },
+  scorer_25k:    { emoji: '\u{1F4AB}', name: { en: '25K Scorer', fr: '25K Points' }, desc: { en: 'Reach 25 000 total points', fr: 'Atteindre 25 000 points au total' } },
+  scorer_100k:   { emoji: '\u{1F3C6}', name: { en: '100K Scorer', fr: '100K Points' }, desc: { en: 'Reach 100 000 total points', fr: 'Atteindre 100 000 points au total' } },
+  comeback_kid:  { emoji: '\u{1F4AA}', name: { en: 'Comeback Kid', fr: 'Retour en Force' }, desc: { en: 'Score 800+ after a round under 200', fr: 'Faire 800+ apres un round sous 200' } },
+  coin_collector:{ emoji: '\u{1F4B0}', name: { en: 'Coin Collector', fr: 'Collectionneur' }, desc: { en: 'Own 5 000 coins', fr: 'Posseder 5 000 coins' } },
+  social_star:   { emoji: '\u{1F4E3}', name: { en: 'Social Star', fr: 'Star Sociale' }, desc: { en: 'Share your score', fr: 'Partager ton score' } }
 };
 
 let userBadgesData = null;
@@ -246,6 +248,12 @@ function getBadgeName(badgeId) {
   const badge = BADGES[badgeId];
   if (!badge) return badgeId;
   return badge.name[currentLang] || badge.name.en || badgeId;
+}
+
+function getBadgeDesc(badgeId) {
+  const badge = BADGES[badgeId];
+  if (!badge || !badge.desc) return '';
+  return badge.desc[currentLang] || badge.desc.en || '';
 }
 
 async function loadBadges() {
@@ -311,6 +319,7 @@ function renderBadgesOverlay(data) {
     item.innerHTML = `
       <div class="badge-grid-emoji">${def.emoji}</div>
       <div class="badge-grid-name">${getBadgeName(badge.id)}</div>
+      <div class="badge-grid-desc">${getBadgeDesc(badge.id)}</div>
       <div class="badge-grid-progress">${badge.unlocked ? '\u2705' : `${badge.progress}/${badge.target}`}</div>
       ${!badge.unlocked ? `<div class="badge-grid-progress-bar"><div class="badge-grid-progress-fill" style="width:${progressPct}%"></div></div>` : ''}
     `;
@@ -574,31 +583,12 @@ function updateMenuStats() {
   const best = state.user.bestSessionScore || 0;
   document.getElementById('menu-high-score').textContent = best.toLocaleString();
 
-  // Trophies based on best session score
-  const thresholds = [500, 2000, 5000];
-  document.querySelectorAll('.trophy').forEach(t => {
-    const threshold = parseInt(t.dataset.threshold);
-    if (best >= threshold) {
-      t.classList.add('unlocked');
-    } else {
-      t.classList.remove('unlocked');
-    }
-  });
-
-  // Progress bar: fill between last unlocked and next threshold
-  const progressFill = document.getElementById('trophy-progress-fill');
-  if (progressFill) {
-    let pct = 0;
-    if (best >= 5000) {
-      pct = 100;
-    } else if (best >= 2000) {
-      pct = 66 + 34 * ((best - 2000) / 3000);
-    } else if (best >= 500) {
-      pct = 33 + 33 * ((best - 500) / 1500);
-    } else {
-      pct = 33 * (best / 500);
-    }
-    progressFill.style.width = `${Math.min(100, Math.round(pct))}%`;
+  // Randomize preview photo on each visit
+  const previewImg = document.getElementById('menu-preview-img');
+  if (previewImg) {
+    const photoNum = Math.floor(Math.random() * 25) + 1;
+    const padded = String(photoNum).padStart(3, '0');
+    previewImg.src = `/photos/originals/auto_${padded}.jpg`;
   }
 }
 
@@ -949,7 +939,7 @@ async function showGameOver(result) {
       div.innerHTML = `
         <span class="go-lb-rank">${medals[entry.rank - 1] || entry.rank}</span>
         <span class="go-lb-name">${escapeHtml(entry.username)}${isMe ? ' (toi)' : ''}</span>
-        <span class="go-lb-pts">${(entry.bestSessionScore || 0).toLocaleString()}</span>
+        <span class="go-lb-pts">${(entry.dailyBestSession || 0).toLocaleString()}</span>
       `;
       list.appendChild(div);
     });
@@ -966,7 +956,7 @@ async function showGameOver(result) {
       myDiv.innerHTML = `
         <span class="go-lb-rank">${myRank}</span>
         <span class="go-lb-name">${escapeHtml(state.user?.username || state.user?.firstName || 'Toi')} (toi)</span>
-        <span class="go-lb-pts">${(statsData.bestSessionScore || 0).toLocaleString()}</span>
+        <span class="go-lb-pts">${(statsData.dailyBestSession || 0).toLocaleString()}</span>
       `;
       list.appendChild(myDiv);
     }
@@ -1122,8 +1112,37 @@ async function useExpandArea() {
 
 // ============ LEADERBOARD ============
 
+let lbTimerInterval = null;
+let lbResetAt = null;
+
+async function startLbTimer() {
+  if (!lbResetAt) {
+    try {
+      const data = await api('/api/leaderboard/timer');
+      lbResetAt = new Date(data.resetAt).getTime();
+    } catch (e) {
+      return;
+    }
+  }
+  if (lbTimerInterval) clearInterval(lbTimerInterval);
+  lbTimerInterval = setInterval(() => {
+    const now = Date.now();
+    const diff = Math.max(0, lbResetAt - now);
+    const h = String(Math.floor(diff / 3600000)).padStart(2, '0');
+    const m = String(Math.floor((diff % 3600000) / 60000)).padStart(2, '0');
+    const s = String(Math.floor((diff % 60000) / 1000)).padStart(2, '0');
+    const el = document.getElementById('lb-timer');
+    if (el) el.textContent = `${h}:${m}:${s}`;
+    if (diff <= 0) {
+      lbResetAt = null;
+      clearInterval(lbTimerInterval);
+    }
+  }, 1000);
+}
+
 async function showLeaderboard() {
   showScreen('leaderboard');
+  startLbTimer();
 
   try {
     const [lbData, statsData] = await Promise.all([
@@ -1139,7 +1158,7 @@ async function showLeaderboard() {
     list.innerHTML = '';
 
     if (lbData.leaderboard.length === 0) {
-      list.innerHTML = '<p style="text-align:center;padding:40px;color:var(--text-muted)">Aucun joueur pour le moment.<br>Sois le premier!</p>';
+      list.innerHTML = '<p style="text-align:center;padding:40px;color:var(--on-surface-variant)">Aucun joueur pour le moment.<br>Sois le premier!</p>';
       return;
     }
 
@@ -1152,9 +1171,9 @@ async function showLeaderboard() {
         <span class="lb-rank">${medals[entry.rank - 1] || entry.rank}</span>
         <div class="lb-info">
           <div class="lb-name">${escapeHtml(entry.username)}</div>
-          <div class="lb-games">${entry.gamesPlayed} parties | Moy: ${entry.avgScore}</div>
+          <div class="lb-games">${entry.gamesPlayed} parties</div>
         </div>
-        <span class="lb-score">${(entry.bestSessionScore || 0).toLocaleString()}</span>
+        <span class="lb-score">${(entry.dailyBestSession || 0).toLocaleString()}</span>
       `;
       list.appendChild(div);
     });
@@ -1166,10 +1185,30 @@ async function showLeaderboard() {
 // ============ SHOP ============
 
 let selectedPack = null;
+let shopPricesLoaded = false;
 
 function showShop() {
   updateAllCoinDisplays();
   showScreen('shop');
+  if (!shopPricesLoaded) loadShopPrices();
+}
+
+async function loadShopPrices() {
+  try {
+    const data = await api('/api/shop/prices');
+    if (!data.packs) return;
+    data.packs.forEach(p => {
+      const item = document.querySelector(`#shop-list .shop-item[data-pack="${p.pack}"]`);
+      if (item) {
+        item.dataset.stars = p.stars;
+        item.dataset.ton = p.ton;
+        item.dataset.price = p.usd;
+      }
+    });
+    shopPricesLoaded = true;
+  } catch (e) {
+    console.error('Failed to load prices:', e);
+  }
 }
 
 // Open bottom sheet with pack details
@@ -1226,10 +1265,10 @@ async function buyWithStars() {
 
 async function buyWithTon() {
   if (!selectedPack) return;
-  const { pack, ton } = selectedPack;
+  const { pack } = selectedPack;
 
   try {
-    const res = await api('/api/shop/ton-invoice', 'POST', { pack, ton });
+    const res = await api('/api/shop/ton-invoice', 'POST', { pack });
     if (res.paymentUrl) {
       window.open(res.paymentUrl, '_blank');
       showToast(t('payment_disclaimer'));

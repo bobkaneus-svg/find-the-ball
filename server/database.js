@@ -93,6 +93,23 @@ try { db.exec('ALTER TABLE users ADD COLUMN current_streak INTEGER DEFAULT 0'); 
 try { db.exec('ALTER TABLE users ADD COLUMN best_streak INTEGER DEFAULT 0'); } catch (e) { /* column already exists */ }
 try { db.exec('ALTER TABLE users ADD COLUMN last_round_score INTEGER DEFAULT 0'); } catch (e) { /* column already exists */ }
 try { db.exec('ALTER TABLE users ADD COLUMN best_session_score INTEGER DEFAULT 0'); } catch (e) { /* column already exists */ }
+try { db.exec('ALTER TABLE users ADD COLUMN daily_best_session INTEGER DEFAULT 0'); } catch (e) { /* column already exists */ }
+try { db.exec('ALTER TABLE users ADD COLUMN daily_reset_date TEXT DEFAULT NULL'); } catch (e) { /* column already exists */ }
+
+// Daily winners archive
+db.exec(`
+  CREATE TABLE IF NOT EXISTS daily_winners (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    day TEXT NOT NULL,
+    rank INTEGER NOT NULL,
+    user_id INTEGER NOT NULL,
+    username TEXT,
+    score INTEGER NOT NULL,
+    prize INTEGER DEFAULT 0,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+  CREATE INDEX IF NOT EXISTS idx_daily_winners_day ON daily_winners(day);
+`);
 try { db.exec('ALTER TABLE users ADD COLUMN referred_by INTEGER DEFAULT NULL'); } catch (e) { /* column already exists */ }
 try { db.exec('ALTER TABLE users ADD COLUMN referral_rewarded INTEGER DEFAULT 0'); } catch (e) { /* column already exists */ }
 
@@ -146,21 +163,33 @@ const completeRound = db.prepare(`
 `);
 const getRoundById = db.prepare('SELECT * FROM game_rounds WHERE id = ?');
 
-// Leaderboard operations (ranked by best session score = cumulative score until game over)
+// Leaderboard operations (ranked by daily best session score — resets every 24h)
 const getLeaderboard = db.prepare(`
-  SELECT u.telegram_id, u.username, u.first_name, u.total_score, u.games_played, u.best_round_score, u.best_session_score
+  SELECT u.telegram_id, u.username, u.first_name, u.total_score, u.games_played, u.best_round_score, u.best_session_score, u.daily_best_session
   FROM users u
-  WHERE u.games_played > 0
-  ORDER BY u.best_session_score DESC
+  WHERE u.daily_best_session > 0
+  ORDER BY u.daily_best_session DESC
   LIMIT ?
 `);
 const getUserRank = db.prepare(`
   SELECT COUNT(*) + 1 as rank FROM users
-  WHERE best_session_score > (SELECT best_session_score FROM users WHERE telegram_id = ?)
-  AND games_played > 0
+  WHERE daily_best_session > (SELECT daily_best_session FROM users WHERE telegram_id = ?)
+  AND daily_best_session > 0
 `);
 const updateBestSessionScore = db.prepare(`
-  UPDATE users SET best_session_score = MAX(best_session_score, ?) WHERE telegram_id = ?
+  UPDATE users SET
+    best_session_score = MAX(best_session_score, ?),
+    daily_best_session = MAX(daily_best_session, ?)
+  WHERE telegram_id = ?
+`);
+const resetAllDailyScores = db.prepare(`UPDATE users SET daily_best_session = 0, daily_reset_date = ?`);
+const getDailyTop3 = db.prepare(`
+  SELECT telegram_id, username, first_name, daily_best_session
+  FROM users WHERE daily_best_session > 0
+  ORDER BY daily_best_session DESC LIMIT 3
+`);
+const insertDailyWinner = db.prepare(`
+  INSERT INTO daily_winners (day, rank, user_id, username, score, prize) VALUES (?, ?, ?, ?, ?, ?)
 `);
 
 // Admin pipeline operations
@@ -219,6 +248,9 @@ module.exports = {
   resetStreak,
   updateLastRoundScore,
   updateBestSessionScore,
+  resetAllDailyScores,
+  getDailyTop3,
+  insertDailyWinner,
   setReferredBy: db.prepare('UPDATE users SET referred_by = ? WHERE telegram_id = ? AND referred_by IS NULL'),
   getReferrer: db.prepare('SELECT referred_by FROM users WHERE telegram_id = ?'),
   markReferralRewarded: db.prepare('UPDATE users SET referral_rewarded = 1 WHERE telegram_id = ?'),

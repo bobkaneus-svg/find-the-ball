@@ -384,15 +384,69 @@ app.post('/api/shop/confirm-stars', authMiddleware, (req, res) => {
   res.json({ coins: user.coins, purchased: coins });
 });
 
-// Create TON payment link
+// ============ TON PRICE CACHE ============
 const TON_WALLET = process.env.TON_WALLET || '';
-app.post('/api/shop/ton-invoice', authMiddleware, (req, res) => {
-  const { pack, ton } = req.body;
-  if (!pack || !ton) return res.status(400).json({ error: 'Missing pack or ton' });
+let tonPriceUsd = 3.5; // fallback price
+let tonPriceLastFetch = 0;
+const TON_PRICE_TTL = 5 * 60 * 1000; // 5 minutes cache
+
+async function fetchTonPrice() {
+  const now = Date.now();
+  if (now - tonPriceLastFetch < TON_PRICE_TTL) return tonPriceUsd;
+
+  try {
+    const https = require('https');
+    const data = await new Promise((resolve, reject) => {
+      https.get('https://api.coingecko.com/api/v3/simple/price?ids=the-open-network&vs_currencies=usd', (res) => {
+        let body = '';
+        res.on('data', chunk => body += chunk);
+        res.on('end', () => resolve(JSON.parse(body)));
+      }).on('error', reject);
+    });
+    if (data['the-open-network']?.usd) {
+      tonPriceUsd = data['the-open-network'].usd;
+      tonPriceLastFetch = now;
+      console.log(`TON price updated: $${tonPriceUsd}`);
+    }
+  } catch (e) {
+    console.error('Failed to fetch TON price:', e.message);
+  }
+  return tonPriceUsd;
+}
+
+// Endpoint: get current pack prices with dynamic TON conversion
+app.get('/api/shop/prices', async (req, res) => {
+  const price = await fetchTonPrice();
+  // 1 Star ~= $0.02 (Telegram Stars rate)
+  const STAR_RATE = 0.02;
+  const packs = [
+    { pack: 500, usd: 0.99 },
+    { pack: 1000, usd: 1.99 },
+    { pack: 2000, usd: 3.49 },
+    { pack: 5000, usd: 7.99 },
+    { pack: 10000, usd: 14.99 },
+    { pack: 20000, usd: 27.99 }
+  ].map(p => ({
+    ...p,
+    stars: Math.round(p.usd / STAR_RATE),
+    ton: Math.round((p.usd / price) * 100) / 100
+  }));
+  res.json({ packs, tonPriceUsd: price });
+});
+
+// Create TON payment link
+app.post('/api/shop/ton-invoice', authMiddleware, async (req, res) => {
+  const { pack } = req.body;
+  if (!pack) return res.status(400).json({ error: 'Missing pack' });
   if (!TON_WALLET) return res.status(500).json({ error: 'TON wallet not configured' });
 
   const coins = parseInt(pack);
-  const tonAmount = parseFloat(ton);
+  const packPrices = { 500: 0.99, 1000: 1.99, 2000: 3.49, 5000: 7.99, 10000: 14.99, 20000: 27.99 };
+  const usdPrice = packPrices[coins];
+  if (!usdPrice) return res.status(400).json({ error: 'Invalid pack' });
+
+  const price = await fetchTonPrice();
+  const tonAmount = Math.round((usdPrice / price) * 100) / 100;
   const comment = `ftb_${coins}_${req.telegramUser.id}_${Date.now()}`;
 
   // TON deeplink for TonKeeper / Tonhub
@@ -402,7 +456,7 @@ app.post('/api/shop/ton-invoice', authMiddleware, (req, res) => {
   // Log pending transaction
   db.logTransaction.run(req.telegramUser.id, 0, 'ton_pending', `TON payment pending: ${tonAmount} TON for ${coins} coins - ${comment}`);
 
-  res.json({ paymentUrl, comment });
+  res.json({ paymentUrl, comment, tonAmount });
 });
 
 // Watch ad reward (placeholder)
@@ -882,7 +936,80 @@ const photoCount = db.getAllPhotos.all().length;
 console.log(`Photos in database: ${photoCount}`);
 
 // Start server
+// ============ DAILY LEADERBOARD RESET ============
+
+const DAILY_PRIZES = { 1: 500, 2: 200, 3: 100 }; // coins awarded to top 3
+
+function getTodayStr() {
+  return new Date().toISOString().slice(0, 10); // "2026-03-31"
+}
+
+function performDailyReset() {
+  const today = getTodayStr();
+  const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+
+  // Check if we already reset today
+  const anyUser = db.getLeaderboard.get ? null : null;
+  // Get top 3 from yesterday's scores before reset
+  const top3 = db.getDailyTop3.all();
+
+  if (top3.length > 0 && top3[0].daily_best_session > 0) {
+    // Archive winners and reward them
+    top3.forEach((winner, i) => {
+      const rank = i + 1;
+      const prize = DAILY_PRIZES[rank] || 0;
+      const name = winner.username || winner.first_name || 'Anonymous';
+
+      db.insertDailyWinner.run(yesterday, rank, winner.telegram_id, name, winner.daily_best_session, prize);
+
+      if (prize > 0) {
+        db.updateUserCoins.run(prize, winner.telegram_id);
+        db.logTransaction.run(winner.telegram_id, prize, 'daily_prize', `Daily leaderboard #${rank} prize`);
+
+        // Notify winner via Telegram
+        if (bot) {
+          const medals = ['', '🥇', '🥈', '🥉'];
+          bot.sendMessage(winner.telegram_id,
+            `${medals[rank]} *Felicitations!*\n\nTu as termine *#${rank}* du classement quotidien avec *${winner.daily_best_session}* points!\n\n+${prize} coins credites!`,
+            { parse_mode: 'Markdown' }
+          ).catch(err => console.error('Failed to notify winner:', err.message));
+        }
+      }
+    });
+
+    console.log(`Daily reset: archived ${top3.length} winners for ${yesterday}`);
+  }
+
+  // Reset all daily scores
+  db.resetAllDailyScores.run(today);
+  console.log(`Daily leaderboard reset for ${today}`);
+}
+
+// Check every minute if we need to reset (safe for server restarts)
+let lastResetDate = '';
+function checkDailyReset() {
+  const today = getTodayStr();
+  if (today !== lastResetDate) {
+    performDailyReset();
+    lastResetDate = today;
+  }
+}
+
+// API: Get time until next reset
+app.get('/api/leaderboard/timer', (req, res) => {
+  const now = new Date();
+  const tomorrow = new Date(now);
+  tomorrow.setUTCDate(tomorrow.getUTCDate() + 1);
+  tomorrow.setUTCHours(0, 0, 0, 0);
+  const msLeft = tomorrow - now;
+  res.json({ resetIn: msLeft, resetAt: tomorrow.toISOString() });
+});
+
 app.listen(PORT, () => {
   console.log(`Find the Ball server running on port ${PORT}`);
   console.log(`Web app URL: ${WEBAPP_URL}`);
+
+  // Run daily reset check on startup + every minute
+  checkDailyReset();
+  setInterval(checkDailyReset, 60 * 1000);
 });

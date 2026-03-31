@@ -48,23 +48,10 @@
           <span class="high-score-value" id="menu-high-score">0</span>
         </div>
 
-        <div class="menu-trophies" id="menu-trophies">
-          <div class="trophy-shelf">
-            <div class="trophy" data-threshold="500">
-              <div class="trophy-icon">&#129353;</div>
-              <span class="trophy-label">500+</span>
-            </div>
-            <div class="trophy" data-threshold="2000">
-              <div class="trophy-icon">&#129352;</div>
-              <span class="trophy-label">2 000+</span>
-            </div>
-            <div class="trophy" data-threshold="5000">
-              <div class="trophy-icon">&#129351;</div>
-              <span class="trophy-label">5 000+</span>
-            </div>
-          </div>
-          <div class="trophy-progress">
-            <div class="trophy-progress-fill" id="trophy-progress-fill"></div>
+        <div class="menu-preview" id="menu-preview">
+          <img class="menu-preview-img" id="menu-preview-img" src="/photos/originals/auto_001.jpg" alt="Find the ball!" draggable="false">
+          <div class="menu-preview-overlay">
+            <span class="menu-preview-hint">&#128270;</span>
           </div>
         </div>
 
@@ -78,6 +65,8 @@
           </div>
         </div>
 
+        <div class="menu-spacer"></div>
+
         <div class="menu-buttons">
           <button class="btn btn-play-main" id="btn-play" data-i18n="start_game">START GAME</button>
           <div class="menu-buttons-row">
@@ -85,8 +74,6 @@
             <button class="btn btn-secondary btn-half" id="btn-shop" data-i18n="shop">SHOP</button>
           </div>
         </div>
-
-        <div class="version">v1.0</div>
       </div>
     </div>
 
@@ -100,7 +87,7 @@
         <div class="hud-coins">
           <span id="game-coins">150</span>
           <span class="hud-coin-sep">x</span>
-          <span class="hud-coin-icon">&#9917;</span>
+          <span class="hud-coin-icon">&#129689;</span>
         </div>
       </div>
 
@@ -234,12 +221,27 @@
         <div class="spacer"></div>
       </div>
 
-      <div class="lb-prizes">
-        <div class="prize-badge gold">&#129351; 500</div>
-        <div class="prize-badge silver">&#129352; 200</div>
-        <div class="prize-badge bronze">&#129353; 100</div>
+      <div class="lb-podium">
+        <div class="podium-item silver">
+          <div class="podium-medal">&#129352;</div>
+          <div class="podium-rank">2nd</div>
+          <div class="podium-prize">&#129689; 200</div>
+        </div>
+        <div class="podium-item gold">
+          <div class="podium-medal">&#129351;</div>
+          <div class="podium-rank">1st</div>
+          <div class="podium-prize">&#129689; 500</div>
+        </div>
+        <div class="podium-item bronze">
+          <div class="podium-medal">&#129353;</div>
+          <div class="podium-rank">3rd</div>
+          <div class="podium-prize">&#129689; 100</div>
+        </div>
       </div>
-      <p class="lb-subtitle" data-i18n="lb_subtitle">Top 50 players rewarded each season!</p>
+      <div class="lb-timer-wrap">
+        <span class="lb-timer-label" data-i18n="lb_resets_in">Resets in</span>
+        <span class="lb-timer" id="lb-timer">--:--:--</span>
+      </div>
 
       <div class="lb-user-rank" id="lb-user-rank">
         <span data-i18n="your_rank">Your rank: </span>
@@ -262,28 +264,28 @@
       <div class="shop-balance">
         <span id="shop-coins">0</span>
         <span class="shop-balance-sep">x</span>
-        <span class="shop-coin-icon">&#9917;</span>
+        <span class="shop-coin-icon">&#129689;</span>
       </div>
 
       <!-- Packs list with $ prices -->
       <div class="shop-list" id="shop-list">
         <div class="shop-item" data-pack="500" data-price="0.99" data-stars="50" data-ton="0.5">
           <div class="shop-item-left">
-            <span class="shop-item-coin">&#9917;</span>
+            <span class="shop-item-coin">&#129689;</span>
             <span>+ 500 Coins</span>
           </div>
           <span class="shop-price">$0.99</span>
         </div>
         <div class="shop-item" data-pack="1000" data-price="1.99" data-stars="95" data-ton="0.9">
           <div class="shop-item-left">
-            <span class="shop-item-coin">&#9917;</span>
+            <span class="shop-item-coin">&#129689;</span>
             <span>+ 1 000 Coins</span>
           </div>
           <span class="shop-price">$1.99</span>
         </div>
         <div class="shop-item" data-pack="2000" data-price="3.49" data-stars="180" data-ton="1.5">
           <div class="shop-item-left">
-            <span class="shop-item-coin">&#9917;</span>
+            <span class="shop-item-coin">&#129689;</span>
             <span>+ 2 000 Coins</span>
           </div>
           <span class="shop-price">$3.49</span>
@@ -291,21 +293,21 @@
         <div class="shop-item popular" data-pack="5000" data-price="7.99" data-stars="400" data-ton="3">
           <div class="shop-popular-badge">POPULAR</div>
           <div class="shop-item-left">
-            <span class="shop-item-coin">&#9917;</span>
+            <span class="shop-item-coin">&#129689;</span>
             <span>+ 5 000 Coins</span>
           </div>
           <span class="shop-price">$7.99</span>
         </div>
         <div class="shop-item" data-pack="10000" data-price="14.99" data-stars="750" data-ton="5">
           <div class="shop-item-left">
-            <span class="shop-item-coin">&#9917;</span>
+            <span class="shop-item-coin">&#129689;</span>
             <span>+ 10 000 Coins</span>
           </div>
           <span class="shop-price">$14.99</span>
         </div>
         <div class="shop-item" data-pack="20000" data-price="27.99" data-stars="1400" data-ton="9">
           <div class="shop-item-left">
-            <span class="shop-item-coin">&#9917;</span>
+            <span class="shop-item-coin">&#129689;</span>
             <span>+ 20 000 Coins</span>
           </div>
           <span class="shop-price">$27.99</span>
@@ -332,7 +334,7 @@
         <div class="sheet-handle"></div>
         <button class="sheet-close" id="payment-sheet-close">&#10005;</button>
         <div class="sheet-pack-info">
-          <span class="sheet-pack-icon">&#9917;</span>
+          <span class="sheet-pack-icon">&#129689;</span>
           <span class="sheet-pack-label" id="sheet-pack-label">+ 500 Coins</span>
         </div>
         <div class="sheet-price" id="sheet-price">$0.99</div>

@@ -224,17 +224,19 @@ function getLeaderboardData(limit = 50) {
     gamesPlayed: entry.games_played,
     bestScore: entry.best_round_score,
     bestSessionScore: entry.best_session_score || 0,
+    dailyBestSession: entry.daily_best_session || 0,
     avgScore: entry.games_played > 0 ? Math.round(entry.total_score / entry.games_played) : 0
   }));
 }
 
 function endSession(telegramId, sessionScore) {
   if (sessionScore > 0) {
-    db.updateBestSessionScore.run(sessionScore, telegramId);
+    db.updateBestSessionScore.run(sessionScore, sessionScore, telegramId);
   }
   const user = db.getUser.get(telegramId);
   return {
-    bestSessionScore: user?.best_session_score || 0
+    bestSessionScore: user?.best_session_score || 0,
+    dailyBestSession: user?.daily_best_session || 0
   };
 }
 
@@ -314,6 +316,7 @@ function getUserStats(telegramId) {
     gamesPlayed: user.games_played,
     bestRoundScore: user.best_round_score,
     bestSessionScore: user.best_session_score || 0,
+    dailyBestSession: user.daily_best_session || 0,
     avgScore: user.games_played > 0 ? Math.round(user.total_score / user.games_played) : 0,
     rank: rank?.rank || 0
   };
