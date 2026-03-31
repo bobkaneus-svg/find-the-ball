@@ -95,13 +95,18 @@ const updateUserScore = db.prepare(`
 const getUserCoins = db.prepare('SELECT coins FROM users WHERE telegram_id = ?');
 
 // Photo operations
+// Get random photo excluding recent ones for this user AND excluding a specific photo
 const getRandomPhoto = db.prepare(`
-  SELECT * FROM photos WHERE active = 1 AND id NOT IN (
+  SELECT * FROM photos WHERE active = 1
+  AND id NOT IN (
     SELECT photo_id FROM game_rounds WHERE user_id = ? AND completed = 1
-    ORDER BY created_at DESC LIMIT 20
-  ) ORDER BY RANDOM() LIMIT 1
+    ORDER BY created_at DESC LIMIT 50
+  )
+  AND id != ?
+  ORDER BY RANDOM() LIMIT 1
 `);
-const getAnyRandomPhoto = db.prepare('SELECT * FROM photos WHERE active = 1 ORDER BY RANDOM() LIMIT 1');
+// Fallback: any photo except the one just played
+const getAnyRandomPhoto = db.prepare('SELECT * FROM photos WHERE active = 1 AND id != ? ORDER BY RANDOM() LIMIT 1');
 const addPhoto = db.prepare(`
   INSERT INTO photos (filename_original, filename_modified, ball_x, ball_y, ball_radius, difficulty, sport, description)
   VALUES (?, ?, ?, ?, ?, ?, ?, ?)

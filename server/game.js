@@ -78,11 +78,11 @@ function getRatingMessage(rating, score) {
   return options[Math.floor(Math.random() * options.length)];
 }
 
-function startNewRound(telegramId) {
-  // Try to get a photo the user hasn't seen recently
-  let photo = db.getRandomPhoto.get(telegramId);
+function startNewRound(telegramId, lastPhotoId = 0) {
+  // Try to get a photo the user hasn't seen recently, never the same as last round
+  let photo = db.getRandomPhoto.get(telegramId, lastPhotoId || 0);
   if (!photo) {
-    photo = db.getAnyRandomPhoto.get();
+    photo = db.getAnyRandomPhoto.get(lastPhotoId || 0);
   }
 
   if (!photo) {

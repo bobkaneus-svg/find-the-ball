@@ -439,9 +439,13 @@ function startNewSession() {
 // Preload next photo for instant display
 let preloadedRound = null;
 
+function getLastPhotoId() {
+  return state.currentRound?.photo?.id || 0;
+}
+
 async function preloadNextRound() {
   try {
-    const res = await api('/api/game/start', 'POST');
+    const res = await api('/api/game/start', 'POST', { lastPhotoId: getLastPhotoId() });
     preloadedRound = res;
     // Preload image into browser cache
     const img = new Image();
@@ -459,7 +463,7 @@ async function loadNextRound() {
       res = preloadedRound;
       preloadedRound = null;
     } else {
-      res = await api('/api/game/start', 'POST');
+      res = await api('/api/game/start', 'POST', { lastPhotoId: getLastPhotoId() });
     }
 
     state.currentRound = res;

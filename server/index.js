@@ -165,7 +165,8 @@ app.post('/api/auth', authMiddleware, (req, res) => {
 
 // Start a new round
 app.post('/api/game/start', authMiddleware, (req, res) => {
-  const result = game.startNewRound(req.telegramUser.id);
+  const lastPhotoId = req.body?.lastPhotoId || 0;
+  const result = game.startNewRound(req.telegramUser.id, lastPhotoId);
   if (result.error) {
     return res.status(400).json({ error: result.error });
   }
