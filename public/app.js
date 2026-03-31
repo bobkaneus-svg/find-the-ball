@@ -730,38 +730,7 @@ function setupGameTouchHandlers() {
 
   const photoContainer = document.getElementById('photo-container');
 
-  function getImageBounds() {
-    // Calculate the actual rendered image area within the container
-    // when using object-fit: contain, there may be black bars
-    const img = document.getElementById('game-photo');
-    const containerRect = photoContainer.getBoundingClientRect();
-
-    const imgNaturalW = img.naturalWidth || 800;
-    const imgNaturalH = img.naturalHeight || 600;
-    const containerW = containerRect.width;
-    const containerH = containerRect.height;
-
-    const imgRatio = imgNaturalW / imgNaturalH;
-    const containerRatio = containerW / containerH;
-
-    let renderW, renderH, offsetX, offsetY;
-
-    if (imgRatio > containerRatio) {
-      // Image is wider than container → black bars top/bottom
-      renderW = containerW;
-      renderH = containerW / imgRatio;
-      offsetX = 0;
-      offsetY = (containerH - renderH) / 2;
-    } else {
-      // Image is taller than container → black bars left/right
-      renderH = containerH;
-      renderW = containerH * imgRatio;
-      offsetX = (containerW - renderW) / 2;
-      offsetY = 0;
-    }
-
-    return { renderW, renderH, offsetX, offsetY, containerRect };
-  }
+  // Use global getImageBounds (defined below setupGame)
 
   function handleMove(clientX, clientY) {
     const { renderW, renderH, offsetX, offsetY, containerRect } = getImageBounds();
@@ -835,6 +804,36 @@ function setupGameTouchHandlers() {
   photoContainer.addEventListener('mouseup', () => {
     state.isDragging = false;
   });
+}
+
+function getImageBounds() {
+  const img = document.getElementById('game-photo');
+  const pc = document.getElementById('photo-container');
+  const containerRect = pc.getBoundingClientRect();
+
+  const imgNaturalW = img.naturalWidth || 800;
+  const imgNaturalH = img.naturalHeight || 600;
+  const containerW = containerRect.width;
+  const containerH = containerRect.height;
+
+  const imgRatio = imgNaturalW / imgNaturalH;
+  const containerRatio = containerW / containerH;
+
+  let renderW, renderH, offsetX, offsetY;
+
+  if (imgRatio > containerRatio) {
+    renderW = containerW;
+    renderH = containerW / imgRatio;
+    offsetX = 0;
+    offsetY = (containerH - renderH) / 2;
+  } else {
+    renderH = containerH;
+    renderW = containerH * imgRatio;
+    offsetX = (containerW - renderW) / 2;
+    offsetY = 0;
+  }
+
+  return { renderW, renderH, offsetX, offsetY, containerRect };
 }
 
 async function submitGuess() {
