@@ -1379,11 +1379,6 @@ body {
   background: var(--on-surface);
   color: var(--surface);
 }
-.sheet-pay-ton {
-  background: var(--surface-container-highest);
-  color: var(--on-surface);
-  border: 1px solid var(--outline-variant);
-}
 
 .sheet-pay-label { font-weight: 600; }
 .sheet-pay-amount { font-weight: 700; }

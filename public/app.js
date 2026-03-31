@@ -1243,14 +1243,12 @@ function openPaymentSheet(element) {
   const pack = element.dataset.pack;
   const price = element.dataset.price;
   const stars = element.dataset.stars;
-  const ton = element.dataset.ton;
 
-  selectedPack = { pack: parseInt(pack), price, stars: parseInt(stars), ton: parseFloat(ton) };
+  selectedPack = { pack: parseInt(pack), price, stars: parseInt(stars) };
 
   document.getElementById('sheet-pack-label').textContent = `+ ${parseInt(pack).toLocaleString()} Coins`;
   document.getElementById('sheet-price').textContent = `$${price}`;
   document.getElementById('sheet-stars-amount').innerHTML = `&#11088; ${stars}`;
-  document.getElementById('sheet-ton-amount').innerHTML = `&#128142; ${ton} TON`;
 
   document.getElementById('payment-sheet').classList.add('active');
 }
@@ -1293,21 +1291,6 @@ async function buyWithStars() {
   }
 }
 
-async function buyWithTon() {
-  if (!selectedPack) return;
-  const { pack } = selectedPack;
-
-  try {
-    const res = await api('/api/shop/ton-invoice', 'POST', { pack });
-    if (res.paymentUrl) {
-      window.open(res.paymentUrl, '_blank');
-      showToast(t('payment_disclaimer'));
-      closePaymentSheet();
-    }
-  } catch (err) {
-    await showModal(err.message || 'Payment error');
-  }
-}
 
 // ============ UTILITIES ============
 
@@ -1449,7 +1432,6 @@ document.getElementById('btn-invite-friend').addEventListener('click', async () 
 document.getElementById('payment-sheet-backdrop').addEventListener('click', closePaymentSheet);
 document.getElementById('payment-sheet-close').addEventListener('click', closePaymentSheet);
 document.getElementById('sheet-btn-stars').addEventListener('click', buyWithStars);
-document.getElementById('sheet-btn-ton').addEventListener('click', buyWithTon);
 
 // Share score button
 const shareBtn = document.getElementById('btn-share-score');
