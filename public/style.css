@@ -142,6 +142,114 @@ body {
   50%      { opacity: 1; }
 }
 
+/* ============ ONBOARDING ============ */
+#screen-onboarding {
+  padding: var(--space-6);
+  padding-top: calc(var(--space-6) + var(--tg-safe-top, var(--safe-top)));
+  padding-bottom: calc(var(--space-6) + var(--tg-safe-bottom, var(--safe-bottom)));
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.ob-slides {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  position: relative;
+}
+
+.ob-slide {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: var(--space-4);
+  padding: 0 var(--space-4);
+  max-width: 320px;
+  animation: obFadeIn 0.4s ease-out;
+}
+.ob-slide.ob-slide-active { display: flex; }
+
+@keyframes obFadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.ob-emoji {
+  font-size: 80px;
+  filter: drop-shadow(0 8px 32px rgba(255, 184, 0, 0.3));
+  animation: obFloat 3s ease-in-out infinite;
+}
+@keyframes obFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-12px); }
+}
+
+.ob-title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: var(--on-surface);
+}
+
+.ob-desc {
+  font-family: 'Manrope', sans-serif;
+  font-size: 15px;
+  color: var(--on-surface-variant);
+  line-height: 1.6;
+}
+
+.ob-dots {
+  display: flex;
+  gap: 8px;
+  padding: var(--space-6) 0 var(--space-4);
+}
+.ob-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--surface-container-highest);
+  transition: all 0.3s;
+}
+.ob-dot.active {
+  width: 24px;
+  border-radius: 4px;
+  background: var(--primary);
+}
+
+.ob-btn {
+  width: 100%;
+  max-width: 320px;
+  padding: var(--space-4) var(--space-6);
+  border: none;
+  border-radius: var(--radius-full);
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 3px;
+  cursor: pointer;
+  background: linear-gradient(135deg, var(--primary), var(--primary-container));
+  color: var(--on-primary);
+  box-shadow: 0 8px 32px rgba(255, 184, 0, 0.3);
+  transition: transform 0.15s;
+}
+.ob-btn:active { transform: scale(0.96); }
+
+.ob-skip {
+  background: none;
+  border: none;
+  font-family: 'Manrope', sans-serif;
+  font-size: 14px;
+  color: var(--on-surface-variant);
+  cursor: pointer;
+  padding: var(--space-3);
+  opacity: 0.6;
+}
+
 /* ============ MAIN MENU ============ */
 #screen-menu {
   padding: var(--space-4) var(--space-6);

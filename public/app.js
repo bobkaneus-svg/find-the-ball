@@ -29,6 +29,10 @@ const TRANSLATIONS = {
     payment_disclaimer: 'Transaction may take a few minutes to process.',
     invite_friend: 'Invite a friend — earn 10 000 coins!',
     lb_resets_in: 'Resets in',
+    ob_title_1: 'The ball is hidden', ob_desc_1: 'A real football photo — but the ball has been erased. Can you find where it was?',
+    ob_title_2: 'Place your shot', ob_desc_2: 'Drag your cursor on the photo. The closer you are to the ball, the more points you earn!',
+    ob_title_3: 'Climb the ranks', ob_desc_3: 'Compete daily against other players. Top 3 win coin prizes every 24 hours!',
+    ob_next: 'NEXT', ob_skip: 'Skip', ob_play: "LET'S PLAY!",
     link_copied: 'Link copied!',
     share_via_telegram: 'Share via Telegram',
     copy_link: 'Copy link',
@@ -62,6 +66,10 @@ const TRANSLATIONS = {
     payment_disclaimer: 'La transaction peut prendre quelques minutes.',
     invite_friend: 'Invite un ami — gagne 10 000 coins !',
     lb_resets_in: 'Reset dans',
+    ob_title_1: 'Le ballon est cache', ob_desc_1: 'Une vraie photo de foot — mais le ballon a ete efface. Sauras-tu le retrouver ?',
+    ob_title_2: 'Place ton tir', ob_desc_2: 'Glisse ton curseur sur la photo. Plus tu es proche du ballon, plus tu marques de points !',
+    ob_title_3: 'Grimpe au classement', ob_desc_3: 'Affronte les autres joueurs chaque jour. Le top 3 gagne des coins toutes les 24h !',
+    ob_next: 'SUIVANT', ob_skip: 'Passer', ob_play: 'JOUER !',
     link_copied: 'Lien copie !',
     share_via_telegram: 'Partager via Telegram',
     copy_link: 'Copier le lien',
@@ -481,7 +489,12 @@ async function init() {
       await new Promise(resolve => setTimeout(resolve, remaining));
     }
 
-    showScreen('menu');
+    // Show onboarding for new users, menu for returning users
+    if (state.user.gamesPlayed === 0) {
+      showScreen('onboarding');
+    } else {
+      showScreen('menu');
+    }
   } catch (err) {
     console.error('Auth failed:', err);
     // Dev mode fallback
@@ -1413,6 +1426,26 @@ document.getElementById('btn-lb-back').addEventListener('click', async () => {
     console.error('Failed to refresh stats:', e);
   }
   goBack();
+});
+
+// Onboarding
+let obStep = 0;
+document.getElementById('ob-next').addEventListener('click', () => {
+  obStep++;
+  if (obStep >= 3) {
+    showScreen('menu');
+    return;
+  }
+  document.querySelectorAll('.ob-slide').forEach(s => s.classList.remove('ob-slide-active'));
+  document.querySelector(`.ob-slide[data-step="${obStep}"]`).classList.add('ob-slide-active');
+  document.querySelectorAll('.ob-dot').forEach((d, i) => d.classList.toggle('active', i === obStep));
+  // Change button text on last step
+  if (obStep === 2) {
+    document.getElementById('ob-next').textContent = t('ob_play') || 'PLAY!';
+  }
+});
+document.getElementById('ob-skip').addEventListener('click', () => {
+  showScreen('menu');
 });
 
 // Shop
