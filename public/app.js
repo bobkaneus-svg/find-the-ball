@@ -14,7 +14,8 @@ const state = {
   hintDismissed: false,
   usedReveal: false,
   usedExpand: false,
-  sessionScore: 0
+  sessionScore: 0,
+  previousScreen: 'menu' // Track where we came from for back navigation
 };
 
 // ============ TRANSLATIONS ============
@@ -373,8 +374,15 @@ function showNoCoinsModal() {
 
 // ============ SCREENS ============
 
-function showScreen(name) {
+function showScreen(name, trackPrevious = true) {
   const prev = document.querySelector('.screen.active');
+  const prevName = prev ? prev.id.replace('screen-', '') : 'menu';
+
+  // Track previous screen for back navigation (except for transient screens)
+  if (trackPrevious && prevName !== name && !['loading'].includes(prevName)) {
+    state.previousScreen = prevName;
+  }
+
   if (prev) {
     prev.classList.add('screen-exit');
     setTimeout(() => {
@@ -388,6 +396,11 @@ function showScreen(name) {
     screen.classList.add('active', 'screen-enter');
     setTimeout(() => screen.classList.remove('screen-enter'), 400);
   }, prev ? 150 : 0);
+}
+
+function goBack() {
+  const target = state.previousScreen || 'menu';
+  showScreen(target);
 }
 
 // ============ MENU ============
@@ -1081,11 +1094,11 @@ document.getElementById('btn-lb-back').addEventListener('click', async () => {
   } catch (e) {
     console.error('Failed to refresh stats:', e);
   }
-  showScreen('menu');
+  goBack();
 });
 
 // Shop
-document.getElementById('btn-shop-back').addEventListener('click', () => showScreen('menu'));
+document.getElementById('btn-shop-back').addEventListener('click', goBack);
 document.querySelectorAll('.shop-item[data-pack]').forEach(item => {
   item.addEventListener('click', () => {
     const pack = parseInt(item.dataset.pack);

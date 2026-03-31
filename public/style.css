@@ -1029,8 +1029,7 @@ body {
 .shop-header {
   display: flex;
   align-items: center;
-  justify-content: center;
-  position: relative;
+  justify-content: space-between;
   padding: var(--space-4);
   padding-top: calc(var(--space-4) + var(--safe-top));
   background: linear-gradient(135deg, var(--primary), var(--primary-container));
@@ -1043,10 +1042,6 @@ body {
   color: var(--on-primary);
 }
 .shop-close-btn {
-  position: absolute;
-  right: var(--space-4);
-  top: 50%;
-  transform: translateY(-50%);
   width: 34px;
   height: 34px;
   border-radius: var(--radius-full);
