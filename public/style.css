@@ -408,6 +408,47 @@ body {
   background: rgba(255, 201, 101, 0.06);
 }
 
+/* Crosshair inside search circle */
+.search-circle-crosshair-h,
+.search-circle-crosshair-v {
+  position: absolute;
+  background: rgba(255, 255, 255, 0.6);
+  pointer-events: none;
+  display: none;
+}
+.search-circle-crosshair-h {
+  width: 100%;
+  height: 1px;
+  top: 50%;
+  left: 0;
+  transform: translateY(-0.5px);
+}
+.search-circle-crosshair-v {
+  width: 1px;
+  height: 100%;
+  left: 50%;
+  top: 0;
+  transform: translateX(-0.5px);
+}
+.search-circle.placed .search-circle-crosshair-h,
+.search-circle.placed .search-circle-crosshair-v {
+  display: block;
+}
+.search-circle-dot {
+  position: absolute;
+  width: 5px;
+  height: 5px;
+  background: var(--primary);
+  border-radius: 50%;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 0 6px var(--primary);
+  display: none;
+  z-index: 7;
+}
+.search-circle.placed .search-circle-dot { display: block; }
+
 .search-circle-icon {
   font-size: 22px;
   z-index: 6;
