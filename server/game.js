@@ -164,13 +164,12 @@ function submitGuess(roundId, telegramId, guessX, guessY, usedReveal, usedExpand
   // Calculate score
   const result = calculateScore(guessX, guessY, photo.ball_x, photo.ball_y, 100, 100);
 
-  // Deduct coins for expand power-up only (reveal is already deducted via /api/game/reveal)
+  // Deduct coins for expand power-up atomically (reveal already deducted via /api/game/reveal)
   if (usedExpand) {
-    const user = db.getUserCoins.get(telegramId);
-    if (!user || user.coins < EXPAND_AREA_COST) {
+    const result2 = db.deductCoinsIfEnough.run(EXPAND_AREA_COST, telegramId, EXPAND_AREA_COST);
+    if (result2.changes === 0) {
       return { error: 'Not enough coins' };
     }
-    db.updateUserCoins.run(-EXPAND_AREA_COST, telegramId);
     db.logTransaction.run(telegramId, -EXPAND_AREA_COST, 'powerup', `Expand area in round ${roundId}`);
   }
 
@@ -198,6 +197,9 @@ function submitGuess(roundId, telegramId, guessX, guessY, usedReveal, usedExpand
   // Check and award badges
   const newBadges = checkAndAwardBadges(telegramId, result);
 
+  // Get updated coin balance after all deductions and rewards
+  const updatedUser = db.getUser.get(telegramId);
+
   return {
     score: result.score,
     distance: result.distance,
@@ -205,6 +207,7 @@ function submitGuess(roundId, telegramId, guessX, guessY, usedReveal, usedExpand
     emoji: getRatingEmoji(result.rating),
     message: getRatingMessage(result.rating, result.score),
     bonusCoins,
+    coins: updatedUser?.coins || 0,
     newBadges,
     ballPosition: {
       x: photo.ball_x,

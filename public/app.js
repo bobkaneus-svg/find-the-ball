@@ -853,11 +853,12 @@ async function submitGuess() {
       usedExpand: state.usedExpand
     });
 
-    // Update user state (coins already deducted server-side for power-ups)
+    // Update user state — use server-authoritative coin balance
     state.sessionScore += result.score;
-    state.user.coins += (result.bonusCoins || 0);
+    state.user.coins = result.coins;
     state.user.totalScore = (state.user.totalScore || 0) + result.score;
     state.user.gamesPlayed = (state.user.gamesPlayed || 0) + 1;
+    updateAllCoinDisplays();
 
     // Handle new badges
     if (result.newBadges && result.newBadges.length > 0) {
@@ -1120,10 +1121,8 @@ async function useExpandArea() {
   const confirmed = await showModal(t('expand_confirm'));
   if (!confirmed) return;
 
-  // Pre-check: will server accept? (coins already checked above)
+  // Mark as used visually — server will deduct coins on guess submission
   state.usedExpand = true;
-  state.user.coins -= 50;
-  updateAllCoinDisplays();
   document.getElementById('btn-expand').classList.add('used');
   document.getElementById('btn-expand').disabled = true;
 
@@ -1267,7 +1266,9 @@ async function buyWithStars() {
     if (invoiceRes.invoiceLink && tg?.openInvoice) {
       tg.openInvoice(invoiceRes.invoiceLink, async (status) => {
         if (status === 'paid') {
-          const res = await api('/api/shop/confirm-stars', 'POST', { pack });
+          // Payment verified server-side via webhook. Poll for updated balance.
+          await new Promise(r => setTimeout(r, 1500));
+          const res = await api('/api/user/coins');
           state.user.coins = res.coins;
           updateAllCoinDisplays();
           showToast(`+${pack} coins!`);
@@ -1276,6 +1277,7 @@ async function buyWithStars() {
         }
       });
     } else {
+      // Dev mode fallback
       const res = await api('/api/shop/buy', 'POST', { pack });
       state.user.coins = res.coins;
       updateAllCoinDisplays();

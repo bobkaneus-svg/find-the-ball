@@ -121,6 +121,8 @@ const createUser = db.prepare(`
   VALUES (?, ?, ?)
 `);
 const updateUserCoins = db.prepare('UPDATE users SET coins = coins + ? WHERE telegram_id = ?');
+// Atomic deduction: only deducts if user has enough coins. Returns changes count (0 = insufficient).
+const deductCoinsIfEnough = db.prepare('UPDATE users SET coins = coins - ? WHERE telegram_id = ? AND coins >= ?');
 const updateUserScore = db.prepare(`
   UPDATE users SET
     total_score = total_score + ?,
@@ -225,6 +227,7 @@ module.exports = {
   getUser,
   createUser,
   updateUserCoins,
+  deductCoinsIfEnough,
   updateUserScore,
   getUserCoins,
   getRandomPhoto,

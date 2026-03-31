@@ -13,19 +13,21 @@ const PORT = process.env.PORT || 3000;
 const BOT_TOKEN = process.env.BOT_TOKEN;
 const WEBAPP_URL = process.env.WEBAPP_URL || `http://localhost:${PORT}`;
 const ADMIN_IDS = (process.env.ADMIN_IDS || '').split(',').map(Number);
-const ADMIN_SECRET = process.env.ADMIN_SECRET || 'ftb-admin-2024';
+const ADMIN_SECRET = process.env.ADMIN_SECRET;
+if (!ADMIN_SECRET) console.warn('WARNING: ADMIN_SECRET not set — admin endpoints disabled');
 
 // Telegram Bot
 let bot;
 if (BOT_TOKEN) {
   bot = new TelegramBot(BOT_TOKEN, { polling: true });
-  game.setBot(bot, botT);
   setupBot(bot);
   console.log('Telegram bot started');
 }
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: WEBAPP_URL !== `http://localhost:${PORT}` ? WEBAPP_URL : '*'
+}));
 app.use(express.json());
 
 // Request logging middleware
@@ -98,7 +100,7 @@ function validateTelegramData(initData) {
 
 function authMiddleware(req, res, next) {
   // Admin secret key bypass (for browser-based admin dashboard)
-  if (req.query.key === ADMIN_SECRET) {
+  if (ADMIN_SECRET && req.query.key === ADMIN_SECRET) {
     req.telegramUser = { id: ADMIN_IDS[0] || 0 };
     return next();
   }
@@ -193,14 +195,11 @@ app.post('/api/game/reveal', authMiddleware, (req, res) => {
   const photo = db.getPhotoById.get(round.photo_id);
   if (!photo) return res.status(404).json({ error: 'Photo not found' });
 
-  // Check coins
-  const user = db.getUserCoins.get(req.telegramUser.id);
-  if (!user || user.coins < 100) {
+  // Atomic deduction — prevents race condition / negative balance
+  const deductResult = db.deductCoinsIfEnough.run(100, req.telegramUser.id, 100);
+  if (deductResult.changes === 0) {
     return res.status(400).json({ error: 'Not enough coins' });
   }
-
-  // Deduct coins
-  db.updateUserCoins.run(-100, req.telegramUser.id);
   db.logTransaction.run(req.telegramUser.id, -100, 'powerup', 'Reveal quarter');
 
   // Determine which quarter: tl, tr, bl, br
@@ -369,19 +368,11 @@ app.post('/api/shop/create-invoice', authMiddleware, async (req, res) => {
   }
 });
 
-// Confirm Stars payment
-app.post('/api/shop/confirm-stars', authMiddleware, (req, res) => {
-  const { pack } = req.body;
-  const coins = parseInt(pack);
-  if (!coins || ![500, 1000, 2000, 5000, 10000, 20000].includes(coins)) {
-    return res.status(400).json({ error: 'Invalid pack' });
-  }
-
-  db.updateUserCoins.run(coins, req.telegramUser.id);
-  db.logTransaction.run(req.telegramUser.id, coins, 'stars_purchase', `Bought ${coins} coins with Stars`);
-
+// Stars payment verified server-side via successful_payment webhook in setupBot()
+// Client polls /api/user/coins after payment to get updated balance
+app.get('/api/user/coins', authMiddleware, (req, res) => {
   const user = db.getUser.get(req.telegramUser.id);
-  res.json({ coins: user.coins, purchased: coins });
+  res.json({ coins: user?.coins || 0 });
 });
 
 // ============ TON PRICE CACHE ============
@@ -459,14 +450,7 @@ app.post('/api/shop/ton-invoice', authMiddleware, async (req, res) => {
   res.json({ paymentUrl, comment, tonAmount });
 });
 
-// Watch ad reward (placeholder)
-app.post('/api/shop/ad-reward', authMiddleware, (req, res) => {
-  const REWARD = 50;
-  db.updateUserCoins.run(REWARD, req.telegramUser.id);
-  db.logTransaction.run(req.telegramUser.id, REWARD, 'ad_reward', 'Watched video ad');
-  const user = db.getUser.get(req.telegramUser.id);
-  res.json({ coins: user.coins, reward: REWARD });
-});
+// Ad reward removed — replaced by invite/referral system
 
 // ============ MANAGE TOOL (photo upload + marking) ============
 
@@ -900,6 +884,9 @@ function getUserLang(telegramId) {
   const user = db.getUser.get(telegramId);
   return user?.language_code || 'en';
 }
+
+// Wire bot + translations to game module (after BOT_I18N is defined)
+if (bot) game.setBot(bot, botT);
 
 function setupBot(bot) {
   // Handle Telegram Stars pre-checkout query (required to accept payments)
