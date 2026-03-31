@@ -1392,6 +1392,40 @@ body {
   opacity: 0.6;
 }
 
+/* Invite sheet */
+.invite-sheet-icon { font-size: 40px; text-align: center; }
+.invite-sheet-title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  text-align: center;
+  color: var(--on-surface);
+  letter-spacing: 1px;
+}
+.invite-sheet-reward {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 24px;
+  font-weight: 700;
+  text-align: center;
+  color: var(--primary);
+}
+.invite-sheet-link {
+  font-family: 'Manrope', sans-serif;
+  font-size: 11px;
+  color: var(--on-surface-variant);
+  text-align: center;
+  padding: var(--space-2) var(--space-4);
+  background: var(--surface-container);
+  border-radius: var(--radius-sm);
+  word-break: break-all;
+  margin: var(--space-2) 0 var(--space-4);
+}
+.invite-copy-btn {
+  background: var(--surface-container-highest) !important;
+  color: var(--on-surface) !important;
+  border: 1px solid var(--outline-variant) !important;
+}
+
 /* ============ OVERLAYS & MODALS ============ */
 .overlay {
   position: fixed;

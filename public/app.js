@@ -29,6 +29,10 @@ const TRANSLATIONS = {
     payment_disclaimer: 'Transaction may take a few minutes to process.',
     invite_friend: 'Invite a friend — earn 10 000 coins!',
     lb_resets_in: 'Resets in',
+    link_copied: 'Link copied!',
+    share_via_telegram: 'Share via Telegram',
+    copy_link: 'Copy link',
+    invite_title: 'Invite a friend',
     step_1: 'A photo appears — the ball is hidden',
     step_2: 'Place your cursor where you think it is',
     step_3: 'The closer you are, the more you score!',
@@ -58,6 +62,10 @@ const TRANSLATIONS = {
     payment_disclaimer: 'La transaction peut prendre quelques minutes.',
     invite_friend: 'Invite un ami — gagne 10 000 coins !',
     lb_resets_in: 'Reset dans',
+    link_copied: 'Lien copie !',
+    share_via_telegram: 'Partager via Telegram',
+    copy_link: 'Copier le lien',
+    invite_title: 'Invite un ami',
     step_1: 'Une photo apparait — le ballon est cache',
     step_2: 'Place ton curseur la ou tu penses qu\'il est',
     step_3: 'Plus tu es proche, plus tu marques de points !',
@@ -1436,15 +1444,50 @@ document.querySelectorAll('#shop-list .shop-item[data-pack]').forEach(item => {
 document.getElementById('btn-invite-friend').addEventListener('click', async () => {
   try {
     const res = await api('/api/invite-link');
-    if (res.link && tg) {
-      tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(res.link)}&text=${encodeURIComponent(t('share_text').replace('{score}', ''))}`);
-    } else if (res.link) {
-      navigator.clipboard?.writeText(res.link);
-      showToast('Link copied!');
-    }
+    if (!res.link) return;
+    // Show invite sheet with options
+    document.getElementById('invite-link-display').textContent = res.link;
+    document.getElementById('invite-sheet').dataset.link = res.link;
+    document.getElementById('invite-sheet').classList.add('active');
   } catch (e) {
     console.error('Invite error:', e);
   }
+});
+
+// Invite sheet actions
+document.getElementById('invite-share-tg').addEventListener('click', () => {
+  const link = document.getElementById('invite-sheet').dataset.link;
+  if (link && tg) {
+    tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(t('share_text').replace('{score}', ''))}`);
+  }
+  document.getElementById('invite-sheet').classList.remove('active');
+});
+
+document.getElementById('invite-copy-link').addEventListener('click', async () => {
+  const link = document.getElementById('invite-sheet').dataset.link;
+  if (link) {
+    try {
+      await navigator.clipboard.writeText(link);
+      showToast(t('link_copied'));
+    } catch (e) {
+      // Fallback for older browsers
+      const input = document.createElement('input');
+      input.value = link;
+      document.body.appendChild(input);
+      input.select();
+      document.execCommand('copy');
+      document.body.removeChild(input);
+      showToast(t('link_copied'));
+    }
+  }
+  document.getElementById('invite-sheet').classList.remove('active');
+});
+
+document.getElementById('invite-sheet-backdrop').addEventListener('click', () => {
+  document.getElementById('invite-sheet').classList.remove('active');
+});
+document.getElementById('invite-sheet-close').addEventListener('click', () => {
+  document.getElementById('invite-sheet').classList.remove('active');
 });
 
 // Payment bottom sheet
