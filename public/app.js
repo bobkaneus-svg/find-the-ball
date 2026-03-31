@@ -3,6 +3,7 @@
 const API_BASE = '';
 let tg = null;
 let initData = '';
+let currentLang = 'en';
 
 // State
 const state = {
@@ -16,6 +17,218 @@ const state = {
   sessionScore: 0
 };
 
+// ============ TRANSLATIONS ============
+
+const TRANSLATIONS = {
+  en: {
+    loading: 'Loading...', high_score: 'HIGH SCORE', start_game: 'START GAME',
+    leaderboard: 'LEADERBOARD', shop: 'SHOP', drag_hint: 'Touch and drag to place your cursor',
+    points: 'points', you: 'You', ball: 'Ball', precision: 'Precision', bonus: 'Bonus',
+    next_photo: 'NEXT PHOTO', share_score: 'SHARE MY SCORE', menu: 'MENU',
+    play_again: 'PLAY AGAIN', main_menu: 'MAIN MENU', pause: 'PAUSE',
+    resume: 'RESUME', quit: 'QUIT', your_rank: 'Your rank: ',
+    lb_subtitle: 'Top 50 players rewarded each season!',
+    watch_ad: '+ 50 Coins / Watch One Video Ad',
+    reveal_confirm: 'Reveal quarter?\n(100 Coins)',
+    expand_confirm: 'Expand search area?\n(50 Coins)',
+    not_enough_coins: 'Not enough coins!',
+    no: 'No', yes: 'Yes',
+    // Rating messages
+    rating_perfect: ['INCREDIBLE!', 'PERFECT!', "BULL'S EYE!"],
+    rating_great: ['EXCELLENT!', 'SO CLOSE!', 'ALMOST PERFECT!'],
+    rating_good: ['WELL PLAYED!', 'NOT BAD!', 'GOOD INSTINCT!'],
+    rating_ok: ['CORRECT', "IT'LL DO", 'COULD BE BETTER'],
+    share_text: "I scored {score} points on Find the Ball! Can you do better?"
+  },
+  fr: {
+    loading: 'Chargement...', high_score: 'MEILLEUR SCORE', start_game: 'JOUER',
+    leaderboard: 'CLASSEMENT', shop: 'BOUTIQUE', drag_hint: 'Touche et glisse pour placer ton curseur',
+    points: 'points', you: 'Toi', ball: 'Ballon', precision: 'Precision', bonus: 'Bonus',
+    next_photo: 'PHOTO SUIVANTE', share_score: 'PARTAGER MON SCORE', menu: 'MENU',
+    play_again: 'REJOUER', main_menu: 'MENU PRINCIPAL', pause: 'PAUSE',
+    resume: 'REPRENDRE', quit: 'QUITTER', your_rank: 'Ton classement : ',
+    lb_subtitle: 'Top 50 joueurs recompenses chaque saison !',
+    watch_ad: '+ 50 Coins / Regarder une pub',
+    reveal_confirm: 'Reveler un quart ?\n(100 Coins)',
+    expand_confirm: 'Agrandir la zone ?\n(50 Coins)',
+    not_enough_coins: 'Pas assez de coins !',
+    no: 'Non', yes: 'Oui',
+    rating_perfect: ['INCROYABLE !', 'PARFAIT !', 'EN PLEIN DANS LE MILLE !'],
+    rating_great: ['EXCELLENT !', 'TRES PROCHE !', 'PRESQUE PARFAIT !'],
+    rating_good: ['BIEN JOUE !', 'PAS MAL !', 'BON INSTINCT !'],
+    rating_ok: ['CORRECT', 'CA PASSE', 'PEUT MIEUX FAIRE'],
+    share_text: "J'ai marque {score} points sur Find the Ball ! Tu peux faire mieux ?"
+  },
+  es: {
+    loading: 'Cargando...', high_score: 'MEJOR PUNTUACION', start_game: 'JUGAR',
+    leaderboard: 'CLASIFICACION', shop: 'TIENDA', drag_hint: 'Toca y arrastra para colocar tu cursor',
+    points: 'puntos', you: 'Tu', ball: 'Balon', precision: 'Precision', bonus: 'Bonus',
+    next_photo: 'SIGUIENTE FOTO', share_score: 'COMPARTIR PUNTUACION', menu: 'MENU',
+    play_again: 'JUGAR DE NUEVO', main_menu: 'MENU PRINCIPAL', pause: 'PAUSA',
+    resume: 'CONTINUAR', quit: 'SALIR', your_rank: 'Tu posicion: ',
+    lb_subtitle: 'Top 50 jugadores premiados cada temporada!',
+    watch_ad: '+ 50 Monedas / Ver un anuncio',
+    reveal_confirm: 'Revelar cuarto?\n(100 Monedas)',
+    expand_confirm: 'Ampliar zona?\n(50 Monedas)',
+    not_enough_coins: 'No tienes suficientes monedas!',
+    no: 'No', yes: 'Si',
+    rating_perfect: ['INCREIBLE!', 'PERFECTO!', 'DIANA!'],
+    rating_great: ['EXCELENTE!', 'MUY CERCA!', 'CASI PERFECTO!'],
+    rating_good: ['BIEN JUGADO!', 'NADA MAL!', 'BUEN INSTINTO!'],
+    rating_ok: ['CORRECTO', 'VALE', 'PUEDE MEJORAR'],
+    share_text: "He conseguido {score} puntos en Find the Ball! Puedes superarme?"
+  },
+  pt: {
+    loading: 'Carregando...', high_score: 'RECORDE', start_game: 'JOGAR',
+    leaderboard: 'RANKING', shop: 'LOJA', drag_hint: 'Toque e arraste para posicionar',
+    points: 'pontos', you: 'Voce', ball: 'Bola', precision: 'Precisao', bonus: 'Bonus',
+    next_photo: 'PROXIMA FOTO', share_score: 'COMPARTILHAR', menu: 'MENU',
+    play_again: 'JOGAR NOVAMENTE', main_menu: 'MENU PRINCIPAL', pause: 'PAUSA',
+    resume: 'CONTINUAR', quit: 'SAIR', your_rank: 'Sua posicao: ',
+    lb_subtitle: 'Top 50 jogadores premiados a cada temporada!',
+    watch_ad: '+ 50 Moedas / Assistir anuncio',
+    reveal_confirm: 'Revelar quarto?\n(100 Moedas)',
+    expand_confirm: 'Ampliar area?\n(50 Moedas)',
+    not_enough_coins: 'Moedas insuficientes!',
+    no: 'Nao', yes: 'Sim',
+    rating_perfect: ['INCRIVEL!', 'PERFEITO!', 'NA MOSCA!'],
+    rating_great: ['EXCELENTE!', 'MUITO PERTO!', 'QUASE PERFEITO!'],
+    rating_good: ['BEM JOGADO!', 'NADA MAL!', 'BOM INSTINTO!'],
+    rating_ok: ['CORRETO', 'PASSOU', 'PODE MELHORAR'],
+    share_text: "Fiz {score} pontos no Find the Ball! Consegue me superar?"
+  },
+  de: {
+    loading: 'Laden...', high_score: 'HIGHSCORE', start_game: 'SPIEL STARTEN',
+    leaderboard: 'RANGLISTE', shop: 'SHOP', drag_hint: 'Tippe und ziehe um den Cursor zu platzieren',
+    points: 'Punkte', you: 'Du', ball: 'Ball', precision: 'Prazision', bonus: 'Bonus',
+    next_photo: 'NACHSTES FOTO', share_score: 'SCORE TEILEN', menu: 'MENU',
+    play_again: 'NOCHMAL SPIELEN', main_menu: 'HAUPTMENU', pause: 'PAUSE',
+    resume: 'WEITER', quit: 'BEENDEN', your_rank: 'Dein Rang: ',
+    lb_subtitle: 'Top 50 Spieler werden jede Saison belohnt!',
+    watch_ad: '+ 50 Munzen / Werbung ansehen',
+    reveal_confirm: 'Viertel aufdecken?\n(100 Munzen)',
+    expand_confirm: 'Suchbereich erweitern?\n(50 Munzen)',
+    not_enough_coins: 'Nicht genug Munzen!',
+    no: 'Nein', yes: 'Ja',
+    rating_perfect: ['UNGLAUBLICH!', 'PERFEKT!', 'VOLLTREFFER!'],
+    rating_great: ['AUSGEZEICHNET!', 'GANZ NAH!', 'FAST PERFEKT!'],
+    rating_good: ['GUT GESPIELT!', 'NICHT SCHLECHT!', 'GUTER INSTINKT!'],
+    rating_ok: ['KORREKT', 'GEHT SO', 'KANN BESSER'],
+    share_text: "Ich habe {score} Punkte bei Find the Ball erreicht! Kannst du das toppen?"
+  },
+  ru: {
+    loading: 'Загрузка...', high_score: 'РЕКОРД', start_game: 'ИГРАТЬ',
+    leaderboard: 'РЕЙТИНГ', shop: 'МАГАЗИН', drag_hint: 'Нажми и перетащи курсор',
+    points: 'очков', you: 'Ты', ball: 'Мяч', precision: 'Точность', bonus: 'Бонус',
+    next_photo: 'СЛЕДУЮЩЕЕ ФОТО', share_score: 'ПОДЕЛИТЬСЯ', menu: 'МЕНЮ',
+    play_again: 'ИГРАТЬ СНОВА', main_menu: 'ГЛАВНОЕ МЕНЮ', pause: 'ПАУЗА',
+    resume: 'ПРОДОЛЖИТЬ', quit: 'ВЫЙТИ', your_rank: 'Твой ранг: ',
+    lb_subtitle: 'Топ-50 игроков получают награды каждый сезон!',
+    watch_ad: '+ 50 Монет / Посмотреть рекламу',
+    reveal_confirm: 'Показать четверть?\n(100 Монет)',
+    expand_confirm: 'Расширить зону?\n(50 Монет)',
+    not_enough_coins: 'Недостаточно монет!',
+    no: 'Нет', yes: 'Да',
+    rating_perfect: ['НЕВЕРОЯТНО!', 'ИДЕАЛЬНО!', 'В ЯБЛОЧКО!'],
+    rating_great: ['ОТЛИЧНО!', 'ОЧЕНЬ БЛИЗКО!', 'ПОЧТИ ИДЕАЛЬНО!'],
+    rating_good: ['ХОРОШО!', 'НЕПЛОХО!', 'ХОРОШИЙ ИНСТИНКТ!'],
+    rating_ok: ['НОРМАЛЬНО', 'СОЙДЁТ', 'МОЖНО ЛУЧШЕ'],
+    share_text: "Я набрал {score} очков в Find the Ball! Сможешь лучше?"
+  },
+  tr: {
+    loading: 'Yukleniyor...', high_score: 'EN YUKSEK SKOR', start_game: 'OYNA',
+    leaderboard: 'SIRALAMA', shop: 'MARKET', drag_hint: 'Imleci yerlestirmek icin dokun ve surukle',
+    points: 'puan', you: 'Sen', ball: 'Top', precision: 'Hassasiyet', bonus: 'Bonus',
+    next_photo: 'SONRAKI FOTO', share_score: 'SKORU PAYLAS', menu: 'MENU',
+    play_again: 'TEKRAR OYNA', main_menu: 'ANA MENU', pause: 'DURAKLAT',
+    resume: 'DEVAM', quit: 'CIK', your_rank: 'Siralamam: ',
+    lb_subtitle: 'Her sezon en iyi 50 oyuncu odullendirilir!',
+    watch_ad: '+ 50 Jeton / Reklam izle',
+    reveal_confirm: 'Ceyregi goster?\n(100 Jeton)',
+    expand_confirm: 'Alani genislet?\n(50 Jeton)',
+    not_enough_coins: 'Yeterli jeton yok!',
+    no: 'Hayir', yes: 'Evet',
+    rating_perfect: ['INANILMAZ!', 'MUKEMMEL!', 'TAM ISABET!'],
+    rating_great: ['HARIKA!', 'COK YAKIN!', 'NEREDEYSE MUKEMMEL!'],
+    rating_good: ['IYI OYNADIN!', 'FENA DEGIL!', 'IYI ICGUDU!'],
+    rating_ok: ['DOGRU', 'IDARE EDER', 'DAHA IYI OLABILIR'],
+    share_text: "Find the Ball'da {score} puan aldim! Beni gecebilir misin?"
+  },
+  ar: {
+    loading: '...جاري التحميل', high_score: 'أعلى نتيجة', start_game: 'ابدأ اللعب',
+    leaderboard: 'لوحة المتصدرين', shop: 'المتجر', drag_hint: 'المس واسحب لوضع المؤشر',
+    points: 'نقاط', you: 'أنت', ball: 'الكرة', precision: 'الدقة', bonus: 'مكافأة',
+    next_photo: 'الصورة التالية', share_score: 'شارك نتيجتك', menu: 'القائمة',
+    play_again: 'العب مجدداً', main_menu: 'القائمة الرئيسية', pause: 'إيقاف مؤقت',
+    resume: 'استمرار', quit: 'خروج', your_rank: 'ترتيبك: ',
+    lb_subtitle: 'أفضل 50 لاعب يكافأون كل موسم!',
+    watch_ad: '+ 50 عملة / شاهد إعلان',
+    reveal_confirm: 'كشف الربع؟\n(100 عملة)',
+    expand_confirm: 'توسيع المنطقة؟\n(50 عملة)',
+    not_enough_coins: 'عملات غير كافية!',
+    no: 'لا', yes: 'نعم',
+    rating_perfect: ['!لا يصدق', '!مثالي', '!في الهدف'],
+    rating_great: ['!ممتاز', '!قريب جداً', '!شبه مثالي'],
+    rating_good: ['!أحسنت', '!ليس سيئاً', '!حدس جيد'],
+    rating_ok: ['صحيح', 'مقبول', 'يمكن أفضل'],
+    share_text: "حققت {score} نقطة في Find the Ball! هل تستطيع التفوق علي؟"
+  },
+  zh: {
+    loading: '加载中...', high_score: '最高分', start_game: '开始游戏',
+    leaderboard: '排行榜', shop: '商店', drag_hint: '触摸并拖动放置光标',
+    points: '分', you: '你', ball: '球', precision: '精度', bonus: '奖励',
+    next_photo: '下一张', share_score: '分享成绩', menu: '菜单',
+    play_again: '再玩一次', main_menu: '主菜单', pause: '暂停',
+    resume: '继续', quit: '退出', your_rank: '你的排名：',
+    lb_subtitle: '每赛季前50名玩家获得奖励！',
+    watch_ad: '+ 50 金币 / 观看广告',
+    reveal_confirm: '揭示象限？\n(100 金币)',
+    expand_confirm: '扩大搜索范围？\n(50 金币)',
+    not_enough_coins: '金币不足！',
+    no: '否', yes: '是',
+    rating_perfect: ['难以置信！', '完美！', '正中靶心！'],
+    rating_great: ['太棒了！', '非常接近！', '几乎完美！'],
+    rating_good: ['不错！', '还行！', '好直觉！'],
+    rating_ok: ['一般', '还行吧', '可以更好'],
+    share_text: "我在Find the Ball中获得了{score}分！你能超过我吗？"
+  }
+};
+
+function t(key) {
+  return (TRANSLATIONS[currentLang] && TRANSLATIONS[currentLang][key]) || TRANSLATIONS.en[key] || key;
+}
+
+function tRating(rating) {
+  const key = `rating_${rating}`;
+  const msgs = (TRANSLATIONS[currentLang] && TRANSLATIONS[currentLang][key]) || TRANSLATIONS.en[key];
+  if (!msgs) return rating.toUpperCase();
+  return msgs[Math.floor(Math.random() * msgs.length)];
+}
+
+function detectLanguage() {
+  // 1. Telegram user language_code
+  if (tg?.initDataUnsafe?.user?.language_code) {
+    const code = tg.initDataUnsafe.user.language_code.toLowerCase().split('-')[0];
+    if (TRANSLATIONS[code]) return code;
+  }
+  // 2. Browser language
+  const nav = (navigator.language || navigator.userLanguage || 'en').toLowerCase().split('-')[0];
+  if (TRANSLATIONS[nav]) return nav;
+  return 'en';
+}
+
+function applyTranslations() {
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    const val = t(key);
+    if (val) el.textContent = val;
+  });
+  // Update modal buttons
+  document.getElementById('modal-btn-no').textContent = t('no');
+  document.getElementById('modal-btn-yes').textContent = t('yes');
+  document.documentElement.lang = currentLang;
+}
+
 // ============ INIT ============
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -25,12 +238,11 @@ document.addEventListener('DOMContentLoaded', () => {
     tg.ready();
     tg.expand();
     initData = tg.initData;
-
-    // Apply Telegram theme
-    if (tg.themeParams) {
-      document.documentElement.style.setProperty('--tg-bg', tg.themeParams.bg_color || '#2a2a2a');
-    }
   }
+
+  // Detect and apply language
+  currentLang = detectLanguage();
+  applyTranslations();
 
   init();
 });
@@ -443,17 +655,10 @@ async function showGameOver(result) {
   photo.src = result.originalPhoto;
 
   const guessMarker = document.getElementById('gameover-guess');
-  const ballMarker = document.getElementById('gameover-ball');
-  const line = document.getElementById('gameover-distance-line');
   const container = document.getElementById('gameover-photo-container');
 
   photo.onload = () => {
     positionMarkerOnPhoto(container, photo, guessMarker, result.guessPosition.x, result.guessPosition.y);
-    positionMarkerOnPhoto(container, photo, ballMarker, result.ballPosition.x, result.ballPosition.y);
-    line.setAttribute('x1', guessMarker.style.left);
-    line.setAttribute('y1', guessMarker.style.top);
-    line.setAttribute('x2', ballMarker.style.left);
-    line.setAttribute('y2', ballMarker.style.top);
   };
 
   showScreen('gameover');
@@ -513,7 +718,7 @@ function showResult(result) {
   header.className = `result-header rating-${result.rating}`;
 
   document.getElementById('result-emoji').textContent = result.emoji;
-  document.getElementById('result-message').textContent = result.message;
+  document.getElementById('result-message').textContent = tRating(result.rating);
   document.getElementById('result-score').textContent = `+${result.score}`;
   document.getElementById('result-score').classList.add('score-animate');
 
@@ -540,18 +745,10 @@ function showResult(result) {
   resultPhoto.src = result.originalPhoto;
 
   const guessMarker = document.getElementById('result-guess');
-  const ballMarker = document.getElementById('result-ball');
-  const line = document.getElementById('distance-line');
   const container = document.getElementById('result-photo-container');
 
   resultPhoto.onload = () => {
     positionMarkerOnPhoto(container, resultPhoto, guessMarker, result.guessPosition.x, result.guessPosition.y);
-    positionMarkerOnPhoto(container, resultPhoto, ballMarker, result.ballPosition.x, result.ballPosition.y);
-
-    line.setAttribute('x1', guessMarker.style.left);
-    line.setAttribute('y1', guessMarker.style.top);
-    line.setAttribute('x2', ballMarker.style.left);
-    line.setAttribute('y2', ballMarker.style.top);
   };
 
   // Haptic feedback
@@ -585,11 +782,11 @@ function showResult(result) {
 async function useRevealQuarter() {
   if (state.usedReveal) return;
   if ((state.user?.coins || 0) < 100) {
-    await showModal('Pas assez de coins! (100 requis)');
+    await showModal(t('not_enough_coins'));
     return;
   }
 
-  const confirmed = await showModal('Reveal quarter?\n(100 Coins)');
+  const confirmed = await showModal(t('reveal_confirm'));
   if (!confirmed) return;
 
   try {
@@ -637,11 +834,11 @@ async function useRevealQuarter() {
 async function useExpandArea() {
   if (state.usedExpand) return;
   if ((state.user?.coins || 0) < 50) {
-    await showModal('Pas assez de coins! (50 requis)');
+    await showModal(t('not_enough_coins'));
     return;
   }
 
-  const confirmed = await showModal('Expand search area?\n(50 Coins)');
+  const confirmed = await showModal(t('expand_confirm'));
   if (!confirmed) return;
 
   state.usedExpand = true;
@@ -768,7 +965,7 @@ function showToast(message, duration = 3000) {
 function shareScore() {
   if (!state.currentRound) return;
   const score = state.sessionScore;
-  const shareText = `J'ai marque ${score} points sur Find the Ball! Tu peux faire mieux?`;
+  const shareText = t('share_text').replace('{score}', score);
 
   if (tg && tg.shareUrl) {
     const url = window.location.origin || 'https://t.me/FindTheBallBot';

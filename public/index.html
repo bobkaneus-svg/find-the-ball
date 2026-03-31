@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -29,7 +29,7 @@
       <div class="loading-content">
         <div class="ball-bounce">&#9917;</div>
         <h1 class="game-title">FIND THE BALL</h1>
-        <p class="loading-text">Chargement...</p>
+        <p class="loading-text" data-i18n="loading">Loading...</p>
       </div>
     </div>
 
@@ -39,7 +39,7 @@
         <h1 class="menu-title">MAIN MENU</h1>
 
         <div class="high-score-section">
-          <span class="high-score-label">HIGH SCORE</span>
+          <span class="high-score-label" data-i18n="high_score">HIGH SCORE</span>
           <span class="high-score-value" id="menu-high-score">0</span>
         </div>
 
@@ -62,9 +62,9 @@
         </div>
 
         <div class="menu-buttons">
-          <button class="btn btn-gold btn-large" id="btn-play">START GAME</button>
-          <button class="btn btn-gold btn-large" id="btn-menu-leaderboard">LEADERBOARD</button>
-          <button class="btn btn-gold btn-large" id="btn-shop">SHOP</button>
+          <button class="btn btn-gold btn-large" id="btn-play" data-i18n="start_game">START GAME</button>
+          <button class="btn btn-gold btn-large" id="btn-menu-leaderboard" data-i18n="leaderboard">LEADERBOARD</button>
+          <button class="btn btn-gold btn-large" id="btn-shop" data-i18n="shop">SHOP</button>
         </div>
 
         <div class="version">v1.0</div>
@@ -96,7 +96,7 @@
         </div>
         <div class="drag-hint" id="drag-hint">
           <div class="hint-icon">&#128070;</div>
-          <p>Touche et glisse pour placer ton curseur</p>
+          <p data-i18n="drag_hint">Touch and drag to place your cursor</p>
         </div>
         <!-- Quarter overlay for reveal power-up -->
         <div class="quarter-overlay" id="quarter-overlay">
@@ -129,7 +129,7 @@
         <h2 class="result-message" id="result-message">PARFAIT!</h2>
         <div class="result-score">
           <span class="result-score-value" id="result-score">0</span>
-          <span class="result-score-label">points</span>
+          <span class="result-score-label" data-i18n="points">points</span>
         </div>
       </div>
 
@@ -137,39 +137,26 @@
         <img id="result-photo" class="game-photo" alt="Result" draggable="false">
         <div class="result-marker guess-marker" id="result-guess">
           <div class="marker-dot guess-dot"></div>
-          <span class="marker-label">Toi</span>
+          <span class="marker-label" data-i18n="you">You</span>
         </div>
-        <div class="result-marker ball-marker" id="result-ball">
-          <div class="marker-dot ball-dot"></div>
-          <span class="marker-label">Ballon</span>
-        </div>
-        <svg class="result-line" id="result-line">
-          <line id="distance-line" stroke="#FFD700" stroke-width="2" stroke-dasharray="8,4"/>
-        </svg>
       </div>
 
       <div class="result-details">
         <div class="result-detail">
-          <span class="detail-label">Precision</span>
+          <span class="detail-label" data-i18n="precision">Precision</span>
           <div class="precision-bar"><div class="precision-fill" id="result-precision-bar"></div></div>
           <span class="detail-value" id="result-distance"></span>
         </div>
         <div class="result-detail" id="result-bonus-container" style="display:none">
-          <span class="detail-label">Bonus</span>
+          <span class="detail-label" data-i18n="bonus">Bonus</span>
           <span class="detail-value bonus" id="result-bonus">+0</span>
         </div>
       </div>
 
       <div class="result-buttons">
-        <button class="btn btn-gold btn-large" id="btn-next-round">
-          PHOTO SUIVANTE
-        </button>
-        <button class="btn btn-secondary" id="btn-share-score" style="display:none">
-          PARTAGER MON SCORE
-        </button>
-        <button class="btn btn-secondary" id="btn-back-menu">
-          MENU
-        </button>
+        <button class="btn btn-gold btn-large" id="btn-next-round" data-i18n="next_photo">NEXT PHOTO</button>
+        <button class="btn btn-secondary" id="btn-share-score" style="display:none" data-i18n="share_score">SHARE MY SCORE</button>
+        <button class="btn btn-secondary" id="btn-back-menu" data-i18n="menu">MENU</button>
       </div>
     </div>
 
@@ -179,22 +166,15 @@
         <div class="gameover-header">
           <h2 class="gameover-title">GAME OVER</h2>
           <span class="gameover-score" id="gameover-score">0</span>
-          <span class="gameover-score-label">points</span>
+          <span class="gameover-score-label" data-i18n="points">points</span>
         </div>
 
         <div class="gameover-photo-container" id="gameover-photo-container">
           <img id="gameover-photo" class="game-photo" alt="Game Over" draggable="false">
           <div class="result-marker guess-marker" id="gameover-guess">
             <div class="marker-dot guess-dot"></div>
-            <span class="marker-label">Toi</span>
+            <span class="marker-label" data-i18n="you">You</span>
           </div>
-          <div class="result-marker ball-marker" id="gameover-ball">
-            <div class="marker-dot ball-dot"></div>
-            <span class="marker-label">Ballon</span>
-          </div>
-          <svg class="result-line" id="gameover-line">
-            <line id="gameover-distance-line" stroke="#FFD700" stroke-width="2" stroke-dasharray="8,4"/>
-          </svg>
         </div>
 
         <!-- Inline leaderboard -->
@@ -209,8 +189,8 @@
         </div>
 
         <div class="gameover-buttons">
-          <button class="btn btn-gold btn-large" id="btn-restart">REJOUER</button>
-          <button class="btn btn-secondary" id="btn-gameover-menu">MAIN MENU</button>
+          <button class="btn btn-gold btn-large" id="btn-restart" data-i18n="play_again">PLAY AGAIN</button>
+          <button class="btn btn-secondary" id="btn-gameover-menu" data-i18n="main_menu">MAIN MENU</button>
         </div>
       </div>
     </div>
@@ -219,7 +199,7 @@
     <div id="screen-leaderboard" class="screen">
       <div class="screen-header">
         <button class="back-btn" id="btn-lb-back">&#8592;</button>
-        <h2>CLASSEMENT</h2>
+        <h2 data-i18n="leaderboard">LEADERBOARD</h2>
         <div class="spacer"></div>
       </div>
 
@@ -228,10 +208,10 @@
         <div class="prize-badge silver">&#129352; 200</div>
         <div class="prize-badge bronze">&#129353; 100</div>
       </div>
-      <p class="lb-subtitle">Top 50 joueurs recompenses chaque saison!</p>
+      <p class="lb-subtitle" data-i18n="lb_subtitle">Top 50 players rewarded each season!</p>
 
       <div class="lb-user-rank" id="lb-user-rank">
-        <span>Ton classement: </span>
+        <span data-i18n="your_rank">Your rank: </span>
         <strong id="lb-my-rank">#-</strong>
       </div>
 
@@ -304,7 +284,7 @@
         <div class="shop-item ad-item" id="btn-watch-ad">
           <div class="shop-item-left">
             <span class="shop-item-coin">&#127760;</span>
-            <span>+ 50 Coins / Watch One Video Ad</span>
+            <span data-i18n="watch_ad">+ 50 Coins / Watch One Video Ad</span>
           </div>
           <span class="shop-price free">Free</span>
         </div>
@@ -314,10 +294,10 @@
     <!-- PAUSE OVERLAY -->
     <div id="overlay-pause" class="overlay">
       <div class="overlay-content">
-        <h2>PAUSE</h2>
-        <button class="btn btn-gold" id="btn-resume">REPRENDRE</button>
-        <button class="btn btn-secondary" id="btn-leaderboard">CLASSEMENT</button>
-        <button class="btn btn-secondary" id="btn-quit">QUITTER</button>
+        <h2 data-i18n="pause">PAUSE</h2>
+        <button class="btn btn-gold" id="btn-resume" data-i18n="resume">RESUME</button>
+        <button class="btn btn-secondary" id="btn-leaderboard" data-i18n="leaderboard">LEADERBOARD</button>
+        <button class="btn btn-secondary" id="btn-quit" data-i18n="quit">QUIT</button>
       </div>
     </div>
 
