@@ -480,7 +480,14 @@ async function loadNextRound() {
     // Reset UI
     const searchCircle = document.getElementById('search-circle');
     searchCircle.classList.remove('visible', 'expanded', 'placed');
-    document.getElementById('drag-hint').classList.remove('hidden');
+
+    // Show drag hint only on first game ever
+    const hintEl = document.getElementById('drag-hint');
+    if (localStorage.getItem('ftb_hint_seen')) {
+      hintEl.classList.add('hidden');
+    } else {
+      hintEl.classList.remove('hidden');
+    }
     document.getElementById('quarter-overlay').classList.remove('active');
     document.getElementById('btn-confirm').disabled = true;
     document.getElementById('btn-confirm').classList.remove('ready');
@@ -577,10 +584,11 @@ function setupGameTouchHandlers() {
     sc.classList.add('visible');
     sc.classList.add('placed');
 
-    // Hide hint
+    // Hide hint and remember it permanently
     if (!state.hintDismissed) {
       state.hintDismissed = true;
       document.getElementById('drag-hint').classList.add('hidden');
+      localStorage.setItem('ftb_hint_seen', '1');
     }
 
     // Enable confirm
@@ -963,26 +971,82 @@ async function showLeaderboard() {
 
 // ============ SHOP ============
 
+let currentPayMethod = 'stars';
+
 function showShop() {
   updateAllCoinDisplays();
   showScreen('shop');
 }
 
-async function buyPack(packSize) {
-  try {
-    // In production, integrate Telegram Stars payment
-    if (tg) {
-      await showModal('Paiement Telegram Stars bientot disponible!\nPour le moment, utilise les pubs gratuites.');
-      return;
-    }
+function switchPayTab(method) {
+  currentPayMethod = method;
+  document.getElementById('shop-tab-stars').classList.toggle('active', method === 'stars');
+  document.getElementById('shop-tab-ton').classList.toggle('active', method === 'ton');
+  document.getElementById('shop-list-stars').style.display = method === 'stars' ? 'block' : 'none';
+  document.getElementById('shop-list-ton').style.display = method === 'ton' ? 'block' : 'none';
+}
 
-    const res = await api('/api/shop/buy', 'POST', { pack: packSize });
-    state.user.coins = res.coins;
-    updateAllCoinDisplays();
-    if (tg) tg.HapticFeedback.notificationOccurred('success');
-    showToast(`+${res.purchased} coins!`);
+async function buyPack(packSize, element) {
+  if (currentPayMethod === 'stars') {
+    await buyWithStars(packSize, element);
+  } else {
+    await buyWithTon(packSize, element);
+  }
+}
+
+async function buyWithStars(packSize, element) {
+  const starsAmount = element?.dataset?.stars;
+  if (!starsAmount) return;
+
+  try {
+    // Create invoice via server
+    const invoiceRes = await api('/api/shop/create-invoice', 'POST', {
+      pack: packSize,
+      stars: parseInt(starsAmount)
+    });
+
+    if (invoiceRes.invoiceLink && tg?.openInvoice) {
+      // Open Telegram Stars payment
+      tg.openInvoice(invoiceRes.invoiceLink, async (status) => {
+        if (status === 'paid') {
+          // Confirm payment and credit coins
+          const res = await api('/api/shop/confirm-stars', 'POST', { pack: packSize });
+          state.user.coins = res.coins;
+          updateAllCoinDisplays();
+          showToast(`+${packSize} coins!`);
+          if (tg) tg.HapticFeedback.notificationOccurred('success');
+        }
+      });
+    } else {
+      // Fallback: direct purchase (dev mode)
+      const res = await api('/api/shop/buy', 'POST', { pack: packSize });
+      state.user.coins = res.coins;
+      updateAllCoinDisplays();
+      showToast(`+${res.purchased} coins!`);
+    }
   } catch (err) {
-    await showModal(err.message);
+    await showModal(err.message || 'Payment error');
+  }
+}
+
+async function buyWithTon(packSize, element) {
+  const tonAmount = element?.dataset?.ton;
+  if (!tonAmount) return;
+
+  try {
+    // Get TON payment address from server
+    const res = await api('/api/shop/ton-invoice', 'POST', {
+      pack: packSize,
+      ton: parseFloat(tonAmount)
+    });
+
+    if (res.paymentUrl) {
+      // Open TON payment link (TonKeeper / Tonhub deeplink)
+      window.open(res.paymentUrl, '_blank');
+      showToast('Complete payment in your TON wallet');
+    }
+  } catch (err) {
+    await showModal(err.message || 'Payment error');
   }
 }
 
@@ -1113,7 +1177,7 @@ document.getElementById('btn-shop-back').addEventListener('click', goBack);
 document.querySelectorAll('.shop-item[data-pack]').forEach(item => {
   item.addEventListener('click', () => {
     const pack = parseInt(item.dataset.pack);
-    buyPack(pack);
+    buyPack(pack, item);
   });
 });
 document.getElementById('btn-watch-ad').addEventListener('click', watchAdReward);

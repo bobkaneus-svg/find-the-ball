@@ -247,48 +247,101 @@
         <span class="shop-coin-icon">&#9917;</span>
       </div>
 
-      <div class="shop-list">
-        <div class="shop-item" data-pack="500">
+      <!-- Payment method tabs -->
+      <div class="shop-payment-tabs">
+        <button class="shop-tab active" id="shop-tab-stars" onclick="switchPayTab('stars')">&#11088; Stars</button>
+        <button class="shop-tab" id="shop-tab-ton" onclick="switchPayTab('ton')">&#128142; TON</button>
+      </div>
+
+      <!-- Stars packs -->
+      <div class="shop-list" id="shop-list-stars">
+        <div class="shop-item" data-pack="500" data-stars="50">
           <div class="shop-item-left">
             <span class="shop-item-coin">&#9917;</span>
             <span>+ 500 Coins</span>
           </div>
-          <span class="shop-price">0,99</span>
+          <span class="shop-price">&#11088; 50</span>
         </div>
-        <div class="shop-item" data-pack="1000">
+        <div class="shop-item" data-pack="1000" data-stars="95">
           <div class="shop-item-left">
             <span class="shop-item-coin">&#9917;</span>
             <span>+ 1 000 Coins</span>
           </div>
-          <span class="shop-price">1,99</span>
+          <span class="shop-price">&#11088; 95</span>
         </div>
-        <div class="shop-item" data-pack="2000">
+        <div class="shop-item" data-pack="2000" data-stars="180">
           <div class="shop-item-left">
             <span class="shop-item-coin">&#9917;</span>
             <span>+ 2 000 Coins</span>
           </div>
-          <span class="shop-price">2,99</span>
+          <span class="shop-price">&#11088; 180</span>
         </div>
-        <div class="shop-item" data-pack="5000">
+        <div class="shop-item" data-pack="5000" data-stars="400">
           <div class="shop-item-left">
             <span class="shop-item-coin">&#9917;</span>
             <span>+ 5 000 Coins</span>
           </div>
-          <span class="shop-price">5,99</span>
+          <span class="shop-price">&#11088; 400</span>
         </div>
-        <div class="shop-item" data-pack="10000">
+        <div class="shop-item" data-pack="10000" data-stars="750">
           <div class="shop-item-left">
             <span class="shop-item-coin">&#9917;</span>
             <span>+ 10 000 Coins</span>
           </div>
-          <span class="shop-price">9,99</span>
+          <span class="shop-price">&#11088; 750</span>
         </div>
-        <div class="shop-item" data-pack="20000">
+        <div class="shop-item" data-pack="20000" data-stars="1400">
           <div class="shop-item-left">
             <span class="shop-item-coin">&#9917;</span>
             <span>+ 20 000 Coins</span>
           </div>
-          <span class="shop-price">14,99</span>
+          <span class="shop-price">&#11088; 1 400</span>
+        </div>
+      </div>
+
+      <!-- TON packs -->
+      <div class="shop-list" id="shop-list-ton" style="display:none">
+        <div class="shop-item" data-pack="500" data-ton="0.5">
+          <div class="shop-item-left">
+            <span class="shop-item-coin">&#9917;</span>
+            <span>+ 500 Coins</span>
+          </div>
+          <span class="shop-price">&#128142; 0.5 TON</span>
+        </div>
+        <div class="shop-item" data-pack="1000" data-ton="0.9">
+          <div class="shop-item-left">
+            <span class="shop-item-coin">&#9917;</span>
+            <span>+ 1 000 Coins</span>
+          </div>
+          <span class="shop-price">&#128142; 0.9 TON</span>
+        </div>
+        <div class="shop-item" data-pack="2000" data-ton="1.5">
+          <div class="shop-item-left">
+            <span class="shop-item-coin">&#9917;</span>
+            <span>+ 2 000 Coins</span>
+          </div>
+          <span class="shop-price">&#128142; 1.5 TON</span>
+        </div>
+        <div class="shop-item" data-pack="5000" data-ton="3">
+          <div class="shop-item-left">
+            <span class="shop-item-coin">&#9917;</span>
+            <span>+ 5 000 Coins</span>
+          </div>
+          <span class="shop-price">&#128142; 3 TON</span>
+        </div>
+        <div class="shop-item" data-pack="10000" data-ton="5">
+          <div class="shop-item-left">
+            <span class="shop-item-coin">&#9917;</span>
+            <span>+ 10 000 Coins</span>
+          </div>
+          <span class="shop-price">&#128142; 5 TON</span>
+        </div>
+        <div class="shop-item" data-pack="20000" data-ton="9">
+          <div class="shop-item-left">
+            <span class="shop-item-coin">&#9917;</span>
+            <span>+ 20 000 Coins</span>
+          </div>
+          <span class="shop-price">&#128142; 9 TON</span>
         </div>
       </div>
 

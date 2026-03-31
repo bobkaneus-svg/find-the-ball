@@ -271,6 +271,67 @@ app.post('/api/shop/buy', authMiddleware, (req, res) => {
   res.json({ coins: user.coins, purchased: selectedPack.coins });
 });
 
+// Create Telegram Stars invoice
+app.post('/api/shop/create-invoice', authMiddleware, async (req, res) => {
+  const { pack, stars } = req.body;
+  if (!pack || !stars) return res.status(400).json({ error: 'Missing pack or stars' });
+
+  if (!bot) {
+    return res.json({ invoiceLink: null }); // Dev mode - no bot
+  }
+
+  try {
+    const invoiceLink = await bot.createInvoiceLink(
+      `${pack} Coins`, // title
+      `Purchase ${pack} coins for Find the Ball`, // description
+      `coins_${pack}_${req.telegramUser.id}_${Date.now()}`, // payload
+      '', // provider_token (empty for Stars)
+      'XTR', // currency (XTR = Telegram Stars)
+      [{ label: `${pack} Coins`, amount: parseInt(stars) }]
+    );
+    res.json({ invoiceLink });
+  } catch (err) {
+    console.error('Invoice creation error:', err.message);
+    res.status(500).json({ error: 'Failed to create invoice' });
+  }
+});
+
+// Confirm Stars payment
+app.post('/api/shop/confirm-stars', authMiddleware, (req, res) => {
+  const { pack } = req.body;
+  const coins = parseInt(pack);
+  if (!coins || ![500, 1000, 2000, 5000, 10000, 20000].includes(coins)) {
+    return res.status(400).json({ error: 'Invalid pack' });
+  }
+
+  db.updateUserCoins.run(coins, req.telegramUser.id);
+  db.logTransaction.run(req.telegramUser.id, coins, 'stars_purchase', `Bought ${coins} coins with Stars`);
+
+  const user = db.getUser.get(req.telegramUser.id);
+  res.json({ coins: user.coins, purchased: coins });
+});
+
+// Create TON payment link
+const TON_WALLET = process.env.TON_WALLET || '';
+app.post('/api/shop/ton-invoice', authMiddleware, (req, res) => {
+  const { pack, ton } = req.body;
+  if (!pack || !ton) return res.status(400).json({ error: 'Missing pack or ton' });
+  if (!TON_WALLET) return res.status(500).json({ error: 'TON wallet not configured' });
+
+  const coins = parseInt(pack);
+  const tonAmount = parseFloat(ton);
+  const comment = `ftb_${coins}_${req.telegramUser.id}_${Date.now()}`;
+
+  // TON deeplink for TonKeeper / Tonhub
+  const nanotons = Math.round(tonAmount * 1e9);
+  const paymentUrl = `ton://transfer/${TON_WALLET}?amount=${nanotons}&text=${encodeURIComponent(comment)}`;
+
+  // Log pending transaction
+  db.logTransaction.run(req.telegramUser.id, 0, 'ton_pending', `TON payment pending: ${tonAmount} TON for ${coins} coins - ${comment}`);
+
+  res.json({ paymentUrl, comment });
+});
+
 // Watch ad reward (placeholder)
 app.post('/api/shop/ad-reward', authMiddleware, (req, res) => {
   const REWARD = 50;
@@ -638,6 +699,30 @@ app.post('/api/admin/marker/generate-masks', authMiddleware, adminMiddleware, as
 // ============ TELEGRAM BOT ============
 
 function setupBot(bot) {
+  // Handle Telegram Stars pre-checkout query (required to accept payments)
+  bot.on('pre_checkout_query', (query) => {
+    bot.answerPreCheckoutQuery(query.id, true);
+  });
+
+  // Handle successful Stars payment
+  bot.on('message', (msg) => {
+    if (msg.successful_payment) {
+      const payload = msg.successful_payment.invoice_payload;
+      // Parse payload: coins_{pack}_{userId}_{timestamp}
+      const parts = payload.split('_');
+      if (parts[0] === 'coins' && parts.length >= 3) {
+        const coins = parseInt(parts[1]);
+        const userId = parseInt(parts[2]);
+        if (coins && userId) {
+          db.createUser.run(userId, null, null);
+          db.updateUserCoins.run(coins, userId);
+          db.logTransaction.run(userId, coins, 'stars_payment', `Stars payment: ${msg.successful_payment.total_amount} XTR for ${coins} coins`);
+          console.log(`Stars payment: ${coins} coins for user ${userId}`);
+        }
+      }
+    }
+  });
+
   bot.onText(/\/start/, (msg) => {
     const chatId = msg.chat.id;
     bot.sendMessage(chatId, '⚽ *Find the Ball!*\n\nPeux-tu deviner ou se cache le ballon?\n\nRegarde bien la photo, analyse les indices et place ton curseur le plus pres possible!\n\n🏆 Les 50 meilleurs joueurs gagnent des recompenses!', {
