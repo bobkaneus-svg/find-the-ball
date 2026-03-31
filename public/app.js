@@ -31,7 +31,7 @@ const TRANSLATIONS = {
     watch_ad: '+ 50 Coins / Watch One Video Ad',
     reveal_confirm: 'Reveal quarter?\n(100 Coins)',
     expand_confirm: 'Expand search area?\n(50 Coins)',
-    not_enough_coins: 'Not enough coins!',
+    not_enough_coins: 'Not enough coins!', buy_coins: 'BUY COINS', cancel: 'Cancel',
     no: 'No', yes: 'Yes',
     // Rating messages
     rating_perfect: ['INCREDIBLE!', 'PERFECT!', "BULL'S EYE!"],
@@ -51,7 +51,7 @@ const TRANSLATIONS = {
     watch_ad: '+ 50 Coins / Regarder une pub',
     reveal_confirm: 'Reveler un quart ?\n(100 Coins)',
     expand_confirm: 'Agrandir la zone ?\n(50 Coins)',
-    not_enough_coins: 'Pas assez de coins !',
+    not_enough_coins: 'Pas assez de coins !', buy_coins: 'ACHETER', cancel: 'Annuler',
     no: 'Non', yes: 'Oui',
     rating_perfect: ['INCROYABLE !', 'PARFAIT !', 'EN PLEIN DANS LE MILLE !'],
     rating_great: ['EXCELLENT !', 'TRES PROCHE !', 'PRESQUE PARFAIT !'],
@@ -70,7 +70,7 @@ const TRANSLATIONS = {
     watch_ad: '+ 50 Monedas / Ver un anuncio',
     reveal_confirm: 'Revelar cuarto?\n(100 Monedas)',
     expand_confirm: 'Ampliar zona?\n(50 Monedas)',
-    not_enough_coins: 'No tienes suficientes monedas!',
+    not_enough_coins: 'No tienes suficientes monedas!', buy_coins: 'COMPRAR', cancel: 'Cancelar',
     no: 'No', yes: 'Si',
     rating_perfect: ['INCREIBLE!', 'PERFECTO!', 'DIANA!'],
     rating_great: ['EXCELENTE!', 'MUY CERCA!', 'CASI PERFECTO!'],
@@ -89,7 +89,7 @@ const TRANSLATIONS = {
     watch_ad: '+ 50 Moedas / Assistir anuncio',
     reveal_confirm: 'Revelar quarto?\n(100 Moedas)',
     expand_confirm: 'Ampliar area?\n(50 Moedas)',
-    not_enough_coins: 'Moedas insuficientes!',
+    not_enough_coins: 'Moedas insuficientes!', buy_coins: 'COMPRAR', cancel: 'Cancelar',
     no: 'Nao', yes: 'Sim',
     rating_perfect: ['INCRIVEL!', 'PERFEITO!', 'NA MOSCA!'],
     rating_great: ['EXCELENTE!', 'MUITO PERTO!', 'QUASE PERFEITO!'],
@@ -108,7 +108,7 @@ const TRANSLATIONS = {
     watch_ad: '+ 50 Munzen / Werbung ansehen',
     reveal_confirm: 'Viertel aufdecken?\n(100 Munzen)',
     expand_confirm: 'Suchbereich erweitern?\n(50 Munzen)',
-    not_enough_coins: 'Nicht genug Munzen!',
+    not_enough_coins: 'Nicht genug Munzen!', buy_coins: 'KAUFEN', cancel: 'Abbrechen',
     no: 'Nein', yes: 'Ja',
     rating_perfect: ['UNGLAUBLICH!', 'PERFEKT!', 'VOLLTREFFER!'],
     rating_great: ['AUSGEZEICHNET!', 'GANZ NAH!', 'FAST PERFEKT!'],
@@ -127,7 +127,7 @@ const TRANSLATIONS = {
     watch_ad: '+ 50 Монет / Посмотреть рекламу',
     reveal_confirm: 'Показать четверть?\n(100 Монет)',
     expand_confirm: 'Расширить зону?\n(50 Монет)',
-    not_enough_coins: 'Недостаточно монет!',
+    not_enough_coins: 'Недостаточно монет!', buy_coins: 'КУПИТЬ', cancel: 'Отмена',
     no: 'Нет', yes: 'Да',
     rating_perfect: ['НЕВЕРОЯТНО!', 'ИДЕАЛЬНО!', 'В ЯБЛОЧКО!'],
     rating_great: ['ОТЛИЧНО!', 'ОЧЕНЬ БЛИЗКО!', 'ПОЧТИ ИДЕАЛЬНО!'],
@@ -146,7 +146,7 @@ const TRANSLATIONS = {
     watch_ad: '+ 50 Jeton / Reklam izle',
     reveal_confirm: 'Ceyregi goster?\n(100 Jeton)',
     expand_confirm: 'Alani genislet?\n(50 Jeton)',
-    not_enough_coins: 'Yeterli jeton yok!',
+    not_enough_coins: 'Yeterli jeton yok!', buy_coins: 'SATIN AL', cancel: 'Iptal',
     no: 'Hayir', yes: 'Evet',
     rating_perfect: ['INANILMAZ!', 'MUKEMMEL!', 'TAM ISABET!'],
     rating_great: ['HARIKA!', 'COK YAKIN!', 'NEREDEYSE MUKEMMEL!'],
@@ -165,7 +165,7 @@ const TRANSLATIONS = {
     watch_ad: '+ 50 عملة / شاهد إعلان',
     reveal_confirm: 'كشف الربع؟\n(100 عملة)',
     expand_confirm: 'توسيع المنطقة؟\n(50 عملة)',
-    not_enough_coins: 'عملات غير كافية!',
+    not_enough_coins: 'عملات غير كافية!', buy_coins: 'شراء', cancel: 'إلغاء',
     no: 'لا', yes: 'نعم',
     rating_perfect: ['!لا يصدق', '!مثالي', '!في الهدف'],
     rating_great: ['!ممتاز', '!قريب جداً', '!شبه مثالي'],
@@ -184,7 +184,7 @@ const TRANSLATIONS = {
     watch_ad: '+ 50 金币 / 观看广告',
     reveal_confirm: '揭示象限？\n(100 金币)',
     expand_confirm: '扩大搜索范围？\n(50 金币)',
-    not_enough_coins: '金币不足！',
+    not_enough_coins: '金币不足！', buy_coins: '购买', cancel: '取消',
     no: '否', yes: '是',
     rating_perfect: ['难以置信！', '完美！', '正中靶心！'],
     rating_great: ['太棒了！', '非常接近！', '几乎完美！'],
@@ -322,6 +322,10 @@ function showModal(message) {
     const btnYes = document.getElementById('modal-btn-yes');
 
     msgEl.textContent = message;
+    btnNo.textContent = t('no');
+    btnYes.textContent = t('yes');
+    btnNo.className = 'modal-btn modal-btn-no';
+    btnYes.className = 'modal-btn modal-btn-yes';
     overlay.classList.add('active');
 
     function cleanup() {
@@ -330,15 +334,37 @@ function showModal(message) {
       btnYes.removeEventListener('click', onYes);
     }
 
-    function onNo() {
-      cleanup();
-      resolve(false);
+    function onNo() { cleanup(); resolve(false); }
+    function onYes() { cleanup(); resolve(true); }
+
+    btnNo.addEventListener('click', onNo);
+    btnYes.addEventListener('click', onYes);
+  });
+}
+
+// Special modal for "not enough coins" with CTA to shop
+function showNoCoinsModal() {
+  return new Promise((resolve) => {
+    const overlay = document.getElementById('custom-modal');
+    const msgEl = document.getElementById('modal-message');
+    const btnNo = document.getElementById('modal-btn-no');
+    const btnYes = document.getElementById('modal-btn-yes');
+
+    msgEl.textContent = t('not_enough_coins');
+    btnNo.textContent = t('cancel');
+    btnNo.className = 'modal-btn modal-btn-no';
+    btnYes.textContent = t('buy_coins');
+    btnYes.className = 'modal-btn modal-btn-yes modal-btn-cta';
+    overlay.classList.add('active');
+
+    function cleanup() {
+      overlay.classList.remove('active');
+      btnNo.removeEventListener('click', onNo);
+      btnYes.removeEventListener('click', onYes);
     }
 
-    function onYes() {
-      cleanup();
-      resolve(true);
-    }
+    function onNo() { cleanup(); resolve(false); }
+    function onYes() { cleanup(); resolve(true); }
 
     btnNo.addEventListener('click', onNo);
     btnYes.addEventListener('click', onYes);
@@ -793,7 +819,8 @@ function showResult(result) {
 async function useRevealQuarter() {
   if (state.usedReveal) return;
   if ((state.user?.coins || 0) < 100) {
-    await showModal(t('not_enough_coins'));
+    const goShop = await showNoCoinsModal();
+    if (goShop) showShop();
     return;
   }
 
@@ -845,7 +872,8 @@ async function useRevealQuarter() {
 async function useExpandArea() {
   if (state.usedExpand) return;
   if ((state.user?.coins || 0) < 50) {
-    await showModal(t('not_enough_coins'));
+    const goShop = await showNoCoinsModal();
+    if (goShop) showShop();
     return;
   }
 

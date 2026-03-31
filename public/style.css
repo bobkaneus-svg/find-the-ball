@@ -1209,6 +1209,12 @@ body {
 .modal-btn:active { background: rgba(255,255,255,0.04); }
 .modal-btn-no { border-right: 1px solid rgba(255,255,255,0.08); }
 .modal-btn-yes { font-weight: 700; }
+.modal-btn-cta {
+  background: linear-gradient(135deg, var(--primary), var(--primary-container));
+  color: var(--on-primary) !important;
+  font-weight: 800;
+  letter-spacing: 1px;
+}
 
 /* ============ CELEBRATE ============ */
 .celebrate { position: relative; overflow: visible; }
