@@ -19,7 +19,7 @@ const ADMIN_SECRET = process.env.ADMIN_SECRET || 'ftb-admin-2024';
 let bot;
 if (BOT_TOKEN) {
   bot = new TelegramBot(BOT_TOKEN, { polling: true });
-  game.setBot(bot);
+  game.setBot(bot, botT);
   setupBot(bot);
   console.log('Telegram bot started');
 }
@@ -825,6 +825,82 @@ app.post('/api/admin/marker/generate-masks', authMiddleware, adminMiddleware, as
 
 // ============ TELEGRAM BOT ============
 
+// ============ BOT TRANSLATIONS ============
+const BOT_I18N = {
+  en: {
+    welcome: '⚽ *Find the Ball!*\n\nCan you guess where the ball is hiding?\n\nLook at the photo, spot the clues and place your cursor as close as possible!\n\n🏆 Top 3 players win coins every day!',
+    play: '🎮 Play',
+    play_now: '🎮 Play now',
+    no_players: 'No players on the leaderboard yet! Be the first!',
+    lb_header: '🏆 *Top 10 - Find the Ball*\n\n',
+    lb_entry: (medal, name, score, games) => `${medal} *${name}* — ${score} pts (${games} games)\n`,
+    lb_footer: '\n_Play to get on the leaderboard!_',
+    no_stats: 'Start playing to see your stats!',
+    stats: (s) => `📊 *Your stats*\n\n💰 Coins: ${s.coins}\n🎯 Total score: ${s.totalScore}\n🎮 Games: ${s.gamesPlayed}\n⭐ Best session: ${s.bestSessionScore}\n📈 Average: ${s.avgScore}\n🏅 Rank: #${s.rank}`,
+    help: '⚽ *How to play Find the Ball*\n\n1️⃣ A football photo appears — the ball has been erased!\n2️⃣ Look for clues: players\' eyes, feet position, body language\n3️⃣ Tap where you think the ball was\n4️⃣ The closer you are, the more points you score!\n\n💡 *Power-ups:*\n🔍 Reveal quarter (100 coins) — shows which quarter has the ball\n↔️ Expand area (50 coins) — increases your search zone\n\n🏆 *Rewards:*\nTop 3 daily = Coin prizes!\nInvite friends = 10,000 coins!\n\n/start - Play\n/leaderboard - Rankings\n/stats - Your stats',
+    daily_prize: (medal, rank, score, prize) => `${medal} *Congratulations!*\n\nYou finished *#${rank}* on today's leaderboard with *${score}* points!\n\n+${prize} coins credited!`,
+    referral: (name, games, reward) => `🎉 *+${reward} coins!*\n\n${name} played ${games} games thanks to your invite!\nYour coins have been credited automatically. Keep inviting friends!`
+  },
+  fr: {
+    welcome: '⚽ *Find the Ball !*\n\nSauras-tu deviner ou se cache le ballon ?\n\nRegarde bien la photo, analyse les indices et place ton curseur le plus pres possible !\n\n🏆 Les 3 meilleurs joueurs gagnent des coins chaque jour !',
+    play: '🎮 Jouer',
+    play_now: '🎮 Jouer maintenant',
+    no_players: 'Pas encore de joueurs au classement ! Sois le premier !',
+    lb_header: '🏆 *Top 10 - Find the Ball*\n\n',
+    lb_entry: (medal, name, score, games) => `${medal} *${name}* — ${score} pts (${games} parties)\n`,
+    lb_footer: '\n_Joue pour apparaitre au classement !_',
+    no_stats: 'Commence a jouer pour voir tes stats !',
+    stats: (s) => `📊 *Tes statistiques*\n\n💰 Coins : ${s.coins}\n🎯 Score total : ${s.totalScore}\n🎮 Parties : ${s.gamesPlayed}\n⭐ Meilleure session : ${s.bestSessionScore}\n📈 Moyenne : ${s.avgScore}\n🏅 Classement : #${s.rank}`,
+    help: '⚽ *Comment jouer a Find the Ball*\n\n1️⃣ Une photo de foot s\'affiche — le ballon a ete efface !\n2️⃣ Analyse les indices : regard des joueurs, position des pieds\n3️⃣ Touche l\'ecran la ou tu penses que le ballon etait\n4️⃣ Plus tu es proche, plus tu marques de points !\n\n💡 *Power-ups :*\n🔍 Reveler un quart (100 coins) — montre quel quart contient le ballon\n↔️ Agrandir la zone (50 coins) — augmente ta zone de recherche\n\n🏆 *Recompenses :*\nTop 3 quotidien = Lots de coins !\nInvite des amis = 10 000 coins !\n\n/start - Jouer\n/leaderboard - Classement\n/stats - Tes stats',
+    daily_prize: (medal, rank, score, prize) => `${medal} *Felicitations !*\n\nTu as termine *#${rank}* au classement quotidien avec *${score}* points !\n\n+${prize} coins credites !`,
+    referral: (name, games, reward) => `🎉 *+${reward} coins !*\n\n${name} a joue ${games} parties grace a ton invitation !\nTes coins ont ete credites automatiquement. Continue a inviter tes amis !`
+  },
+  es: {
+    welcome: '⚽ *Find the Ball!*\n\nPuedes adivinar donde se esconde el balon?\n\nMira la foto, busca las pistas y coloca tu cursor lo mas cerca posible!\n\n🏆 Los 3 mejores jugadores ganan coins cada dia!',
+    play: '🎮 Jugar',
+    play_now: '🎮 Jugar ahora',
+    no_players: 'Aun no hay jugadores en el ranking. Se el primero!',
+    lb_header: '🏆 *Top 10 - Find the Ball*\n\n',
+    lb_entry: (medal, name, score, games) => `${medal} *${name}* — ${score} pts (${games} partidas)\n`,
+    lb_footer: '\n_Juega para aparecer en el ranking!_',
+    no_stats: 'Empieza a jugar para ver tus estadisticas!',
+    stats: (s) => `📊 *Tus estadisticas*\n\n💰 Coins: ${s.coins}\n🎯 Puntuacion total: ${s.totalScore}\n🎮 Partidas: ${s.gamesPlayed}\n⭐ Mejor sesion: ${s.bestSessionScore}\n📈 Promedio: ${s.avgScore}\n🏅 Posicion: #${s.rank}`,
+    help: '⚽ *Como jugar Find the Ball*\n\n1️⃣ Aparece una foto de futbol — el balon ha sido borrado!\n2️⃣ Busca pistas: miradas de los jugadores, posicion de los pies\n3️⃣ Toca donde crees que estaba el balon\n4️⃣ Cuanto mas cerca, mas puntos!\n\n/start - Jugar\n/leaderboard - Ranking\n/stats - Tus stats',
+    daily_prize: (medal, rank, score, prize) => `${medal} *Felicidades!*\n\nTerminaste *#${rank}* en el ranking diario con *${score}* puntos!\n\n+${prize} coins acreditados!`,
+    referral: (name, games, reward) => `🎉 *+${reward} coins!*\n\n${name} jugo ${games} partidas gracias a tu invitacion!\nTus coins se han acreditado automaticamente.`
+  },
+  ru: {
+    welcome: '⚽ *Find the Ball!*\n\nСможешь угадать, где прячется мяч?\n\nСмотри на фото, ищи подсказки и ставь курсор как можно ближе!\n\n🏆 Топ-3 игрока получают монеты каждый день!',
+    play: '🎮 Играть',
+    play_now: '🎮 Играть сейчас',
+    no_players: 'В рейтинге пока нет игроков! Будь первым!',
+    lb_header: '🏆 *Топ 10 - Find the Ball*\n\n',
+    lb_entry: (medal, name, score, games) => `${medal} *${name}* — ${score} очков (${games} игр)\n`,
+    lb_footer: '\n_Играй, чтобы попасть в рейтинг!_',
+    no_stats: 'Начни играть, чтобы увидеть статистику!',
+    stats: (s) => `📊 *Твоя статистика*\n\n💰 Монеты: ${s.coins}\n🎯 Всего очков: ${s.totalScore}\n🎮 Игр: ${s.gamesPlayed}\n⭐ Лучшая сессия: ${s.bestSessionScore}\n📈 Среднее: ${s.avgScore}\n🏅 Место: #${s.rank}`,
+    help: '⚽ *Как играть в Find the Ball*\n\n1️⃣ Появляется фото — мяч стерт!\n2️⃣ Ищи подсказки: взгляды игроков, позиции ног\n3️⃣ Нажми, где был мяч\n4️⃣ Чем ближе — тем больше очков!\n\n/start - Играть\n/leaderboard - Рейтинг\n/stats - Статистика',
+    daily_prize: (medal, rank, score, prize) => `${medal} *Поздравляем!*\n\nТы занял *#${rank}* место в дневном рейтинге с *${score}* очками!\n\n+${prize} монет зачислено!`,
+    referral: (name, games, reward) => `🎉 *+${reward} монет!*\n\n${name} сыграл ${games} игр благодаря твоему приглашению!\nМонеты зачислены автоматически.`
+  }
+};
+
+function getBotLang(langCode) {
+  if (!langCode) return 'en';
+  const short = langCode.slice(0, 2).toLowerCase();
+  return BOT_I18N[short] ? short : 'en';
+}
+
+function botT(langCode) {
+  return BOT_I18N[getBotLang(langCode)] || BOT_I18N.en;
+}
+
+// Get user language from DB
+function getUserLang(telegramId) {
+  const user = db.getUser.get(telegramId);
+  return user?.language_code || 'en';
+}
+
 function setupBot(bot) {
   // Handle Telegram Stars pre-checkout query (required to accept payments)
   bot.on('pre_checkout_query', (query) => {
@@ -853,25 +929,28 @@ function setupBot(bot) {
   bot.onText(/\/start(.*)/, (msg, match) => {
     const chatId = msg.chat.id;
     const userId = msg.from.id;
+    const lang = msg.from.language_code;
+    const t = botT(lang);
     const param = (match[1] || '').trim();
+
+    // Save user language
+    db.createUser.run(userId, msg.from.username || null, msg.from.first_name || null);
+    db.updateLanguage.run(getBotLang(lang), userId);
 
     // Handle referral: /start ref_123456
     if (param.startsWith('ref_')) {
       const referrerId = parseInt(param.replace('ref_', ''));
       if (referrerId && referrerId !== userId) {
-        // Create user first if needed
-        db.createUser.run(userId, msg.from.username || null, msg.from.first_name || null);
-        // Set referrer (only if not already referred)
         db.setReferredBy.run(referrerId, userId);
         console.log(`Referral: user ${userId} referred by ${referrerId}`);
       }
     }
 
-    bot.sendMessage(chatId, '⚽ *Find the Ball!*\n\nCan you guess where the ball is hiding?\n\nLook at the photo, spot the clues and place your cursor as close as possible!\n\n🏆 Top 3 players win coins every day!', {
+    bot.sendMessage(chatId, t.welcome, {
       parse_mode: 'Markdown',
       reply_markup: {
         inline_keyboard: [[
-          { text: '🎮 Play', web_app: { url: WEBAPP_URL } }
+          { text: t.play, web_app: { url: WEBAPP_URL } }
         ]]
       }
     });
@@ -879,27 +958,28 @@ function setupBot(bot) {
 
   bot.onText(/\/leaderboard/, async (msg) => {
     const chatId = msg.chat.id;
+    const t = botT(msg.from.language_code);
     const lb = game.getLeaderboardData(10);
 
     if (lb.length === 0) {
-      return bot.sendMessage(chatId, 'No players on the leaderboard yet! Be the first!');
+      return bot.sendMessage(chatId, t.no_players);
     }
 
-    let text = '🏆 *Top 10 - Find the Ball*\n\n';
+    let text = t.lb_header;
     const medals = ['🥇', '🥈', '🥉'];
 
     lb.forEach((entry, i) => {
       const medal = medals[i] || `${i + 1}.`;
-      text += `${medal} *${entry.username}* — ${entry.totalScore} pts (${entry.gamesPlayed} games)\n`;
+      text += t.lb_entry(medal, entry.username, entry.totalScore, entry.gamesPlayed);
     });
 
-    text += '\n_Play to get on the leaderboard!_';
+    text += t.lb_footer;
 
     bot.sendMessage(chatId, text, {
       parse_mode: 'Markdown',
       reply_markup: {
         inline_keyboard: [[
-          { text: '🎮 Play now', web_app: { url: WEBAPP_URL } }
+          { text: t.play_now, web_app: { url: WEBAPP_URL } }
         ]]
       }
     });
@@ -908,23 +988,22 @@ function setupBot(bot) {
   bot.onText(/\/stats/, async (msg) => {
     const chatId = msg.chat.id;
     const userId = msg.from.id;
+    const t = botT(msg.from.language_code);
 
     db.createUser.run(userId, msg.from.username || null, msg.from.first_name || null);
+    db.updateLanguage.run(getBotLang(msg.from.language_code), userId);
     const stats = game.getUserStats(userId);
 
     if (!stats) {
-      return bot.sendMessage(chatId, 'Start playing to see your stats!');
+      return bot.sendMessage(chatId, t.no_stats);
     }
 
-    bot.sendMessage(chatId, `📊 *Your stats*\n\n💰 Coins: ${stats.coins}\n🎯 Total score: ${stats.totalScore}\n🎮 Games: ${stats.gamesPlayed}\n⭐ Best session: ${stats.bestSessionScore}\n📈 Average: ${stats.avgScore}\n🏅 Rank: #${stats.rank}`, {
-      parse_mode: 'Markdown'
-    });
+    bot.sendMessage(chatId, t.stats(stats), { parse_mode: 'Markdown' });
   });
 
   bot.onText(/\/help/, (msg) => {
-    bot.sendMessage(msg.chat.id, `⚽ *How to play Find the Ball*\n\n1️⃣ A football photo appears — the ball has been erased!\n2️⃣ Look for clues: players' eyes, feet position, body language\n3️⃣ Tap where you think the ball was\n4️⃣ The closer you are, the more points you score!\n\n💡 *Power-ups:*\n🔍 Reveal quarter (100 coins) — shows which quarter has the ball\n↔️ Expand area (50 coins) — increases your search zone\n\n🏆 *Rewards:*\nTop 3 daily = Coin prizes!\nInvite friends = 10,000 coins!\n\n/start - Play\n/leaderboard - Rankings\n/stats - Your stats`, {
-      parse_mode: 'Markdown'
-    });
+    const t = botT(msg.from.language_code);
+    bot.sendMessage(msg.chat.id, t.help, { parse_mode: 'Markdown' });
   });
 }
 
@@ -966,11 +1045,13 @@ function performDailyReset() {
         db.updateUserCoins.run(prize, winner.telegram_id);
         db.logTransaction.run(winner.telegram_id, prize, 'daily_prize', `Daily leaderboard #${rank} prize`);
 
-        // Notify winner via Telegram
+        // Notify winner via Telegram in their language
         if (bot) {
           const medals = ['', '🥇', '🥈', '🥉'];
+          const winnerLang = getUserLang(winner.telegram_id);
+          const t = botT(winnerLang);
           bot.sendMessage(winner.telegram_id,
-            `${medals[rank]} *Congratulations!*\n\nYou finished *#${rank}* on today's leaderboard with *${winner.daily_best_session}* points!\n\n+${prize} coins credited!`,
+            t.daily_prize(medals[rank], rank, winner.daily_best_session, prize),
             { parse_mode: 'Markdown' }
           ).catch(err => console.error('Failed to notify winner:', err.message));
         }

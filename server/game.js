@@ -1,8 +1,9 @@
 const db = require('./database');
 
-// Reference to Telegram bot (set by index.js)
+// Reference to Telegram bot and translation function (set by index.js)
 let telegramBot = null;
-function setBot(bot) { telegramBot = bot; }
+let botTranslateFn = null;
+function setBot(bot, translateFn) { telegramBot = bot; botTranslateFn = translateFn; }
 
 const REFERRAL_REWARD = 10000;
 const REFERRAL_MIN_GAMES = 5;
@@ -23,12 +24,14 @@ function checkReferralReward(telegramId) {
       // Mark as rewarded so we don't reward twice
       db.markReferralRewarded.run(telegramId);
 
-      // Send Telegram notification to referrer
-      if (telegramBot) {
+      // Send Telegram notification to referrer in their language
+      if (telegramBot && botTranslateFn) {
         const referredUser = db.getUser.get(telegramId);
-        const name = referredUser?.first_name || referredUser?.username || 'Un ami';
+        const referrerUser = db.getUser.get(referrerId);
+        const name = referredUser?.first_name || referredUser?.username || 'A friend';
+        const t = botTranslateFn(referrerUser?.language_code || 'en');
         telegramBot.sendMessage(referrerId,
-          `🎉 *+${REFERRAL_REWARD.toLocaleString()} coins!*\n\n${name} played ${REFERRAL_MIN_GAMES} games thanks to your invite!\nYour coins have been credited automatically. Keep inviting friends!`,
+          t.referral(name, REFERRAL_MIN_GAMES, REFERRAL_REWARD.toLocaleString()),
           { parse_mode: 'Markdown' }
         ).catch(err => console.error('Failed to send referral notification:', err.message));
       }

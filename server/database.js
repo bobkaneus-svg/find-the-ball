@@ -111,6 +111,7 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_daily_winners_day ON daily_winners(day);
 `);
 try { db.exec('ALTER TABLE users ADD COLUMN referred_by INTEGER DEFAULT NULL'); } catch (e) { /* column already exists */ }
+try { db.exec('ALTER TABLE users ADD COLUMN language_code TEXT DEFAULT "en"'); } catch (e) { /* column already exists */ }
 try { db.exec('ALTER TABLE users ADD COLUMN referral_rewarded INTEGER DEFAULT 0'); } catch (e) { /* column already exists */ }
 
 // User operations
@@ -251,6 +252,7 @@ module.exports = {
   resetAllDailyScores,
   getDailyTop3,
   insertDailyWinner,
+  updateLanguage: db.prepare('UPDATE users SET language_code = ? WHERE telegram_id = ?'),
   setReferredBy: db.prepare('UPDATE users SET referred_by = ? WHERE telegram_id = ? AND referred_by IS NULL'),
   getReferrer: db.prepare('SELECT referred_by FROM users WHERE telegram_id = ?'),
   markReferralRewarded: db.prepare('UPDATE users SET referral_rewarded = 1 WHERE telegram_id = ?'),
