@@ -1136,8 +1136,6 @@ function performDailyReset() {
   const today = getTodayStr();
   const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
 
-  // Check if we already reset today
-  const anyUser = db.getLeaderboard.get ? null : null;
   // Get top 3 from yesterday's scores before reset
   const top3 = db.getDailyTop3.all();
 

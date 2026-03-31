@@ -934,14 +934,13 @@ async function showGameOver(result) {
   document.getElementById('gameover-score').textContent = state.sessionScore;
 
   const photo = document.getElementById('gameover-photo');
-  photo.src = result.originalPhoto;
-
   const guessMarker = document.getElementById('gameover-guess');
   const container = document.getElementById('gameover-photo-container');
 
   photo.onload = () => {
     positionMarkerOnPhoto(container, photo, guessMarker, result.guessPosition.x, result.guessPosition.y);
   };
+  photo.src = result.originalPhoto;
 
   showScreen('gameover');
 
@@ -1022,16 +1021,15 @@ function showResult(result) {
     bonusContainer.style.display = 'none';
   }
 
-  // Show original photo with markers
+  // Show original photo with markers — register onload before setting src (cached images)
   const resultPhoto = document.getElementById('result-photo');
-  resultPhoto.src = result.originalPhoto;
-
   const guessMarker = document.getElementById('result-guess');
   const container = document.getElementById('result-photo-container');
 
   resultPhoto.onload = () => {
     positionMarkerOnPhoto(container, resultPhoto, guessMarker, result.guessPosition.x, result.guessPosition.y);
   };
+  resultPhoto.src = result.originalPhoto;
 
   // Haptic feedback
   if (tg) {
@@ -1268,13 +1266,32 @@ async function buyWithStars() {
     if (invoiceRes.invoiceLink && tg?.openInvoice) {
       tg.openInvoice(invoiceRes.invoiceLink, async (status) => {
         if (status === 'paid') {
-          // Payment verified server-side via webhook. Poll for updated balance.
-          await new Promise(r => setTimeout(r, 1500));
-          const res = await api('/api/user/coins');
-          state.user.coins = res.coins;
-          updateAllCoinDisplays();
-          showToast(`+${pack} coins!`);
-          if (tg) tg.HapticFeedback.notificationOccurred('success');
+          // Payment verified server-side via webhook. Poll with retry.
+          const prevCoins = state.user.coins;
+          let credited = false;
+          for (let i = 0; i < 5; i++) {
+            await new Promise(r => setTimeout(r, 1500));
+            try {
+              const res = await api('/api/user/coins');
+              if (res.coins > prevCoins) {
+                state.user.coins = res.coins;
+                updateAllCoinDisplays();
+                showToast(`+${pack} coins!`);
+                if (tg) tg.HapticFeedback.notificationOccurred('success');
+                credited = true;
+                break;
+              }
+            } catch (e) { /* retry */ }
+          }
+          if (!credited) {
+            // Fallback: refresh coins anyway
+            try {
+              const res = await api('/api/user/coins');
+              state.user.coins = res.coins;
+              updateAllCoinDisplays();
+            } catch (e) {}
+            showToast('Payment processing...');
+          }
           closePaymentSheet();
         }
       });
@@ -1374,7 +1391,8 @@ document.getElementById('btn-quit').addEventListener('click', async () => {
 
 // Result buttons - continue session (don't reset score)
 document.getElementById('btn-next-round').addEventListener('click', loadNextRound);
-document.getElementById('btn-back-menu').addEventListener('click', () => {
+document.getElementById('btn-back-menu').addEventListener('click', async () => {
+  await endSession(state.sessionScore);
   state.sessionScore = 0;
   updateMenuStats();
   updateAllCoinDisplays();
@@ -1384,7 +1402,8 @@ document.getElementById('btn-back-menu').addEventListener('click', () => {
 
 // Game Over buttons
 document.getElementById('btn-restart').addEventListener('click', startNewSession);
-document.getElementById('btn-gameover-menu').addEventListener('click', () => {
+document.getElementById('btn-gameover-menu').addEventListener('click', async () => {
+  await endSession(state.sessionScore);
   state.sessionScore = 0;
   updateMenuStats();
   updateAllCoinDisplays();
