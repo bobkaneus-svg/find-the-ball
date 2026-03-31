@@ -55,42 +55,51 @@ const MAX_RADIUS = 300;       // max distance for any points
 const REVEAL_QUARTER_COST = 100;
 const EXPAND_AREA_COST = 50;
 
-function calculateScore(guessX, guessY, ballX, ballY, imageWidth, imageHeight) {
-  // Normalize coordinates to percentage (0-100)
+// Search circle radius in % of image (matches 88px on ~400px container)
+const SEARCH_RADIUS_PCT = 6;
+// Expanded search circle radius (176px on ~400px = ~12%)
+const SEARCH_RADIUS_EXPANDED_PCT = 12;
+
+function calculateScore(guessX, guessY, ballX, ballY, ballRadius, usedExpand) {
+  // All values in percentage (0-100)
   const dx = guessX - ballX;
   const dy = guessY - ballY;
   const distance = Math.sqrt(dx * dx + dy * dy);
 
-  // Scale distance based on image dimensions (use percentage-based distance)
-  const maxDim = Math.max(imageWidth || 100, imageHeight || 100);
-  const normalizedDistance = (distance / maxDim) * 100;
+  const searchRadius = usedExpand ? SEARCH_RADIUS_EXPANDED_PCT : SEARCH_RADIUS_PCT;
+  // Circles overlap if distance between centers < sum of radii
+  const overlapThreshold = ballRadius + searchRadius;
 
   let score = 0;
   let rating = '';
 
-  if (normalizedDistance <= 2) {
-    score = MAX_SCORE;
-    rating = 'perfect';
-  } else if (normalizedDistance <= 5) {
-    score = Math.round(MAX_SCORE * 0.8 + (MAX_SCORE * 0.2) * (1 - (normalizedDistance - 2) / 3));
-    rating = 'great';
-  } else if (normalizedDistance <= 10) {
-    score = Math.round(MAX_SCORE * 0.5 + (MAX_SCORE * 0.3) * (1 - (normalizedDistance - 5) / 5));
-    rating = 'good';
-  } else if (normalizedDistance <= 20) {
-    score = Math.round(MAX_SCORE * 0.2 + (MAX_SCORE * 0.3) * (1 - (normalizedDistance - 10) / 10));
-    rating = 'ok';
-  } else if (normalizedDistance <= 35) {
-    score = Math.round(MAX_SCORE * 0.05 + (MAX_SCORE * 0.15) * (1 - (normalizedDistance - 20) / 15));
-    rating = 'far';
-  } else {
+  if (distance >= overlapThreshold) {
+    // No overlap between search circle and ball circle → GAME OVER
     score = 0;
-    rating = 'miss';
+    rating = distance >= overlapThreshold + 10 ? 'miss' : 'far';
+  } else {
+    // Circles overlap — score based on distance to ball center
+    // 0 distance = 1000 pts (perfect), at overlap edge = minimum points
+    const precision = 1 - (distance / overlapThreshold);
+
+    if (precision >= 0.9) {
+      score = MAX_SCORE;
+      rating = 'perfect';
+    } else if (precision >= 0.7) {
+      score = Math.round(800 + 200 * ((precision - 0.7) / 0.2));
+      rating = 'great';
+    } else if (precision >= 0.4) {
+      score = Math.round(500 + 300 * ((precision - 0.4) / 0.3));
+      rating = 'good';
+    } else {
+      score = Math.round(200 + 300 * (precision / 0.4));
+      rating = 'ok';
+    }
   }
 
   return {
     score: Math.max(0, score),
-    distance: Math.round(normalizedDistance * 10) / 10,
+    distance: Math.round(distance * 10) / 10,
     rating,
     rawDistance: Math.round(distance * 10) / 10
   };
@@ -161,8 +170,8 @@ function submitGuess(roundId, telegramId, guessX, guessY, usedReveal, usedExpand
   const photo = db.getPhotoById.get(round.photo_id);
   if (!photo) return { error: 'Photo not found' };
 
-  // Calculate score
-  const result = calculateScore(guessX, guessY, photo.ball_x, photo.ball_y, 100, 100);
+  // Calculate score — uses ball radius from photo + search circle overlap logic
+  const result = calculateScore(guessX, guessY, photo.ball_x, photo.ball_y, photo.ball_radius || 16, usedExpand);
 
   // Deduct coins for expand power-up atomically (reveal already deducted via /api/game/reveal)
   if (usedExpand) {
