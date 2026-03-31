@@ -138,8 +138,8 @@
           <div class="ball-center" id="ball-center" style="display:none"></div>
         </div>
         <div class="controls">
-          <label>Rayon: <span id="radius-value">25</span>px</label>
-          <input type="range" id="radius-slider" min="8" max="80" value="25">
+          <label>Rayon: <span id="radius-value">3</span>%</label>
+          <input type="range" id="radius-slider" min="1" max="10" value="3">
           <label>Difficulte:</label>
           <select id="difficulty-select">
             <option value="easy">Facile</option>
@@ -199,7 +199,7 @@
       modifiedFile: null,
       ballX: null, // percentage
       ballY: null, // percentage
-      radius: 25,
+      radius: 3,
       difficulty: 'medium'
     };
 
@@ -372,7 +372,7 @@
     }
 
     function resetAll() {
-      currentState = { originalFile: null, modifiedFile: null, ballX: null, ballY: null, radius: 25, difficulty: 'medium' };
+      currentState = { originalFile: null, modifiedFile: null, ballX: null, ballY: null, radius: 3, difficulty: 'medium' };
       marker.style.display = 'none';
       center.style.display = 'none';
       document.getElementById('ball-center-preview').style.display = 'none';
@@ -382,8 +382,8 @@
       btnValidate.disabled = true;
       inputOriginal.value = '';
       inputModified.value = '';
-      radiusSlider.value = 25;
-      document.getElementById('radius-value').textContent = '25';
+      radiusSlider.value = 3;
+      document.getElementById('radius-value').textContent = '3';
       document.getElementById('btn-publish').disabled = false;
       document.getElementById('btn-publish').textContent = 'Publier dans le jeu';
       goToStep(1);

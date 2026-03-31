@@ -27,7 +27,7 @@ db.exec(`
     filename_modified TEXT NOT NULL,
     ball_x REAL NOT NULL,
     ball_y REAL NOT NULL,
-    ball_radius REAL DEFAULT 3,
+    ball_radius REAL DEFAULT 5,
     difficulty TEXT DEFAULT 'medium',
     sport TEXT DEFAULT 'football',
     description TEXT,
@@ -113,8 +113,8 @@ db.exec(`
 try { db.exec('ALTER TABLE users ADD COLUMN referred_by INTEGER DEFAULT NULL'); } catch (e) { /* column already exists */ }
 try { db.exec('ALTER TABLE users ADD COLUMN language_code TEXT DEFAULT "en"'); } catch (e) { /* column already exists */ }
 
-// Migration: reduce ball_radius to realistic values (old values were 16-28%, real ball is ~3%)
-db.exec(`UPDATE photos SET ball_radius = 3 WHERE ball_radius > 5 AND active = 1`);
+// Migration: set ball_radius to balanced value (old values were 16-28%, now 5%)
+db.exec(`UPDATE photos SET ball_radius = 5 WHERE ball_radius != 5`);
 try { db.exec('ALTER TABLE users ADD COLUMN referral_rewarded INTEGER DEFAULT 0'); } catch (e) { /* column already exists */ }
 
 // User operations

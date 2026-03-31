@@ -12,7 +12,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const BOT_TOKEN = process.env.BOT_TOKEN;
 const WEBAPP_URL = process.env.WEBAPP_URL || `http://localhost:${PORT}`;
-const ADMIN_IDS = (process.env.ADMIN_IDS || '').split(',').map(Number);
+const ADMIN_IDS = (process.env.ADMIN_IDS || '').split(',').map(Number).filter(n => !isNaN(n) && n > 0);
 const ADMIN_SECRET = process.env.ADMIN_SECRET;
 if (!ADMIN_SECRET) console.warn('WARNING: ADMIN_SECRET not set — admin endpoints disabled');
 
@@ -101,7 +101,7 @@ function validateTelegramData(initData) {
 function authMiddleware(req, res, next) {
   // Admin secret key bypass (for browser-based admin dashboard)
   if (ADMIN_SECRET && req.query.key === ADMIN_SECRET) {
-    req.telegramUser = { id: ADMIN_IDS[0] || 0 };
+    req.telegramUser = { id: ADMIN_IDS[0] || 0, isAdmin: true };
     return next();
   }
 
@@ -127,10 +127,14 @@ function authMiddleware(req, res, next) {
 }
 
 function adminMiddleware(req, res, next) {
-  if (!req.telegramUser || !ADMIN_IDS.includes(req.telegramUser.id)) {
+  if (!req.telegramUser) {
     return res.status(403).json({ error: 'Admin access required' });
   }
-  next();
+  // Allow if authenticated via admin secret key or if user is in ADMIN_IDS
+  if (req.telegramUser.isAdmin || ADMIN_IDS.includes(req.telegramUser.id)) {
+    return next();
+  }
+  return res.status(403).json({ error: 'Admin access required' });
 }
 
 // ============ HEALTH CHECK ============
@@ -486,7 +490,7 @@ app.post('/api/manage/publish',
       req.files.modified[0].filename,
       parseFloat(ball_x),
       parseFloat(ball_y),
-      parseFloat(ball_radius) || 25,
+      parseFloat(ball_radius) || 3,
       difficulty || 'medium',
       'football',
       `Uploaded ${new Date().toISOString().split('T')[0]}`
