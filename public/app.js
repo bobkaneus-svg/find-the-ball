@@ -700,8 +700,15 @@ function positionMarkerOnPhoto(container, img, marker, pctX, pctY) {
 }
 
 async function showGameOver(result) {
-  // Haptic
-  if (tg) tg.HapticFeedback.notificationOccurred('error');
+  // Haptic - double vibration for impact
+  if (tg) {
+    tg.HapticFeedback.notificationOccurred('error');
+    setTimeout(() => tg.HapticFeedback.impactOccurred('heavy'), 200);
+  }
+
+  // Random game over emoji
+  const goEmojis = ['😱', '😵', '💀', '😭', '🤦', '😤', '😩'];
+  document.getElementById('gameover-emoji').textContent = goEmojis[Math.floor(Math.random() * goEmojis.length)];
 
   document.getElementById('gameover-score').textContent = state.sessionScore;
 

@@ -174,11 +174,15 @@
 
     <!-- GAME OVER SCREEN -->
     <div id="screen-gameover" class="screen">
+      <div class="gameover-flash" id="gameover-flash"></div>
       <div class="gameover-content">
-        <div class="gameover-header">
+        <div class="gameover-impact">
+          <div class="gameover-emoji" id="gameover-emoji">&#128557;</div>
           <h2 class="gameover-title">GAME OVER</h2>
-          <span class="gameover-score" id="gameover-score">0</span>
-          <span class="gameover-score-label" data-i18n="points">points</span>
+          <div class="gameover-score-wrap">
+            <span class="gameover-score" id="gameover-score">0</span>
+            <span class="gameover-score-label" data-i18n="points">points</span>
+          </div>
         </div>
 
         <div class="gameover-photo-container" id="gameover-photo-container">
@@ -194,9 +198,7 @@
             <span class="gameover-lb-title">LEADERBOARD</span>
             <span class="gameover-lb-rank" id="gameover-rank">-</span>
           </div>
-          <div class="gameover-lb-list" id="gameover-lb-list">
-            <!-- Populated dynamically -->
-          </div>
+          <div class="gameover-lb-list" id="gameover-lb-list"></div>
         </div>
 
         <div class="gameover-buttons">
