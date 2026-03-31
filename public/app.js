@@ -29,6 +29,9 @@ const TRANSLATIONS = {
     payment_disclaimer: 'Transaction may take a few minutes to process.',
     invite_friend: 'Invite a friend — earn 10 000 coins!',
     lb_resets_in: 'Resets in',
+    step_1: 'A photo appears — the ball is hidden',
+    step_2: 'Place your cursor where you think it is',
+    step_3: 'The closer you are, the more you score!',
     points: 'points', you: 'You', ball: 'Ball', precision: 'Precision', bonus: 'Bonus',
     next_photo: 'NEXT PHOTO', share_score: 'SHARE MY SCORE', menu: 'MENU',
     play_again: 'PLAY AGAIN', main_menu: 'MAIN MENU', pause: 'PAUSE',
@@ -55,6 +58,9 @@ const TRANSLATIONS = {
     payment_disclaimer: 'La transaction peut prendre quelques minutes.',
     invite_friend: 'Invite un ami — gagne 10 000 coins !',
     lb_resets_in: 'Reset dans',
+    step_1: 'Une photo apparait — le ballon est cache',
+    step_2: 'Place ton curseur la ou tu penses qu\'il est',
+    step_3: 'Plus tu es proche, plus tu marques de points !',
     points: 'points', you: 'Toi', ball: 'Ballon', precision: 'Precision', bonus: 'Bonus',
     next_photo: 'PHOTO SUIVANTE', share_score: 'PARTAGER MON SCORE', menu: 'MENU',
     play_again: 'REJOUER', main_menu: 'MENU PRINCIPAL', pause: 'PAUSE',
@@ -607,13 +613,6 @@ function updateMenuStats() {
   const best = state.user.bestSessionScore || 0;
   document.getElementById('menu-high-score').textContent = best.toLocaleString();
 
-  // Randomize preview photo on each visit
-  const previewImg = document.getElementById('menu-preview-img');
-  if (previewImg) {
-    const photoNum = Math.floor(Math.random() * 25) + 1;
-    const padded = String(photoNum).padStart(3, '0');
-    previewImg.src = `/photos/originals/auto_${padded}.jpg`;
-  }
 }
 
 function updateAllCoinDisplays() {
