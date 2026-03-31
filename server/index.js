@@ -540,6 +540,123 @@ app.get('/api/manage/stats', authMiddleware, adminMiddleware, (req, res) => {
   res.json({ active: stats.approved || 0, pending: stats.pending || 0, total: stats.total || 0 });
 });
 
+// ============ DASHBOARD API ============
+
+app.get('/api/dashboard/overview', authMiddleware, adminMiddleware, (req, res) => {
+  const totalUsers = db.db.prepare('SELECT COUNT(*) as c FROM users').get().c;
+  const today = new Date().toISOString().slice(0, 10);
+  const activeToday = db.db.prepare("SELECT COUNT(*) as c FROM users WHERE date(last_played) = ?").get(today).c;
+  const activeLast7d = db.db.prepare("SELECT COUNT(*) as c FROM users WHERE last_played >= datetime('now', '-7 days')").get().c;
+  const totalGames = db.db.prepare('SELECT SUM(games_played) as c FROM users').get().c || 0;
+  const totalRounds = db.db.prepare('SELECT COUNT(*) as c FROM game_rounds WHERE completed = 1').get().c;
+  const totalCoinsCirculating = db.db.prepare('SELECT SUM(coins) as c FROM users').get().c || 0;
+  const avgScore = db.db.prepare('SELECT AVG(score) as a FROM game_rounds WHERE completed = 1 AND score > 0').get().a || 0;
+  const photos = db.getPhotoStats.get();
+
+  res.json({
+    users: { total: totalUsers, activeToday, activeLast7d },
+    games: { totalGames, totalRounds, avgScore: Math.round(avgScore) },
+    economy: { totalCoinsCirculating },
+    photos: { active: photos.approved || 0, pending: photos.pending || 0, total: photos.total || 0 }
+  });
+});
+
+app.get('/api/dashboard/revenue', authMiddleware, adminMiddleware, (req, res) => {
+  const starsPurchases = db.db.prepare("SELECT COUNT(*) as count, SUM(amount) as total FROM transactions WHERE type = 'stars_purchase'").get();
+  const starsPayments = db.db.prepare("SELECT COUNT(*) as count, SUM(amount) as total FROM transactions WHERE type = 'stars_payment'").get();
+  const tonPending = db.db.prepare("SELECT COUNT(*) as count FROM transactions WHERE type = 'ton_pending'").get();
+  const powerupSpend = db.db.prepare("SELECT COUNT(*) as count, SUM(ABS(amount)) as total FROM transactions WHERE type = 'powerup'").get();
+  const dailyPrizes = db.db.prepare("SELECT COUNT(*) as count, SUM(amount) as total FROM transactions WHERE type = 'daily_prize'").get();
+  const referralRewards = db.db.prepare("SELECT COUNT(*) as count, SUM(amount) as total FROM transactions WHERE type = 'referral_reward'").get();
+  const recentTx = db.db.prepare("SELECT * FROM transactions ORDER BY created_at DESC LIMIT 20").all();
+
+  res.json({
+    revenue: {
+      starsPurchases: { count: starsPurchases.count || 0, coins: starsPurchases.total || 0 },
+      starsPayments: { count: starsPayments.count || 0, coins: starsPayments.total || 0 },
+      tonPending: tonPending.count || 0
+    },
+    spending: {
+      powerups: { count: powerupSpend.count || 0, coins: powerupSpend.total || 0 },
+      dailyPrizes: { count: dailyPrizes.count || 0, coins: dailyPrizes.total || 0 },
+      referrals: { count: referralRewards.count || 0, coins: referralRewards.total || 0 }
+    },
+    recentTransactions: recentTx
+  });
+});
+
+app.get('/api/dashboard/users', authMiddleware, adminMiddleware, (req, res) => {
+  // Signups per day (last 30 days)
+  const signups = db.db.prepare(`
+    SELECT date(created_at) as day, COUNT(*) as count
+    FROM users WHERE created_at >= datetime('now', '-30 days')
+    GROUP BY date(created_at) ORDER BY day
+  `).all();
+
+  // Top 10 players by total score
+  const topPlayers = db.db.prepare(`
+    SELECT telegram_id, username, first_name, coins, total_score, games_played, best_session_score, daily_best_session, last_played
+    FROM users ORDER BY total_score DESC LIMIT 10
+  `).all();
+
+  // Retention: users who played > 1 day
+  const retention = db.db.prepare(`
+    SELECT COUNT(*) as c FROM users WHERE games_played >= 5
+  `).get().c;
+
+  // Language distribution
+  const languages = db.db.prepare(`
+    SELECT language_code, COUNT(*) as count FROM users GROUP BY language_code ORDER BY count DESC
+  `).all();
+
+  // Referral stats
+  const referrals = db.db.prepare(`SELECT COUNT(*) as c FROM users WHERE referred_by IS NOT NULL`).get().c;
+  const referralsRewarded = db.db.prepare(`SELECT COUNT(*) as c FROM users WHERE referral_rewarded = 1`).get().c;
+
+  res.json({ signups, topPlayers, retention, languages, referrals: { total: referrals, rewarded: referralsRewarded } });
+});
+
+app.get('/api/dashboard/gameplay', authMiddleware, adminMiddleware, (req, res) => {
+  // Score distribution
+  const scoreDist = db.db.prepare(`
+    SELECT
+      SUM(CASE WHEN score >= 900 THEN 1 ELSE 0 END) as perfect,
+      SUM(CASE WHEN score >= 700 AND score < 900 THEN 1 ELSE 0 END) as great,
+      SUM(CASE WHEN score >= 400 AND score < 700 THEN 1 ELSE 0 END) as good,
+      SUM(CASE WHEN score > 0 AND score < 400 THEN 1 ELSE 0 END) as ok,
+      SUM(CASE WHEN score = 0 THEN 1 ELSE 0 END) as miss
+    FROM game_rounds WHERE completed = 1
+  `).get();
+
+  // Power-up usage
+  const powerups = db.db.prepare(`
+    SELECT
+      SUM(used_reveal_quarter) as reveals,
+      SUM(used_expand_area) as expands,
+      COUNT(*) as totalRounds
+    FROM game_rounds WHERE completed = 1
+  `).get();
+
+  // Games per day (last 14 days)
+  const gamesPerDay = db.db.prepare(`
+    SELECT date(created_at) as day, COUNT(*) as count
+    FROM game_rounds WHERE completed = 1 AND created_at >= datetime('now', '-14 days')
+    GROUP BY date(created_at) ORDER BY day
+  `).all();
+
+  // Daily winners history
+  const winners = db.db.prepare(`
+    SELECT * FROM daily_winners ORDER BY day DESC, rank ASC LIMIT 30
+  `).all();
+
+  // Badge unlock rates
+  const badgeStats = db.db.prepare(`
+    SELECT badge_id, COUNT(*) as count FROM user_badges GROUP BY badge_id ORDER BY count DESC
+  `).all();
+
+  res.json({ scoreDist, powerups, gamesPerDay, winners, badgeStats });
+});
+
 // ============ ADMIN PIPELINE ROUTES ============
 
 const { fork } = require('child_process');
