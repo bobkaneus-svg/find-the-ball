@@ -500,6 +500,8 @@ function showModal(message) {
     btnYes.textContent = t('yes');
     btnNo.className = 'modal-btn modal-btn-no';
     btnYes.className = 'modal-btn modal-btn-yes';
+    const icon = document.getElementById('modal-icon');
+    if (icon) icon.classList.remove('visible');
     overlay.classList.add('active');
 
     function cleanup() {
@@ -529,6 +531,8 @@ function showNoCoinsModal() {
     btnNo.className = 'modal-btn modal-btn-no';
     btnYes.textContent = t('buy_coins');
     btnYes.className = 'modal-btn modal-btn-yes modal-btn-cta';
+    const icon = document.getElementById('modal-icon');
+    if (icon) { icon.textContent = '\u{1FA99}'; icon.classList.add('visible'); }
     overlay.classList.add('active');
 
     function cleanup() {
