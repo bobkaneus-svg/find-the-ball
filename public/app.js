@@ -1244,29 +1244,11 @@ async function loadShopPrices() {
   }
 }
 
-// Open bottom sheet with pack details
-function openPaymentSheet(element) {
-  const pack = element.dataset.pack;
-  const price = element.dataset.price;
-  const stars = element.dataset.stars;
-
-  selectedPack = { pack: parseInt(pack), price, stars: parseInt(stars) };
-
-  document.getElementById('sheet-pack-label').textContent = `+ ${parseInt(pack).toLocaleString()} Coins`;
-  document.getElementById('sheet-price').textContent = `$${price}`;
-  document.getElementById('sheet-stars-amount').innerHTML = `&#11088; ${stars}`;
-
-  document.getElementById('payment-sheet').classList.add('active');
-}
-
-function closePaymentSheet() {
-  document.getElementById('payment-sheet').classList.remove('active');
-  selectedPack = null;
-}
-
-async function buyWithStars() {
-  if (!selectedPack) return;
-  const { pack, stars } = selectedPack;
+// Buy pack directly — opens Stars invoice immediately
+async function buyPack(element) {
+  const pack = parseInt(element.dataset.pack);
+  const stars = parseInt(element.dataset.stars);
+  if (!pack || !stars) return;
 
   try {
     const invoiceRes = await api('/api/shop/create-invoice', 'POST', { pack, stars });
@@ -1300,7 +1282,6 @@ async function buyWithStars() {
             } catch (e) {}
             showToast('Payment processing...');
           }
-          closePaymentSheet();
         }
       });
     } else {
@@ -1437,7 +1418,7 @@ document.getElementById('btn-lb-back').addEventListener('click', async () => {
 // Shop
 document.getElementById('btn-shop-back').addEventListener('click', goBack);
 document.querySelectorAll('#shop-list .shop-item[data-pack]').forEach(item => {
-  item.addEventListener('click', () => openPaymentSheet(item));
+  item.addEventListener('click', () => buyPack(item));
 });
 
 // Invite friend
@@ -1490,10 +1471,6 @@ document.getElementById('invite-sheet-close').addEventListener('click', () => {
   document.getElementById('invite-sheet').classList.remove('active');
 });
 
-// Payment bottom sheet
-document.getElementById('payment-sheet-backdrop').addEventListener('click', closePaymentSheet);
-document.getElementById('payment-sheet-close').addEventListener('click', closePaymentSheet);
-document.getElementById('sheet-btn-stars').addEventListener('click', buyWithStars);
 
 // Share score button
 const shareBtn = document.getElementById('btn-share-score');
