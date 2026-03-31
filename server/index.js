@@ -218,7 +218,7 @@ app.post('/api/game/reveal', authMiddleware, (req, res) => {
 
 // Submit guess
 app.post('/api/game/guess', authMiddleware, (req, res) => {
-  const { roundId, guessX, guessY, usedReveal, usedExpand } = req.body;
+  const { roundId, guessX, guessY, usedReveal, usedExpand, searchRadiusPct } = req.body;
 
   if (roundId == null || guessX == null || guessY == null) {
     return res.status(400).json({ error: 'Missing required fields' });
@@ -230,7 +230,8 @@ app.post('/api/game/guess', authMiddleware, (req, res) => {
     parseFloat(guessX),
     parseFloat(guessY),
     !!usedReveal,
-    !!usedExpand
+    !!usedExpand,
+    searchRadiusPct ? parseFloat(searchRadiusPct) : null
   );
 
   if (result.error) {

@@ -844,12 +844,18 @@ async function submitGuess() {
   confirmBtn.disabled = true;
 
   try {
+    // Calculate actual search circle radius as % of rendered image width
+    const { renderW } = getImageBounds();
+    const circleRadiusPx = state.usedExpand ? 88 : 44; // half of 176px or 88px CSS
+    const searchRadiusPct = (circleRadiusPx / renderW) * 100;
+
     const result = await api('/api/game/guess', 'POST', {
       roundId: state.currentRound.roundId,
       guessX: state.cursorPosition.x,
       guessY: state.cursorPosition.y,
       usedReveal: state.usedReveal,
-      usedExpand: state.usedExpand
+      usedExpand: state.usedExpand,
+      searchRadiusPct
     });
 
     // Update user state — use server-authoritative coin balance

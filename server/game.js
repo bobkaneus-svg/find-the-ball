@@ -55,18 +55,22 @@ const MAX_RADIUS = 300;       // max distance for any points
 const REVEAL_QUARTER_COST = 100;
 const EXPAND_AREA_COST = 50;
 
-// Search circle radius in % of image (matches 88px on ~400px container)
-const SEARCH_RADIUS_PCT = 6;
-// Expanded search circle radius (176px on ~400px = ~12%)
-const SEARCH_RADIUS_EXPANDED_PCT = 12;
+// Fallback search circle radius if client doesn't send it
+const SEARCH_RADIUS_FALLBACK = 10;
+// Anti-cheat: cap the search radius sent by client
+const SEARCH_RADIUS_MIN = 3;
+const SEARCH_RADIUS_MAX = 15;
 
-function calculateScore(guessX, guessY, ballX, ballY, ballRadius, usedExpand) {
+function calculateScore(guessX, guessY, ballX, ballY, ballRadius, searchRadiusPct) {
   // All values in percentage (0-100)
   const dx = guessX - ballX;
   const dy = guessY - ballY;
   const distance = Math.sqrt(dx * dx + dy * dy);
 
-  const searchRadius = usedExpand ? SEARCH_RADIUS_EXPANDED_PCT : SEARCH_RADIUS_PCT;
+  // Use client-reported search radius (capped for anti-cheat) or fallback
+  const searchRadius = searchRadiusPct
+    ? Math.max(SEARCH_RADIUS_MIN, Math.min(SEARCH_RADIUS_MAX, searchRadiusPct))
+    : SEARCH_RADIUS_FALLBACK;
   // Circles overlap if distance between centers < sum of radii
   const overlapThreshold = ballRadius + searchRadius;
 
@@ -161,7 +165,7 @@ function startNewRound(telegramId, lastPhotoId = 0) {
   };
 }
 
-function submitGuess(roundId, telegramId, guessX, guessY, usedReveal, usedExpand) {
+function submitGuess(roundId, telegramId, guessX, guessY, usedReveal, usedExpand, searchRadiusPct) {
   const round = db.getRoundById.get(roundId);
   if (!round) return { error: 'Round not found' };
   if (round.completed) return { error: 'Round already completed' };
@@ -172,7 +176,7 @@ function submitGuess(roundId, telegramId, guessX, guessY, usedReveal, usedExpand
 
   // Calculate score — fixed gameplay ball radius (independent of visual radius in manage tool)
   const GAMEPLAY_BALL_RADIUS = 5; // % of image
-  const result = calculateScore(guessX, guessY, photo.ball_x, photo.ball_y, GAMEPLAY_BALL_RADIUS, usedExpand);
+  const result = calculateScore(guessX, guessY, photo.ball_x, photo.ball_y, GAMEPLAY_BALL_RADIUS, searchRadiusPct);
 
   // Deduct coins for expand power-up atomically (reveal already deducted via /api/game/reveal)
   if (usedExpand) {
