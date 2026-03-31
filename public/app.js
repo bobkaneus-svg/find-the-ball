@@ -237,6 +237,17 @@ document.addEventListener('DOMContentLoaded', () => {
     tg = window.Telegram.WebApp;
     tg.ready();
     tg.expand();
+    // Request fullscreen mode (removes Telegram header)
+    if (tg.requestFullscreen) {
+      tg.requestFullscreen();
+    }
+    // Set header color to match app background
+    if (tg.setHeaderColor) {
+      tg.setHeaderColor('#0e0e0e');
+    }
+    if (tg.setBackgroundColor) {
+      tg.setBackgroundColor('#0e0e0e');
+    }
     initData = tg.initData;
   }
 
