@@ -28,10 +28,10 @@ const TRANSLATIONS = {
     buy_with_stars: 'BUY WITH', buy_with_ton: 'BUY WITH',
     payment_disclaimer: 'Transaction may take a few minutes to process.',
     invite_friend: 'Invite a friend — earn 10 000 coins!',
-    lb_resets_in: 'Resets in',
+    lb_resets_in: 'Weekly reset in',
     ob_title_1: 'The ball is hidden', ob_desc_1: 'A real football photo — but the ball has been erased. Can you find where it was?',
     ob_title_2: 'Place your shot', ob_desc_2: 'Drag your cursor on the photo. The closer you are to the ball, the more points you earn!',
-    ob_title_3: 'Climb the ranks', ob_desc_3: 'Compete daily against other players. Top 3 win coin prizes every 24 hours!',
+    ob_title_3: 'Climb the ranks', ob_desc_3: 'Compete weekly against other players. Top 3 win coin prizes every Monday!',
     ob_next: 'NEXT', ob_skip: 'Skip', ob_play: "LET'S PLAY!",
     link_copied: 'Link copied!',
     share_via_telegram: 'Share via Telegram',
@@ -65,10 +65,10 @@ const TRANSLATIONS = {
     buy_with_stars: 'PAYER AVEC', buy_with_ton: 'PAYER AVEC',
     payment_disclaimer: 'La transaction peut prendre quelques minutes.',
     invite_friend: 'Invite un ami — gagne 10 000 coins !',
-    lb_resets_in: 'Reset dans',
+    lb_resets_in: 'Reset hebdo dans',
     ob_title_1: 'Le ballon est cache', ob_desc_1: 'Une vraie photo de foot — mais le ballon a ete efface. Sauras-tu le retrouver ?',
     ob_title_2: 'Place ton tir', ob_desc_2: 'Glisse ton curseur sur la photo. Plus tu es proche du ballon, plus tu marques de points !',
-    ob_title_3: 'Grimpe au classement', ob_desc_3: 'Affronte les autres joueurs chaque jour. Le top 3 gagne des coins toutes les 24h !',
+    ob_title_3: 'Grimpe au classement', ob_desc_3: 'Affronte les autres joueurs chaque semaine. Le top 3 gagne des coins tous les lundis !',
     ob_next: 'SUIVANT', ob_skip: 'Passer', ob_play: 'JOUER !',
     link_copied: 'Lien copie !',
     share_via_telegram: 'Partager via Telegram',
@@ -1174,11 +1174,12 @@ async function startLbTimer() {
   lbTimerInterval = setInterval(() => {
     const now = Date.now();
     const diff = Math.max(0, lbResetAt - now);
-    const h = String(Math.floor(diff / 3600000)).padStart(2, '0');
+    const d = Math.floor(diff / 86400000);
+    const h = String(Math.floor((diff % 86400000) / 3600000)).padStart(2, '0');
     const m = String(Math.floor((diff % 3600000) / 60000)).padStart(2, '0');
     const s = String(Math.floor((diff % 60000) / 1000)).padStart(2, '0');
     const el = document.getElementById('lb-timer');
-    if (el) el.textContent = `${h}:${m}:${s}`;
+    if (el) el.textContent = d > 0 ? `${d}d ${h}:${m}:${s}` : `${h}:${m}:${s}`;
     if (diff <= 0) {
       lbResetAt = null;
       clearInterval(lbTimerInterval);

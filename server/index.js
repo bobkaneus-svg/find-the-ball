@@ -934,7 +934,7 @@ app.post('/api/admin/marker/generate-masks', authMiddleware, adminMiddleware, as
 // ============ BOT TRANSLATIONS ============
 const BOT_I18N = {
   en: {
-    welcome: '⚽ *Find the Ball!*\n\nCan you guess where the ball is hiding?\n\nLook at the photo, spot the clues and place your cursor as close as possible!\n\n🏆 Top 3 players win coins every day!',
+    welcome: '⚽ *Find the Ball!*\n\nCan you guess where the ball is hiding?\n\nLook at the photo, spot the clues and place your cursor as close as possible!\n\n🏆 Top 3 players win coins every week!',
     play: '🎮 Play',
     play_now: '🎮 Play now',
     no_players: 'No players on the leaderboard yet! Be the first!',
@@ -943,12 +943,12 @@ const BOT_I18N = {
     lb_footer: '\n_Play to get on the leaderboard!_',
     no_stats: 'Start playing to see your stats!',
     stats: (s) => `📊 *Your stats*\n\n💰 Coins: ${s.coins}\n🎯 Total score: ${s.totalScore}\n🎮 Games: ${s.gamesPlayed}\n⭐ Best session: ${s.bestSessionScore}\n📈 Average: ${s.avgScore}\n🏅 Rank: #${s.rank}`,
-    help: '⚽ *How to play Find the Ball*\n\n1️⃣ A football photo appears — the ball has been erased!\n2️⃣ Look for clues: players\' eyes, feet position, body language\n3️⃣ Tap where you think the ball was\n4️⃣ The closer you are, the more points you score!\n\n💡 *Power-ups:*\n🔍 Reveal quarter (100 coins) — shows which quarter has the ball\n↔️ Expand area (50 coins) — increases your search zone\n\n🏆 *Rewards:*\nTop 3 daily = Coin prizes!\nInvite friends = 10,000 coins!\n\n/start - Play\n/leaderboard - Rankings\n/stats - Your stats',
-    daily_prize: (medal, rank, score, prize) => `${medal} *Congratulations!*\n\nYou finished *#${rank}* on today's leaderboard with *${score}* points!\n\n+${prize} coins credited!`,
+    help: '⚽ *How to play Find the Ball*\n\n1️⃣ A football photo appears — the ball has been erased!\n2️⃣ Look for clues: players\' eyes, feet position, body language\n3️⃣ Tap where you think the ball was\n4️⃣ The closer you are, the more points you score!\n\n💡 *Power-ups:*\n🔍 Reveal quarter (100 coins) — shows which quarter has the ball\n↔️ Expand area (50 coins) — increases your search zone\n\n🏆 *Rewards:*\nTop 3 weekly = Coin prizes!\nInvite friends = 10,000 coins!\n\n/start - Play\n/leaderboard - Rankings\n/stats - Your stats',
+    daily_prize: (medal, rank, score, prize) => `${medal} *Congratulations!*\n\nYou finished *#${rank}* on this week's leaderboard with *${score}* points!\n\n+${prize} coins credited!`,
     referral: (name, games, reward) => `🎉 *+${reward} coins!*\n\n${name} played ${games} games thanks to your invite!\nYour coins have been credited automatically. Keep inviting friends!`
   },
   fr: {
-    welcome: '⚽ *Find the Ball !*\n\nSauras-tu deviner ou se cache le ballon ?\n\nRegarde bien la photo, analyse les indices et place ton curseur le plus pres possible !\n\n🏆 Les 3 meilleurs joueurs gagnent des coins chaque jour !',
+    welcome: '⚽ *Find the Ball !*\n\nSauras-tu deviner ou se cache le ballon ?\n\nRegarde bien la photo, analyse les indices et place ton curseur le plus pres possible !\n\n🏆 Les 3 meilleurs joueurs gagnent des coins chaque semaine !',
     play: '🎮 Jouer',
     play_now: '🎮 Jouer maintenant',
     no_players: 'Pas encore de joueurs au classement ! Sois le premier !',
@@ -957,12 +957,12 @@ const BOT_I18N = {
     lb_footer: '\n_Joue pour apparaitre au classement !_',
     no_stats: 'Commence a jouer pour voir tes stats !',
     stats: (s) => `📊 *Tes statistiques*\n\n💰 Coins : ${s.coins}\n🎯 Score total : ${s.totalScore}\n🎮 Parties : ${s.gamesPlayed}\n⭐ Meilleure session : ${s.bestSessionScore}\n📈 Moyenne : ${s.avgScore}\n🏅 Classement : #${s.rank}`,
-    help: '⚽ *Comment jouer a Find the Ball*\n\n1️⃣ Une photo de foot s\'affiche — le ballon a ete efface !\n2️⃣ Analyse les indices : regard des joueurs, position des pieds\n3️⃣ Touche l\'ecran la ou tu penses que le ballon etait\n4️⃣ Plus tu es proche, plus tu marques de points !\n\n💡 *Power-ups :*\n🔍 Reveler un quart (100 coins) — montre quel quart contient le ballon\n↔️ Agrandir la zone (50 coins) — augmente ta zone de recherche\n\n🏆 *Recompenses :*\nTop 3 quotidien = Lots de coins !\nInvite des amis = 10 000 coins !\n\n/start - Jouer\n/leaderboard - Classement\n/stats - Tes stats',
-    daily_prize: (medal, rank, score, prize) => `${medal} *Felicitations !*\n\nTu as termine *#${rank}* au classement quotidien avec *${score}* points !\n\n+${prize} coins credites !`,
+    help: '⚽ *Comment jouer a Find the Ball*\n\n1️⃣ Une photo de foot s\'affiche — le ballon a ete efface !\n2️⃣ Analyse les indices : regard des joueurs, position des pieds\n3️⃣ Touche l\'ecran la ou tu penses que le ballon etait\n4️⃣ Plus tu es proche, plus tu marques de points !\n\n💡 *Power-ups :*\n🔍 Reveler un quart (100 coins) — montre quel quart contient le ballon\n↔️ Agrandir la zone (50 coins) — augmente ta zone de recherche\n\n🏆 *Recompenses :*\nTop 3 hebdo = Lots de coins !\nInvite des amis = 10 000 coins !\n\n/start - Jouer\n/leaderboard - Classement\n/stats - Tes stats',
+    daily_prize: (medal, rank, score, prize) => `${medal} *Felicitations !*\n\nTu as termine *#${rank}* au classement de la semaine avec *${score}* points !\n\n+${prize} coins credites !`,
     referral: (name, games, reward) => `🎉 *+${reward} coins !*\n\n${name} a joue ${games} parties grace a ton invitation !\nTes coins ont ete credites automatiquement. Continue a inviter tes amis !`
   },
   es: {
-    welcome: '⚽ *Find the Ball!*\n\nPuedes adivinar donde se esconde el balon?\n\nMira la foto, busca las pistas y coloca tu cursor lo mas cerca posible!\n\n🏆 Los 3 mejores jugadores ganan coins cada dia!',
+    welcome: '⚽ *Find the Ball!*\n\nPuedes adivinar donde se esconde el balon?\n\nMira la foto, busca las pistas y coloca tu cursor lo mas cerca posible!\n\n🏆 Los 3 mejores jugadores ganan coins cada semana!',
     play: '🎮 Jugar',
     play_now: '🎮 Jugar ahora',
     no_players: 'Aun no hay jugadores en el ranking. Se el primero!',
@@ -972,11 +972,11 @@ const BOT_I18N = {
     no_stats: 'Empieza a jugar para ver tus estadisticas!',
     stats: (s) => `📊 *Tus estadisticas*\n\n💰 Coins: ${s.coins}\n🎯 Puntuacion total: ${s.totalScore}\n🎮 Partidas: ${s.gamesPlayed}\n⭐ Mejor sesion: ${s.bestSessionScore}\n📈 Promedio: ${s.avgScore}\n🏅 Posicion: #${s.rank}`,
     help: '⚽ *Como jugar Find the Ball*\n\n1️⃣ Aparece una foto de futbol — el balon ha sido borrado!\n2️⃣ Busca pistas: miradas de los jugadores, posicion de los pies\n3️⃣ Toca donde crees que estaba el balon\n4️⃣ Cuanto mas cerca, mas puntos!\n\n/start - Jugar\n/leaderboard - Ranking\n/stats - Tus stats',
-    daily_prize: (medal, rank, score, prize) => `${medal} *Felicidades!*\n\nTerminaste *#${rank}* en el ranking diario con *${score}* puntos!\n\n+${prize} coins acreditados!`,
+    daily_prize: (medal, rank, score, prize) => `${medal} *Felicidades!*\n\nTerminaste *#${rank}* en el ranking semanal con *${score}* puntos!\n\n+${prize} coins acreditados!`,
     referral: (name, games, reward) => `🎉 *+${reward} coins!*\n\n${name} jugo ${games} partidas gracias a tu invitacion!\nTus coins se han acreditado automaticamente.`
   },
   ru: {
-    welcome: '⚽ *Find the Ball!*\n\nСможешь угадать, где прячется мяч?\n\nСмотри на фото, ищи подсказки и ставь курсор как можно ближе!\n\n🏆 Топ-3 игрока получают монеты каждый день!',
+    welcome: '⚽ *Find the Ball!*\n\nСможешь угадать, где прячется мяч?\n\nСмотри на фото, ищи подсказки и ставь курсор как можно ближе!\n\n🏆 Топ-3 игрока получают монеты каждую неделю!',
     play: '🎮 Играть',
     play_now: '🎮 Играть сейчас',
     no_players: 'В рейтинге пока нет игроков! Будь первым!',
@@ -986,7 +986,7 @@ const BOT_I18N = {
     no_stats: 'Начни играть, чтобы увидеть статистику!',
     stats: (s) => `📊 *Твоя статистика*\n\n💰 Монеты: ${s.coins}\n🎯 Всего очков: ${s.totalScore}\n🎮 Игр: ${s.gamesPlayed}\n⭐ Лучшая сессия: ${s.bestSessionScore}\n📈 Среднее: ${s.avgScore}\n🏅 Место: #${s.rank}`,
     help: '⚽ *Как играть в Find the Ball*\n\n1️⃣ Появляется фото — мяч стерт!\n2️⃣ Ищи подсказки: взгляды игроков, позиции ног\n3️⃣ Нажми, где был мяч\n4️⃣ Чем ближе — тем больше очков!\n\n/start - Играть\n/leaderboard - Рейтинг\n/stats - Статистика',
-    daily_prize: (medal, rank, score, prize) => `${medal} *Поздравляем!*\n\nТы занял *#${rank}* место в дневном рейтинге с *${score}* очками!\n\n+${prize} монет зачислено!`,
+    daily_prize: (medal, rank, score, prize) => `${medal} *Поздравляем!*\n\nТы занял *#${rank}* место в недельном рейтинге с *${score}* очками!\n\n+${prize} монет зачислено!`,
     referral: (name, games, reward) => `🎉 *+${reward} монет!*\n\n${name} сыграл ${games} игр благодаря твоему приглашению!\nМонеты зачислены автоматически.`
   }
 };
@@ -1124,33 +1124,55 @@ const photoCount = db.getAllPhotos.all().length;
 console.log(`Photos in database: ${photoCount}`);
 
 // Start server
-// ============ DAILY LEADERBOARD RESET ============
+// ============ WEEKLY LEADERBOARD RESET ============
 
-const DAILY_PRIZES = { 1: 500, 2: 200, 3: 100 }; // coins awarded to top 3
+const WEEKLY_PRIZES = { 1: 500, 2: 200, 3: 100 }; // coins awarded to top 3
 
-function getTodayStr() {
-  return new Date().toISOString().slice(0, 10); // "2026-03-31"
+function getWeekStr() {
+  // Returns ISO week identifier e.g. "2026-W14"
+  const now = new Date();
+  const d = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+  d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+  const weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+  return `${d.getUTCFullYear()}-W${String(weekNo).padStart(2, '0')}`;
 }
 
-function performDailyReset() {
-  const today = getTodayStr();
-  const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+function getNextMondayUTC() {
+  const now = new Date();
+  const next = new Date(now);
+  next.setUTCHours(0, 0, 0, 0);
+  // Days until next Monday (1 = Monday)
+  const dayOfWeek = next.getUTCDay(); // 0=Sun, 1=Mon, ...
+  const daysUntilMonday = (8 - dayOfWeek) % 7 || 7;
+  next.setUTCDate(next.getUTCDate() + daysUntilMonday);
+  return next;
+}
 
-  // Get top 3 from yesterday's scores before reset
+function performWeeklyReset() {
+  const thisWeek = getWeekStr();
+  const lastWeekDate = new Date(Date.now() - 7 * 86400000);
+  const lastWeekD = new Date(Date.UTC(lastWeekDate.getUTCFullYear(), lastWeekDate.getUTCMonth(), lastWeekDate.getUTCDate()));
+  lastWeekD.setUTCDate(lastWeekD.getUTCDate() + 4 - (lastWeekD.getUTCDay() || 7));
+  const yearStart = new Date(Date.UTC(lastWeekD.getUTCFullYear(), 0, 1));
+  const lastWeekNo = Math.ceil((((lastWeekD - yearStart) / 86400000) + 1) / 7);
+  const lastWeek = `${lastWeekD.getUTCFullYear()}-W${String(lastWeekNo).padStart(2, '0')}`;
+
+  // Get top 3 from last week's scores before reset
   const top3 = db.getDailyTop3.all();
 
   if (top3.length > 0 && top3[0].daily_best_session > 0) {
     // Archive winners and reward them
     top3.forEach((winner, i) => {
       const rank = i + 1;
-      const prize = DAILY_PRIZES[rank] || 0;
+      const prize = WEEKLY_PRIZES[rank] || 0;
       const name = winner.username || winner.first_name || 'Anonymous';
 
-      db.insertDailyWinner.run(yesterday, rank, winner.telegram_id, name, winner.daily_best_session, prize);
+      db.insertDailyWinner.run(lastWeek, rank, winner.telegram_id, name, winner.daily_best_session, prize);
 
       if (prize > 0) {
         db.updateUserCoins.run(prize, winner.telegram_id);
-        db.logTransaction.run(winner.telegram_id, prize, 'daily_prize', `Daily leaderboard #${rank} prize`);
+        db.logTransaction.run(winner.telegram_id, prize, 'weekly_prize', `Weekly leaderboard #${rank} prize`);
 
         // Notify winner via Telegram in their language
         if (bot) {
@@ -1165,39 +1187,41 @@ function performDailyReset() {
       }
     });
 
-    console.log(`Daily reset: archived ${top3.length} winners for ${yesterday}`);
+    console.log(`Weekly reset: archived ${top3.length} winners for ${lastWeek}`);
   }
 
-  // Reset all daily scores
-  db.resetAllDailyScores.run(today);
-  console.log(`Daily leaderboard reset for ${today}`);
+  // Reset all scores for the new week
+  db.resetAllDailyScores.run(thisWeek);
+  console.log(`Weekly leaderboard reset for ${thisWeek}`);
 }
 
-// Check every minute if we need to reset (safe for server restarts)
-let lastResetDate = '';
-function checkDailyReset() {
-  const today = getTodayStr();
-  if (today !== lastResetDate) {
-    performDailyReset();
-    lastResetDate = today;
+// Check every minute if we need to reset (every Monday at midnight UTC)
+let lastResetWeek = '';
+function checkWeeklyReset() {
+  const now = new Date();
+  const currentWeek = getWeekStr();
+  // Only reset on Monday (day 1) and only once per week
+  if (now.getUTCDay() === 1 && currentWeek !== lastResetWeek) {
+    performWeeklyReset();
+    lastResetWeek = currentWeek;
   }
+  // On first startup, set lastResetWeek to avoid immediate reset on non-Monday
+  if (!lastResetWeek) lastResetWeek = currentWeek;
 }
 
-// API: Get time until next reset
+// API: Get time until next weekly reset (Monday 00:00 UTC)
 app.get('/api/leaderboard/timer', (req, res) => {
   const now = new Date();
-  const tomorrow = new Date(now);
-  tomorrow.setUTCDate(tomorrow.getUTCDate() + 1);
-  tomorrow.setUTCHours(0, 0, 0, 0);
-  const msLeft = tomorrow - now;
-  res.json({ resetIn: msLeft, resetAt: tomorrow.toISOString() });
+  const nextMonday = getNextMondayUTC();
+  const msLeft = nextMonday - now;
+  res.json({ resetIn: msLeft, resetAt: nextMonday.toISOString() });
 });
 
 app.listen(PORT, () => {
   console.log(`Find the Ball server running on port ${PORT}`);
   console.log(`Web app URL: ${WEBAPP_URL}`);
 
-  // Run daily reset check on startup + every minute
-  checkDailyReset();
-  setInterval(checkDailyReset, 60 * 1000);
+  // Run weekly reset check on startup + every minute
+  checkWeeklyReset();
+  setInterval(checkWeeklyReset, 60 * 1000);
 });
