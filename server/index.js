@@ -455,7 +455,26 @@ app.post('/api/shop/ton-invoice', authMiddleware, async (req, res) => {
   res.json({ paymentUrl, comment, tonAmount });
 });
 
-// Ad reward removed — replaced by invite/referral system
+// ============ FEEDBACK ============
+app.post('/api/feedback', authMiddleware, (req, res) => {
+  const { message } = req.body;
+  if (!message || !message.trim()) return res.status(400).json({ error: 'Empty feedback' });
+
+  const user = db.getUser.get(req.telegramUser.id);
+  const name = user?.username || user?.first_name || 'Unknown';
+  const text = `📝 *New Feedback*\n\nFrom: ${name} (${req.telegramUser.id})\nGames: ${user?.games_played || 0}\nCoins: ${user?.coins || 0}\n\n"${message.trim().slice(0, 500)}"`;
+
+  // Send to all admins
+  if (bot && ADMIN_IDS.length > 0) {
+    ADMIN_IDS.forEach(adminId => {
+      bot.sendMessage(adminId, text, { parse_mode: 'Markdown' })
+        .catch(err => console.error('Failed to send feedback to admin:', err.message));
+    });
+  }
+
+  console.log(`Feedback from ${name}: ${message.trim().slice(0, 100)}`);
+  res.json({ success: true });
+});
 
 // ============ MANAGE TOOL (photo upload + marking) ============
 
@@ -1126,7 +1145,7 @@ console.log(`Photos in database: ${photoCount}`);
 // Start server
 // ============ WEEKLY LEADERBOARD RESET ============
 
-const WEEKLY_PRIZES = { 1: 500, 2: 200, 3: 100 }; // coins awarded to top 3
+const WEEKLY_PRIZES = { 1: 20000, 2: 10000, 3: 5000 }; // coins awarded to top 3
 
 function getWeekStr() {
   // Returns ISO week identifier e.g. "2026-W14"

@@ -15,6 +15,7 @@ const state = {
   usedReveal: false,
   usedExpand: false,
   sessionScore: 0,
+  roundNumber: 0,
   previousScreen: 'menu' // Track where we came from for back navigation
 };
 
@@ -33,6 +34,10 @@ const TRANSLATIONS = {
     ob_title_2: 'Place your shot', ob_desc_2: 'Drag your cursor on the photo. The closer you are to the ball, the more points you earn!',
     ob_title_3: 'Climb the ranks', ob_desc_3: 'Compete weekly against other players. Top 3 win coin prizes every Monday!',
     ob_next: 'NEXT', ob_skip: 'Skip', ob_play: "LET'S PLAY!",
+    gameover_reason: 'Your cursor missed the ball zone!',
+    you_label: 'You', send_feedback: 'Send feedback',
+    feedback_placeholder: 'Tell us what you think...',
+    feedback_sent: 'Thanks for your feedback!',
     link_copied: 'Link copied!',
     share_via_telegram: 'Share via Telegram',
     copy_link: 'Copy link',
@@ -70,6 +75,10 @@ const TRANSLATIONS = {
     ob_title_2: 'Place ton tir', ob_desc_2: 'Glisse ton curseur sur la photo. Plus tu es proche du ballon, plus tu marques de points !',
     ob_title_3: 'Grimpe au classement', ob_desc_3: 'Affronte les autres joueurs chaque semaine. Le top 3 gagne des coins tous les lundis !',
     ob_next: 'SUIVANT', ob_skip: 'Passer', ob_play: 'JOUER !',
+    gameover_reason: 'Ton curseur a rate la zone du ballon !',
+    you_label: 'Toi', send_feedback: 'Envoyer un feedback',
+    feedback_placeholder: 'Dis-nous ce que tu en penses...',
+    feedback_sent: 'Merci pour ton retour !',
     link_copied: 'Lien copie !',
     share_via_telegram: 'Partager via Telegram',
     copy_link: 'Copier le lien',
@@ -660,6 +669,7 @@ async function endSession(sessionScore) {
 // Start a fresh game session (resets score)
 function startNewSession() {
   state.sessionScore = 0;
+  state.roundNumber = 0;
   loadNextRound();
 }
 
@@ -722,7 +732,9 @@ async function loadNextRound() {
     document.getElementById('btn-expand').classList.remove('used');
     document.getElementById('btn-reveal').disabled = false;
     document.getElementById('btn-expand').disabled = false;
+    state.roundNumber++;
     document.getElementById('game-score-text').textContent = `SCORE ${state.sessionScore}`;
+    document.getElementById('game-streak').textContent = state.roundNumber > 1 ? `🔥 ${state.roundNumber - 1} streak` : '';
 
     updateAllCoinDisplays();
 
@@ -953,6 +965,7 @@ async function showGameOver(result) {
   document.getElementById('gameover-emoji').textContent = goEmojis[Math.floor(Math.random() * goEmojis.length)];
 
   document.getElementById('gameover-score').textContent = state.sessionScore;
+  document.getElementById('gameover-reason').textContent = t('gameover_reason');
 
   const photo = document.getElementById('gameover-photo');
   const guessMarker = document.getElementById('gameover-guess');
@@ -973,30 +986,31 @@ async function showGameOver(result) {
     ]);
 
     const myRank = statsData?.rank || '-';
-    document.getElementById('gameover-rank').textContent = `Toi: #${myRank}`;
+    document.getElementById('gameover-rank').textContent = `${t('you_label')}: #${myRank}`;
 
     const list = document.getElementById('gameover-lb-list');
     list.innerHTML = '';
 
     const medals = ['🥇', '🥈', '🥉'];
-    const myId = state.user?.telegramId;
+    const myName = state.user?.username || state.user?.firstName || t('you_label');
 
-    lbData.leaderboard.forEach(entry => {
+    // Show more entries (top 5) for better visibility
+    lbData.leaderboard.slice(0, 5).forEach(entry => {
       const div = document.createElement('div');
-      const isMe = entry.username === (state.user?.username || state.user?.firstName);
+      const isMe = entry.username === myName;
       div.className = 'go-lb-entry' + (isMe ? ' is-me' : '');
       div.innerHTML = `
         <span class="go-lb-rank">${medals[entry.rank - 1] || entry.rank}</span>
-        <span class="go-lb-name">${escapeHtml(entry.username)}${isMe ? ' (toi)' : ''}</span>
+        <span class="go-lb-name">${escapeHtml(entry.username)}${isMe ? ` (${t('you_label')})` : ''}</span>
         <span class="go-lb-pts">${(entry.dailyBestSession || 0).toLocaleString()}</span>
       `;
       list.appendChild(div);
     });
 
-    // If player not in top 10, add their entry at the bottom
-    if (myRank > 10 && statsData) {
+    // Always show player's entry if not in top 5
+    if (myRank > 5 && statsData) {
       const sep = document.createElement('div');
-      sep.style.cssText = 'text-align:center;padding:4px;color:var(--text-muted);font-size:11px;';
+      sep.style.cssText = 'text-align:center;padding:4px;color:var(--on-surface-variant);font-size:11px;';
       sep.textContent = '...';
       list.appendChild(sep);
 
@@ -1004,7 +1018,7 @@ async function showGameOver(result) {
       myDiv.className = 'go-lb-entry is-me';
       myDiv.innerHTML = `
         <span class="go-lb-rank">${myRank}</span>
-        <span class="go-lb-name">${escapeHtml(state.user?.username || state.user?.firstName || 'Toi')} (toi)</span>
+        <span class="go-lb-name">${escapeHtml(myName)} (${t('you_label')})</span>
         <span class="go-lb-pts">${(statsData.dailyBestSession || 0).toLocaleString()}</span>
       `;
       list.appendChild(myDiv);
@@ -1447,6 +1461,30 @@ document.getElementById('ob-next').addEventListener('click', () => {
 });
 document.getElementById('ob-skip').addEventListener('click', () => {
   showScreen('menu');
+});
+
+// Shop
+// Feedback
+function openFeedback() {
+  document.getElementById('feedback-text').value = '';
+  document.getElementById('feedback-modal').classList.add('active');
+}
+document.getElementById('btn-feedback-menu').addEventListener('click', openFeedback);
+document.getElementById('btn-feedback-gameover').addEventListener('click', openFeedback);
+document.getElementById('btn-feedback-cancel').addEventListener('click', () => {
+  document.getElementById('feedback-modal').classList.remove('active');
+});
+document.getElementById('btn-feedback-send').addEventListener('click', async () => {
+  const text = document.getElementById('feedback-text').value.trim();
+  if (!text) return;
+  try {
+    await api('/api/feedback', 'POST', { message: text });
+    document.getElementById('feedback-modal').classList.remove('active');
+    showToast(t('feedback_sent'));
+    if (tg) tg.HapticFeedback.notificationOccurred('success');
+  } catch (e) {
+    showToast('Error');
+  }
 });
 
 // Shop

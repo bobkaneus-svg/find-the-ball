@@ -92,6 +92,7 @@
             <button class="btn btn-secondary btn-half" id="btn-menu-leaderboard" data-i18n="leaderboard">LEADERBOARD</button>
             <button class="btn btn-secondary btn-half" id="btn-shop" data-i18n="shop">SHOP</button>
           </div>
+          <button class="btn-feedback" id="btn-feedback-menu" data-i18n="send_feedback">Send feedback</button>
         </div>
       </div>
     </div>
@@ -102,6 +103,7 @@
         <button class="hud-btn" id="btn-pause">&#10074;&#10074;</button>
         <div class="game-score-display">
           <span class="score-text" id="game-score-text">SCORE 0</span>
+          <span class="streak-text" id="game-streak"></span>
         </div>
         <div class="hud-coins">
           <span id="game-coins">150</span>
@@ -203,6 +205,7 @@
         <div class="gameover-impact">
           <div class="gameover-emoji" id="gameover-emoji">&#128557;</div>
           <h2 class="gameover-title">GAME OVER</h2>
+          <p class="gameover-reason" id="gameover-reason"></p>
           <div class="gameover-score-wrap">
             <span class="gameover-score" id="gameover-score">0</span>
             <span class="gameover-score-label" data-i18n="points">points</span>
@@ -228,6 +231,7 @@
         <div class="gameover-buttons">
           <button class="btn btn-gold btn-large" id="btn-restart" data-i18n="play_again">PLAY AGAIN</button>
           <button class="btn btn-secondary" id="btn-gameover-menu" data-i18n="main_menu">MAIN MENU</button>
+          <button class="btn-feedback" id="btn-feedback-gameover" data-i18n="send_feedback">Send feedback</button>
         </div>
       </div>
     </div>
@@ -244,17 +248,17 @@
         <div class="podium-item silver">
           <div class="podium-medal">&#129352;</div>
           <div class="podium-rank">2nd</div>
-          <div class="podium-prize">&#129689; 200</div>
+          <div class="podium-prize">&#129689; 10 000</div>
         </div>
         <div class="podium-item gold">
           <div class="podium-medal">&#129351;</div>
           <div class="podium-rank">1st</div>
-          <div class="podium-prize">&#129689; 500</div>
+          <div class="podium-prize">&#129689; 20 000</div>
         </div>
         <div class="podium-item bronze">
           <div class="podium-medal">&#129353;</div>
           <div class="podium-rank">3rd</div>
-          <div class="podium-prize">&#129689; 100</div>
+          <div class="podium-prize">&#129689; 5 000</div>
         </div>
       </div>
       <div class="lb-info-bar">
@@ -367,6 +371,16 @@
             <span data-i18n="copy_link">Copy link</span>
           </button>
         </div>
+      </div>
+    </div>
+
+    <!-- FEEDBACK MODAL -->
+    <div id="feedback-modal" class="overlay">
+      <div class="overlay-content feedback-content">
+        <h2 data-i18n="send_feedback">Send feedback</h2>
+        <textarea id="feedback-text" class="feedback-textarea" rows="4" maxlength="500" data-i18n-placeholder="feedback_placeholder" placeholder="Tell us what you think..."></textarea>
+        <button class="btn btn-gold" id="btn-feedback-send" data-i18n="send_feedback">SEND</button>
+        <button class="btn btn-secondary" id="btn-feedback-cancel" data-i18n="cancel">CANCEL</button>
       </div>
     </div>
 
