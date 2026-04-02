@@ -35,8 +35,10 @@ const TRANSLATIONS = {
     ob_title_3: 'Climb the ranks', ob_desc_3: 'Compete weekly against other players. Top 3 win coin prizes every Monday!',
     ob_next: 'NEXT', ob_skip: 'Skip', ob_play: "LET'S PLAY!",
     gameover_reason: 'Your cursor missed the ball zone!',
-    you_label: 'You', send_feedback: 'Send feedback',
-    feedback_placeholder: 'Tell us what you think...',
+    you_label: 'You', send_feedback: 'Send Feedback',
+    fb_title: "How's your experience?", fb_subtitle: 'Your feedback goes straight to the team',
+    fb_love: 'Love it', fb_ok: "It's ok", fb_bad: 'Needs work',
+    feedback_placeholder: 'Any ideas, bugs, or feature requests? (optional)',
     feedback_sent: 'Thanks for your feedback!',
     link_copied: 'Link copied!',
     share_via_telegram: 'Share via Telegram',
@@ -76,8 +78,10 @@ const TRANSLATIONS = {
     ob_title_3: 'Grimpe au classement', ob_desc_3: 'Affronte les autres joueurs chaque semaine. Le top 3 gagne des coins tous les lundis !',
     ob_next: 'SUIVANT', ob_skip: 'Passer', ob_play: 'JOUER !',
     gameover_reason: 'Ton curseur a rate la zone du ballon !',
-    you_label: 'Toi', send_feedback: 'Envoyer un feedback',
-    feedback_placeholder: 'Dis-nous ce que tu en penses...',
+    you_label: 'Toi', send_feedback: 'Envoyer',
+    fb_title: 'Comment trouves-tu le jeu ?', fb_subtitle: 'Ton feedback va directement a l\'equipe',
+    fb_love: 'J\'adore', fb_ok: 'Ca va', fb_bad: 'A ameliorer',
+    feedback_placeholder: 'Des idees, bugs ou suggestions ? (optionnel)',
     feedback_sent: 'Merci pour ton retour !',
     link_copied: 'Lien copie !',
     share_via_telegram: 'Partager via Telegram',
@@ -1465,20 +1469,38 @@ document.getElementById('ob-skip').addEventListener('click', () => {
 
 // Shop
 // Feedback
+let selectedRating = null;
+
 function openFeedback() {
+  selectedRating = null;
   document.getElementById('feedback-text').value = '';
+  document.querySelectorAll('.fb-rating').forEach(b => b.classList.remove('selected'));
+  document.getElementById('btn-feedback-send').classList.remove('active');
+  document.getElementById('btn-feedback-send').disabled = true;
   document.getElementById('feedback-modal').classList.add('active');
 }
 document.getElementById('btn-feedback-menu').addEventListener('click', openFeedback);
 document.getElementById('btn-feedback-gameover').addEventListener('click', openFeedback);
-document.getElementById('btn-feedback-cancel').addEventListener('click', () => {
-  document.getElementById('feedback-modal').classList.remove('active');
+
+// Rating selection
+document.querySelectorAll('.fb-rating').forEach(btn => {
+  btn.addEventListener('click', () => {
+    selectedRating = btn.dataset.rating;
+    document.querySelectorAll('.fb-rating').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    document.getElementById('btn-feedback-send').classList.add('active');
+    document.getElementById('btn-feedback-send').disabled = false;
+    if (tg) tg.HapticFeedback.impactOccurred('light');
+  });
 });
+
 document.getElementById('btn-feedback-send').addEventListener('click', async () => {
+  if (!selectedRating) return;
   const text = document.getElementById('feedback-text').value.trim();
-  if (!text) return;
+  const ratingEmojis = { love: '👍', ok: '😐', bad: '👎' };
+  const message = `${ratingEmojis[selectedRating]} ${selectedRating.toUpperCase()}${text ? '\n\n' + text : ''}`;
   try {
-    await api('/api/feedback', 'POST', { message: text });
+    await api('/api/feedback', 'POST', { message });
     document.getElementById('feedback-modal').classList.remove('active');
     showToast(t('feedback_sent'));
     if (tg) tg.HapticFeedback.notificationOccurred('success');

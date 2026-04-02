@@ -377,10 +377,24 @@
     <!-- FEEDBACK MODAL -->
     <div id="feedback-modal" class="overlay">
       <div class="overlay-content feedback-content">
-        <h2 data-i18n="send_feedback">Send feedback</h2>
-        <textarea id="feedback-text" class="feedback-textarea" rows="4" maxlength="500" data-i18n-placeholder="feedback_placeholder" placeholder="Tell us what you think..."></textarea>
-        <button class="btn btn-gold" id="btn-feedback-send" data-i18n="send_feedback">SEND</button>
-        <button class="btn btn-secondary" id="btn-feedback-cancel" data-i18n="cancel">CANCEL</button>
+        <h2 class="fb-title" data-i18n="fb_title">How's your experience?</h2>
+        <p class="fb-subtitle" data-i18n="fb_subtitle">Your feedback goes straight to the team</p>
+        <div class="fb-ratings">
+          <button class="fb-rating" data-rating="love">
+            <span class="fb-rating-emoji">&#128077;</span>
+            <span class="fb-rating-label" data-i18n="fb_love">Love it</span>
+          </button>
+          <button class="fb-rating" data-rating="ok">
+            <span class="fb-rating-emoji">&#128528;</span>
+            <span class="fb-rating-label" data-i18n="fb_ok">It's ok</span>
+          </button>
+          <button class="fb-rating" data-rating="bad">
+            <span class="fb-rating-emoji">&#128078;</span>
+            <span class="fb-rating-label" data-i18n="fb_bad">Needs work</span>
+          </button>
+        </div>
+        <textarea id="feedback-text" class="feedback-textarea" rows="3" maxlength="500" data-i18n-placeholder="feedback_placeholder" placeholder="Any ideas, bugs, or feature requests? (optional)"></textarea>
+        <button class="btn fb-send-btn" id="btn-feedback-send" disabled data-i18n="send_feedback">Send Feedback</button>
       </div>
     </div>
 
