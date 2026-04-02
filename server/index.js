@@ -155,7 +155,20 @@ app.get('/api/game/photo-count', (req, res) => {
 app.post('/api/auth', authMiddleware, (req, res) => {
   const { id, username, first_name } = req.telegramUser;
 
-  db.createUser.run(id, username || null, first_name || null);
+  const insertResult = db.createUser.run(id, username || null, first_name || null);
+
+  // Notify admins on signup milestones
+  if (insertResult.changes > 0 && bot && ADMIN_IDS.length > 0) {
+    const totalUsers = db.db.prepare('SELECT COUNT(*) as c FROM users').get().c;
+    const milestones = [10, 50, 100, 200, 500, 1000, 2000, 5000, 10000];
+    if (milestones.includes(totalUsers)) {
+      ADMIN_IDS.forEach(adminId => {
+        bot.sendMessage(adminId, `🎉 *Milestone!* ${totalUsers} users signed up!`, { parse_mode: 'Markdown' })
+          .catch(() => {});
+      });
+    }
+  }
+
   const user = db.getUser.get(id);
   const stats = game.getUserStats(id);
 
