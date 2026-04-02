@@ -109,12 +109,20 @@ db.exec(`
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
   );
   CREATE INDEX IF NOT EXISTS idx_daily_winners_day ON daily_winners(day);
+
+  CREATE TABLE IF NOT EXISTS feedbacks (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    username TEXT,
+    rating TEXT,
+    message TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(telegram_id)
+  );
 `);
 try { db.exec('ALTER TABLE users ADD COLUMN referred_by INTEGER DEFAULT NULL'); } catch (e) { /* column already exists */ }
 try { db.exec('ALTER TABLE users ADD COLUMN language_code TEXT DEFAULT "en"'); } catch (e) { /* column already exists */ }
 
-// Migration: set ball_radius to balanced value (old values were 16-28%, now 5%)
-db.exec(`UPDATE photos SET ball_radius = 5 WHERE ball_radius != 5`);
 try { db.exec('ALTER TABLE users ADD COLUMN referral_rewarded INTEGER DEFAULT 0'); } catch (e) { /* column already exists */ }
 
 // User operations

@@ -475,9 +475,18 @@ app.post('/api/feedback', authMiddleware, (req, res) => {
 
   const user = db.getUser.get(req.telegramUser.id);
   const name = user?.username || user?.first_name || 'Unknown';
-  const text = `📝 *New Feedback*\n\nFrom: ${name} (${req.telegramUser.id})\nGames: ${user?.games_played || 0}\nCoins: ${user?.coins || 0}\n\n"${message.trim().slice(0, 500)}"`;
 
-  // Send to all admins
+  // Extract rating from message (first word: LOVE/OK/BAD)
+  const msg = message.trim();
+  const ratingMatch = msg.match(/^(👍 LOVE|😐 OK|👎 BAD)/);
+  const rating = ratingMatch ? ratingMatch[1] : 'unknown';
+
+  // Save to DB
+  db.db.prepare('INSERT INTO feedbacks (user_id, username, rating, message) VALUES (?, ?, ?, ?)')
+    .run(req.telegramUser.id, name, rating, msg.slice(0, 500));
+
+  // Send to all admins via bot
+  const text = `📝 *New Feedback*\n\nFrom: ${name} (${req.telegramUser.id})\nGames: ${user?.games_played || 0}\nCoins: ${user?.coins || 0}\n\n"${msg.slice(0, 500)}"`;
   if (bot && ADMIN_IDS.length > 0) {
     ADMIN_IDS.forEach(adminId => {
       bot.sendMessage(adminId, text, { parse_mode: 'Markdown' })
@@ -485,7 +494,7 @@ app.post('/api/feedback', authMiddleware, (req, res) => {
     });
   }
 
-  console.log(`Feedback from ${name}: ${message.trim().slice(0, 100)}`);
+  console.log(`Feedback from ${name}: ${msg.slice(0, 100)}`);
   res.json({ success: true });
 });
 
@@ -687,6 +696,14 @@ app.get('/api/dashboard/gameplay', authMiddleware, adminMiddleware, (req, res) =
   `).all();
 
   res.json({ scoreDist, powerups, gamesPerDay, winners, badgeStats });
+});
+
+app.get('/api/dashboard/feedbacks', authMiddleware, adminMiddleware, (req, res) => {
+  const feedbacks = db.db.prepare('SELECT * FROM feedbacks ORDER BY created_at DESC LIMIT 50').all();
+  const summary = db.db.prepare(`
+    SELECT rating, COUNT(*) as count FROM feedbacks GROUP BY rating ORDER BY count DESC
+  `).all();
+  res.json({ feedbacks, summary });
 });
 
 // ============ ADMIN PIPELINE ROUTES ============

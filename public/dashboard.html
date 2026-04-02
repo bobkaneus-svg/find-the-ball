@@ -195,6 +195,18 @@
         <div class="kpi-card"><div class="kpi-label">Retained (5+ games)</div><div class="kpi-value" id="kpi-retention">-</div></div>
       </div>
     </div>
+
+    <!-- FEEDBACKS -->
+    <div class="section">
+      <div class="section-title">PLAYER FEEDBACKS</div>
+      <div class="kpi-grid" style="grid-template-columns:1fr 1fr 1fr; margin-bottom:12px;" id="fb-summary"></div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Date</th><th>Player</th><th>Rating</th><th>Message</th></tr></thead>
+          <tbody id="fb-list"></tbody>
+        </table>
+      </div>
+    </div>
   </div>
 
   <script>
@@ -356,10 +368,37 @@
       d.badgeStats.forEach(b => renderBar(badgeEl, b.badge_id.replace(/_/g, ' '), b.count, maxBadge, 'gold'));
     }
 
+    async function loadFeedbacks() {
+      const d = await fetchAPI('/api/dashboard/feedbacks');
+
+      // Summary cards
+      const summaryEl = document.getElementById('fb-summary');
+      summaryEl.innerHTML = '';
+      const ratingColors = { '👍 LOVE': 'green', '😐 OK': 'gold', '👎 BAD': 'red' };
+      d.summary.forEach(s => {
+        const color = ratingColors[s.rating] || '';
+        summaryEl.innerHTML += `<div class="kpi-card"><div class="kpi-label">${s.rating || 'Other'}</div><div class="kpi-value ${color}">${s.count}</div></div>`;
+      });
+
+      // Feedback list
+      const tbody = document.getElementById('fb-list');
+      tbody.innerHTML = '';
+      d.feedbacks.forEach(fb => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td class="text-muted">${fb.created_at?.slice(0, 16) || '-'}</td>
+          <td>${fb.username || 'Anon'}</td>
+          <td>${fb.rating || '-'}</td>
+          <td style="max-width:300px;white-space:pre-wrap;word-break:break-word;font-size:12px;">${fb.message?.replace(/</g, '&lt;') || ''}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
     async function loadAll() {
       document.getElementById('last-updated').textContent = 'Loading...';
       try {
-        await Promise.all([loadOverview(), loadRevenue(), loadUsers(), loadGameplay()]);
+        await Promise.all([loadOverview(), loadRevenue(), loadUsers(), loadGameplay(), loadFeedbacks()]);
         document.getElementById('last-updated').textContent = 'Updated ' + new Date().toLocaleTimeString();
       } catch (e) {
         document.getElementById('last-updated').textContent = 'Error: ' + e.message;
