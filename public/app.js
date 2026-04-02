@@ -1480,7 +1480,6 @@ function openFeedback() {
   document.getElementById('feedback-modal').classList.add('active');
 }
 document.getElementById('btn-feedback-menu').addEventListener('click', openFeedback);
-document.getElementById('btn-feedback-gameover').addEventListener('click', openFeedback);
 
 // Rating selection
 document.querySelectorAll('.fb-rating').forEach(btn => {
