@@ -16,6 +16,15 @@ const ADMIN_IDS = (process.env.ADMIN_IDS || '').split(',').map(Number).filter(n 
 const ADMIN_SECRET = process.env.ADMIN_SECRET;
 if (!ADMIN_SECRET) console.warn('WARNING: ADMIN_SECRET not set — admin endpoints disabled');
 
+// TON Pay (optional — enabled if vars are set)
+const TONPAY_API_KEY = process.env.TONPAY_API_KEY;
+const TONPAY_API_SECRET = process.env.TONPAY_API_SECRET;
+const TON_RECIPIENT_ADDRESS = process.env.TON_RECIPIENT_ADDRESS;
+const TONPAY_CHAIN = process.env.TONPAY_CHAIN === 'testnet' ? 'testnet' : 'mainnet';
+const tonPay = (TONPAY_API_KEY) ? require('@ton-pay/api') : null;
+if (tonPay) console.log(`TON Pay enabled (${TONPAY_CHAIN})`);
+else console.log('TON Pay disabled — set TONPAY_API_KEY to enable');
+
 // Telegram Bot
 let bot;
 if (BOT_TOKEN) {
@@ -443,29 +452,83 @@ app.get('/api/shop/prices', async (req, res) => {
   res.json({ packs, tonPriceUsd: price });
 });
 
-// Create TON payment link
-app.post('/api/shop/ton-invoice', authMiddleware, async (req, res) => {
-  const { pack } = req.body;
+// ============ TON PAY ============
+
+// Create a TON Pay transfer (returns message + reference for client to sign via TON Connect)
+app.post('/api/shop/tonpay/create', authMiddleware, async (req, res) => {
+  const { pack, senderAddr } = req.body;
+  if (!tonPay) return res.status(503).json({ error: 'TON Pay not configured on server' });
   if (!pack) return res.status(400).json({ error: 'Missing pack' });
-  if (!TON_WALLET) return res.status(500).json({ error: 'TON wallet not configured' });
+  if (!senderAddr) return res.status(400).json({ error: 'Missing senderAddr — connect wallet first' });
 
   const coins = parseInt(pack);
   const packPrices = { 500: 0.99, 1000: 1.99, 2000: 3.49, 5000: 7.99, 10000: 14.99, 20000: 27.99 };
   const usdPrice = packPrices[coins];
   if (!usdPrice) return res.status(400).json({ error: 'Invalid pack' });
 
-  const price = await fetchTonPrice();
-  const tonAmount = Math.round((usdPrice / price) * 100) / 100;
-  const comment = `ftb_${coins}_${req.telegramUser.id}_${Date.now()}`;
+  try {
+    const price = await fetchTonPrice();
+    const tonAmount = Math.round((usdPrice / price) * 100) / 100;
 
-  // TON deeplink for TonKeeper / Tonhub
-  const nanotons = Math.round(tonAmount * 1e9);
-  const paymentUrl = `ton://transfer/${TON_WALLET}?amount=${nanotons}&text=${encodeURIComponent(comment)}`;
+    const transferParams = {
+      amount: tonAmount,
+      asset: tonPay.TON,
+      senderAddr,
+      commentToRecipient: `ftb_${coins}_${req.telegramUser.id}`
+    };
+    if (TON_RECIPIENT_ADDRESS) transferParams.recipientAddr = TON_RECIPIENT_ADDRESS;
 
-  // Log pending transaction
-  db.logTransaction.run(req.telegramUser.id, 0, 'ton_pending', `TON payment pending: ${tonAmount} TON for ${coins} coins - ${comment}`);
+    const result = await tonPay.createTonPayTransfer(transferParams, {
+      apiKey: TONPAY_API_KEY,
+      chain: TONPAY_CHAIN
+    });
 
-  res.json({ paymentUrl, comment, tonAmount });
+    db.insertPendingTonPay.run(result.reference, req.telegramUser.id, coins, tonAmount);
+    res.json({ message: result.message, reference: result.reference, tonAmount });
+  } catch (err) {
+    console.error('TON Pay create error:', err.message);
+    res.status(500).json({ error: 'Failed to create TON payment' });
+  }
+});
+
+// TON Pay webhook — called by TON Pay backend when transfer completes
+app.post('/api/tonpay/webhook', (req, res) => {
+  if (!tonPay) return res.status(503).json({ error: 'TON Pay not configured' });
+
+  const sig = req.headers['x-tonpay-signature'];
+  if (TONPAY_API_SECRET && !tonPay.verifySignature(req.body, sig, TONPAY_API_SECRET)) {
+    return res.status(401).json({ error: 'Invalid signature' });
+  }
+
+  const { event, data } = req.body || {};
+  if (event !== 'transfer.completed' || !data || data.status !== 'success') {
+    return res.json({ received: true });
+  }
+
+  const pending = db.getPendingTonPayByReference.get(data.reference);
+  if (!pending) {
+    console.warn(`TON Pay webhook: unknown reference ${data.reference}`);
+    return res.json({ received: true });
+  }
+  if (pending.status === 'credited') {
+    return res.json({ received: true, alreadyCredited: true });
+  }
+
+  // Credit coins atomically (transaction wrapper)
+  const tx = db.db.transaction(() => {
+    db.updateUserCoins.run(pending.pack, pending.user_id);
+    db.markTonPayCredited.run(data.reference);
+    db.logTransaction.run(
+      pending.user_id,
+      pending.pack,
+      'tonpay_payment',
+      `TON Pay: ${data.amount} TON for ${pending.pack} coins (tx: ${data.txHash || 'n/a'})`
+    );
+  });
+  tx();
+
+  console.log(`TON Pay credited: ${pending.pack} coins to user ${pending.user_id} (ref: ${data.reference})`);
+  res.json({ received: true, credited: true });
 });
 
 // ============ FEEDBACK ============
@@ -606,6 +669,7 @@ app.get('/api/dashboard/revenue', authMiddleware, adminMiddleware, (req, res) =>
   const starsPurchases = db.db.prepare("SELECT COUNT(*) as count, SUM(amount) as total FROM transactions WHERE type = 'stars_purchase'").get();
   const starsPayments = db.db.prepare("SELECT COUNT(*) as count, SUM(amount) as total FROM transactions WHERE type = 'stars_payment'").get();
   const tonPending = db.db.prepare("SELECT COUNT(*) as count FROM transactions WHERE type = 'ton_pending'").get();
+  const tonPayPayments = db.db.prepare("SELECT COUNT(*) as count, SUM(amount) as total FROM transactions WHERE type = 'tonpay_payment'").get();
   const powerupSpend = db.db.prepare("SELECT COUNT(*) as count, SUM(ABS(amount)) as total FROM transactions WHERE type = 'powerup'").get();
   const dailyPrizes = db.db.prepare("SELECT COUNT(*) as count, SUM(amount) as total FROM transactions WHERE type = 'daily_prize'").get();
   const referralRewards = db.db.prepare("SELECT COUNT(*) as count, SUM(amount) as total FROM transactions WHERE type = 'referral_reward'").get();
@@ -615,6 +679,7 @@ app.get('/api/dashboard/revenue', authMiddleware, adminMiddleware, (req, res) =>
     revenue: {
       starsPurchases: { count: starsPurchases.count || 0, coins: starsPurchases.total || 0 },
       starsPayments: { count: starsPayments.count || 0, coins: starsPayments.total || 0 },
+      tonPayPayments: { count: tonPayPayments.count || 0, coins: tonPayPayments.total || 0 },
       tonPending: tonPending.count || 0
     },
     spending: {

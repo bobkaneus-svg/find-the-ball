@@ -40,6 +40,7 @@ const TRANSLATIONS = {
     fb_love: 'Love it', fb_ok: "It's ok", fb_bad: 'Needs work',
     feedback_placeholder: 'Any ideas, bugs, or feature requests? (optional)',
     feedback_sent: 'Thanks for your feedback!',
+    payment_processing: 'Payment processing...', wallet_not_connected: 'Wallet not connected',
     link_copied: 'Link copied!',
     share_via_telegram: 'Share via Telegram',
     copy_link: 'Copy link',
@@ -83,6 +84,7 @@ const TRANSLATIONS = {
     fb_love: 'J\'adore', fb_ok: 'Ca va', fb_bad: 'A ameliorer',
     feedback_placeholder: 'Des idees, bugs ou suggestions ? (optionnel)',
     feedback_sent: 'Merci pour ton retour !',
+    payment_processing: 'Paiement en cours...', wallet_not_connected: 'Wallet non connecte',
     link_copied: 'Lien copie !',
     share_via_telegram: 'Partager via Telegram',
     copy_link: 'Copier le lien',
@@ -1251,11 +1253,27 @@ async function showLeaderboard() {
 
 let selectedPack = null;
 let shopPricesLoaded = false;
+let shopMethod = 'stars'; // 'stars' | 'ton'
+let tonConnectUI = null;
+
+function initTonConnect() {
+  if (tonConnectUI) return tonConnectUI;
+  if (!window.TON_CONNECT_UI) return null;
+  try {
+    tonConnectUI = new window.TON_CONNECT_UI.TonConnectUI({
+      manifestUrl: window.location.origin + '/tonconnect-manifest.json'
+    });
+  } catch (e) {
+    console.error('TON Connect init failed:', e);
+  }
+  return tonConnectUI;
+}
 
 function showShop() {
   updateAllCoinDisplays();
   showScreen('shop');
   if (!shopPricesLoaded) loadShopPrices();
+  initTonConnect();
 }
 
 async function loadShopPrices() {
@@ -1268,6 +1286,8 @@ async function loadShopPrices() {
         item.dataset.stars = p.stars;
         item.dataset.ton = p.ton;
         item.dataset.price = p.usd;
+        const tonSpan = item.querySelector('.shop-price-ton');
+        if (tonSpan) tonSpan.textContent = `\u{1F48E} ${p.ton}`;
       }
     });
     shopPricesLoaded = true;
@@ -1276,44 +1296,58 @@ async function loadShopPrices() {
   }
 }
 
-// Buy pack directly — opens Stars invoice immediately
+function setShopMethod(method) {
+  shopMethod = method;
+  document.querySelectorAll('.shop-tab').forEach(tab => {
+    tab.classList.toggle('active', tab.dataset.method === method);
+  });
+  document.querySelectorAll('.shop-price-stars').forEach(s => s.style.display = method === 'stars' ? '' : 'none');
+  document.querySelectorAll('.shop-price-ton').forEach(s => s.style.display = method === 'ton' ? '' : 'none');
+}
+
+// Poll /api/user/coins to detect credit after payment (works for both Stars and TON Pay)
+async function pollCoinsAfterPayment(prevCoins, pack) {
+  let credited = false;
+  for (let i = 0; i < 8; i++) {
+    await new Promise(r => setTimeout(r, 1500));
+    try {
+      const res = await api('/api/user/coins');
+      if (res.coins > prevCoins) {
+        state.user.coins = res.coins;
+        updateAllCoinDisplays();
+        showToast(`+${pack} coins!`);
+        if (tg) tg.HapticFeedback.notificationOccurred('success');
+        credited = true;
+        break;
+      }
+    } catch (e) { /* retry */ }
+  }
+  if (!credited) {
+    try {
+      const res = await api('/api/user/coins');
+      state.user.coins = res.coins;
+      updateAllCoinDisplays();
+    } catch (e) {}
+    showToast(t('payment_processing') || 'Payment processing...');
+  }
+}
+
+// Entry point — picks Stars or TON Pay based on selected tab
 async function buyPack(element) {
   const pack = parseInt(element.dataset.pack);
-  const stars = parseInt(element.dataset.stars);
-  if (!pack || !stars) return;
+  if (!pack) return;
+  if (shopMethod === 'ton') return buyWithTonPay(pack);
+  return buyWithStars(pack, parseInt(element.dataset.stars));
+}
 
+async function buyWithStars(pack, stars) {
+  if (!stars) return;
   try {
     const invoiceRes = await api('/api/shop/create-invoice', 'POST', { pack, stars });
-
     if (invoiceRes.invoiceLink && tg?.openInvoice) {
       tg.openInvoice(invoiceRes.invoiceLink, async (status) => {
         if (status === 'paid') {
-          // Payment verified server-side via webhook. Poll with retry.
-          const prevCoins = state.user.coins;
-          let credited = false;
-          for (let i = 0; i < 5; i++) {
-            await new Promise(r => setTimeout(r, 1500));
-            try {
-              const res = await api('/api/user/coins');
-              if (res.coins > prevCoins) {
-                state.user.coins = res.coins;
-                updateAllCoinDisplays();
-                showToast(`+${pack} coins!`);
-                if (tg) tg.HapticFeedback.notificationOccurred('success');
-                credited = true;
-                break;
-              }
-            } catch (e) { /* retry */ }
-          }
-          if (!credited) {
-            // Fallback: refresh coins anyway
-            try {
-              const res = await api('/api/user/coins');
-              state.user.coins = res.coins;
-              updateAllCoinDisplays();
-            } catch (e) {}
-            showToast('Payment processing...');
-          }
+          await pollCoinsAfterPayment(state.user.coins, pack);
         }
       });
     } else {
@@ -1322,10 +1356,56 @@ async function buyPack(element) {
       state.user.coins = res.coins;
       updateAllCoinDisplays();
       showToast(`+${res.purchased} coins!`);
-      closePaymentSheet();
     }
   } catch (err) {
     await showModal(err.message || 'Payment error');
+  }
+}
+
+async function buyWithTonPay(pack) {
+  const ui = initTonConnect();
+  if (!ui) {
+    await showModal('TON Connect not available');
+    return;
+  }
+  try {
+    if (!ui.connected) {
+      await ui.openModal();
+      await new Promise((resolve) => {
+        const unsub = ui.onStatusChange((wallet) => {
+          if (wallet) { unsub(); resolve(); }
+        });
+        setTimeout(() => { unsub(); resolve(); }, 60000);
+      });
+    }
+    if (!ui.connected || !ui.account?.address) {
+      showToast(t('wallet_not_connected') || 'Wallet not connected');
+      return;
+    }
+
+    const senderAddr = ui.account.address;
+    const createRes = await api('/api/shop/tonpay/create', 'POST', { pack, senderAddr });
+    if (!createRes.message) {
+      await showModal('Could not create TON payment');
+      return;
+    }
+
+    const prevCoins = state.user.coins;
+    await ui.sendTransaction({
+      validUntil: Math.floor(Date.now() / 1000) + 600,
+      messages: [{
+        address: createRes.message.address,
+        amount: createRes.message.amount,
+        payload: createRes.message.payload
+      }]
+    });
+
+    showToast(t('payment_processing') || 'Payment processing...');
+    await pollCoinsAfterPayment(prevCoins, pack);
+  } catch (err) {
+    if (err && err.message && err.message.includes('UserRejects')) return;
+    console.error('TON Pay error:', err);
+    await showModal(err.message || 'TON payment error');
   }
 }
 
@@ -1512,6 +1592,9 @@ document.getElementById('btn-feedback-send').addEventListener('click', async () 
 document.getElementById('btn-shop-back').addEventListener('click', goBack);
 document.querySelectorAll('#shop-list .shop-item[data-pack]').forEach(item => {
   item.addEventListener('click', () => buyPack(item));
+});
+document.querySelectorAll('.shop-tab').forEach(tab => {
+  tab.addEventListener('click', () => setShopMethod(tab.dataset.method));
 });
 
 // Invite friend

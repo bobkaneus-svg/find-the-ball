@@ -59,7 +59,7 @@ const EXPAND_AREA_COST = 50;
 const SEARCH_RADIUS_FALLBACK = 10;
 // Anti-cheat: cap the search radius sent by client
 const SEARCH_RADIUS_MIN = 3;
-const SEARCH_RADIUS_MAX = 15;
+const SEARCH_RADIUS_MAX = 25;
 
 function calculateScore(guessX, guessY, ballX, ballY, ballRadius, searchRadiusPct) {
   // All values in percentage (0-100)
@@ -174,9 +174,9 @@ function submitGuess(roundId, telegramId, guessX, guessY, usedReveal, usedExpand
   const photo = db.getPhotoById.get(round.photo_id);
   if (!photo) return { error: 'Photo not found' };
 
-  // Calculate score — fixed gameplay ball radius (independent of visual radius in manage tool)
-  const GAMEPLAY_BALL_RADIUS = 5; // % of image
-  const result = calculateScore(guessX, guessY, photo.ball_x, photo.ball_y, GAMEPLAY_BALL_RADIUS, searchRadiusPct);
+  // Use the ball radius defined in the platform for each photo
+  const ballRadius = photo.ball_radius || 5;
+  const result = calculateScore(guessX, guessY, photo.ball_x, photo.ball_y, ballRadius, searchRadiusPct);
 
   // Deduct coins for expand power-up atomically (reveal already deducted via /api/game/reveal)
   if (usedExpand) {

@@ -119,6 +119,17 @@ db.exec(`
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(telegram_id)
   );
+
+  CREATE TABLE IF NOT EXISTS pending_tonpay (
+    reference TEXT PRIMARY KEY,
+    user_id INTEGER NOT NULL,
+    pack INTEGER NOT NULL,
+    ton_amount REAL NOT NULL,
+    status TEXT DEFAULT 'pending',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    credited_at DATETIME
+  );
+  CREATE INDEX IF NOT EXISTS idx_pending_tonpay_user ON pending_tonpay(user_id);
 `);
 try { db.exec('ALTER TABLE users ADD COLUMN referred_by INTEGER DEFAULT NULL'); } catch (e) { /* column already exists */ }
 try { db.exec('ALTER TABLE users ADD COLUMN language_code TEXT DEFAULT "en"'); } catch (e) { /* column already exists */ }
@@ -206,6 +217,13 @@ const insertDailyWinner = db.prepare(`
   INSERT INTO daily_winners (day, rank, user_id, username, score, prize) VALUES (?, ?, ?, ?, ?, ?)
 `);
 
+// TON Pay pending payments
+const insertPendingTonPay = db.prepare(`
+  INSERT INTO pending_tonpay (reference, user_id, pack, ton_amount) VALUES (?, ?, ?, ?)
+`);
+const getPendingTonPayByReference = db.prepare('SELECT * FROM pending_tonpay WHERE reference = ?');
+const markTonPayCredited = db.prepare(`UPDATE pending_tonpay SET status = 'credited', credited_at = CURRENT_TIMESTAMP WHERE reference = ?`);
+
 // Admin pipeline operations
 const getPhotosByStatus = db.prepare('SELECT * FROM photos WHERE active = ? ORDER BY id DESC');
 const getAllPhotosAdmin = db.prepare('SELECT * FROM photos ORDER BY id DESC LIMIT ? OFFSET ?');
@@ -266,6 +284,9 @@ module.exports = {
   resetAllDailyScores,
   getDailyTop3,
   insertDailyWinner,
+  insertPendingTonPay,
+  getPendingTonPayByReference,
+  markTonPayCredited,
   updateLanguage: db.prepare('UPDATE users SET language_code = ? WHERE telegram_id = ?'),
   setReferredBy: db.prepare('UPDATE users SET referred_by = ? WHERE telegram_id = ? AND referred_by IS NULL'),
   getReferrer: db.prepare('SELECT referred_by FROM users WHERE telegram_id = ?'),
